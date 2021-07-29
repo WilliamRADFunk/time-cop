@@ -49,7 +49,7 @@ import { SOUNDS_CTRL } from "./sounds-controller";
 import { COLORS } from "../../styles/colors";
 import { colorLuminance } from "../../utils/color-shader";
 import { noOp } from "../../utils/no-op";
-import { Explosion } from "../../weapons/explosion";
+import { Explosion } from "../../collidables/explosion";
 import { ReloadButton } from "../buttons/reload-button";
 import { LoadButton } from "../../controls/buttons/load-button";
 import { ProfileBase } from "../../controls/profiles/profile-base";

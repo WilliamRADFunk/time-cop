@@ -7,9 +7,11 @@ import {
     OrthographicCamera,
     PlaneGeometry,
     Scene,
+    SphereGeometry,
     Texture,
     Vector3 } from 'three';
 
+import { CollisionatorSingleton } from '../../collisionator';
 import { SOUNDS_CTRL } from '../../controls/controllers/sounds-controller';
 import { Actor } from '../../models/actor';
 import { SceneType } from '../../models/scene-type';
@@ -23,6 +25,7 @@ import { TextBase } from '../../controls/text/text-base';
 import { SettingsCtrl } from '../../controls/controllers/settings-controllers';
 import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
 import { createActor } from '../../utils/create-actor';
+import { Post } from '../../collidables/post';
 
 /*
  * Grid Values
@@ -56,6 +59,45 @@ export enum MainLevelState {
     'autopilot' = 6,
     'win' = 7
 }
+
+const postPositions: [number, number][] = [
+    [ -4, -4 ], [ 4, -4 ],
+    [ -4, -3.5 ], [ 4, -3.5 ],
+    [ -4, -3 ], [ 4, -3 ],
+    [ -4, -2.5 ], [ 4, -2.5 ],
+    [ -4, -2 ], [ 4, -2 ],
+    [ -4, -1.5 ], [ 4, -1.5 ],
+    [ -4, -1 ], [ 4, -1 ],
+    [ -4, -0.5 ], [ 4, -0.5 ],
+    [ -4, 0 ], [ 4, 0 ],
+    [ -4, 0.5 ], [ 4, 0.5 ],
+    [ -4, 1 ], [ 4, 1 ],
+    [ -4, 1.5 ], [ 4, 1.5 ],
+    [ -4, 2 ], [ 4, 2 ],
+    [ -4, 2.5 ], [ 4, 2.5 ],
+    [ -4, 3 ], [ 4, 3 ],
+    [ -4, 3.5 ], [ 4, 3.5 ],
+    [ -4, 4 ], [ 4, 4 ],
+
+    [ -3.5, 4 ], [ 3.5, 4 ],
+    [ -3, 4 ], [ 3, 4 ],
+    [ -2.5, 4 ], [ 2.5, 4 ],
+    [ -2, 4 ], [ 2, 4 ],
+    [ -1, 4 ], [ 1, 4 ],
+    [ -1.5, 4 ], [ 1.5, 4 ],
+    [ 0.5, 4 ],
+    [ 0, 4 ],
+    [ -0.5, 4 ],
+    [ -3.5, -4 ], [ 3.5, -4 ],
+    [ -3, -4 ], [ 3, -4 ],
+    [ -2.5, -4 ], [ 2.5, -4 ],
+    [ -2, -4 ], [ 2, -4 ],
+    [ -1.5, -4 ], [ 1.5, -4 ],
+    [ -1, -4 ], [ 1, -4 ],
+    [ -0.5, -4 ],
+    [ 0, -4 ],
+    [ 0.5, -4 ]
+];
 
 /**
  * @class
@@ -108,6 +150,11 @@ export class MainPlayLevel {
      * Reference to _onWindowResize so that it can be removed later.
      */
     private _listenerRef: () => void;
+
+    /**
+     * The list of collidable post objects in the level.
+     */
+    private _posts: Post[] = [];
 
     /**
      * Reference to the scene, used to remove elements from rendering cycle once destroyed.
@@ -204,7 +251,7 @@ export class MainPlayLevel {
         demoGuyLeft3.mesh.name = 'Demo-Guy-Left-3';
 
         this._actors = {
-            demoActors: []
+            demoActors: [],
         };
         this._actors.demoActors.push(demoGuyLeft1);
         this._scene.add(demoGuyLeft1.mesh);
@@ -212,6 +259,13 @@ export class MainPlayLevel {
         this._scene.add(demoGuyLeft2.mesh);
         this._actors.demoActors.push(demoGuyLeft3);
         this._scene.add(demoGuyLeft3.mesh);
+
+        for (let x = 0; x < postPositions.length; x++) {
+            const postPos = postPositions[x];
+            const post = new Post(this._scene, postPos[0], postPos[1]);
+            this._posts.push(post);
+            CollisionatorSingleton.add(post);
+        }
 
         this._helpCtrl = new HelpCtrl(
             this._scene,
@@ -260,7 +314,6 @@ export class MainPlayLevel {
 
         };
         document.onkeydown = event => {
-            console.log('onkeydown', 'state', this._state, 'event.key', event.key);
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
                 // Up & Down move and aim adjustment.
@@ -290,7 +343,6 @@ export class MainPlayLevel {
             }
         };
         document.onkeyup = event => {
-            console.log('onkeyup', 'state', this._state, 'event.key', event.key);
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
                 // Up & Down move and aim adjustment.
