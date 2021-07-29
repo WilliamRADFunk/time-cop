@@ -182,7 +182,7 @@ export class MainPlayLevel {
         demoGuyLeft1.mesh = new Mesh(demoGuyGeometry, demoGuyMaterialStanding);
         demoGuyLeft1.mesh.position.set(demoGuyLeft1.currentPoint[0], 1, demoGuyLeft1.currentPoint[1] + 0.02);
         demoGuyLeft1.mesh.rotation.set(-1.5708, 0, 0);
-        demoGuyLeft1.mesh.scale.set(5, 5, 5);
+        demoGuyLeft1.mesh.scale.set(10, 10, 10);
         demoGuyLeft1.mesh.name = 'Demo-Guy-Left-1';
         const demoGuyLeft2 = createActor();
         demoGuyLeft2.originalStartingPoint = [0, 0];
@@ -191,7 +191,7 @@ export class MainPlayLevel {
         demoGuyLeft2.mesh = new Mesh(demoGuyGeometry, demoGuyMaterialWalking1);
         demoGuyLeft2.mesh.position.set(demoGuyLeft2.currentPoint[0], 1, demoGuyLeft2.currentPoint[1] + 0.02);
         demoGuyLeft2.mesh.rotation.set(-1.5708, 0, 0);
-        demoGuyLeft2.mesh.scale.set(5, 5, 5);
+        demoGuyLeft2.mesh.scale.set(10, 10, 10);
         demoGuyLeft2.mesh.name = 'Demo-Guy-Left-2';
         const demoGuyLeft3 = createActor();
         demoGuyLeft3.originalStartingPoint = [0, 0];
@@ -200,7 +200,7 @@ export class MainPlayLevel {
         demoGuyLeft3.mesh = new Mesh(demoGuyGeometry, demoGuyMaterialWalking2);
         demoGuyLeft3.mesh.position.set(demoGuyLeft3.currentPoint[0], 1, demoGuyLeft3.currentPoint[1] + 0.03);
         demoGuyLeft3.mesh.rotation.set(-1.5708, 0, 0);
-        demoGuyLeft3.mesh.scale.set(5, 5, 5);
+        demoGuyLeft3.mesh.scale.set(10, 10, 10);
         demoGuyLeft3.mesh.name = 'Demo-Guy-Left-3';
 
         this._actors = {
@@ -506,13 +506,13 @@ export class MainPlayLevel {
         }
 
         if (this._state === MainLevelState.active && this._directionMove.some(x => !!x)) {
-            const val = this._counters.demoWalkClear / 3;
             this._counters.demoWalk++;
-            if (this._counters.demoWalk < val) {
+            const val = this._counters.demoWalk % 3;
+            if (val === 0) {
                 this._actors.demoActors[0].mesh.visible = true;
                 this._actors.demoActors[1].mesh.visible = false;
                 this._actors.demoActors[2].mesh.visible = false;
-            } else if (this._counters.demoWalk % 10 < 5) {
+            } else if (val === 1) {
                 this._actors.demoActors[0].mesh.visible = false;
                 this._actors.demoActors[1].mesh.visible = true;
                 this._actors.demoActors[2].mesh.visible = false;
@@ -520,6 +520,10 @@ export class MainPlayLevel {
                 this._actors.demoActors[0].mesh.visible = false;
                 this._actors.demoActors[1].mesh.visible = false;
                 this._actors.demoActors[2].mesh.visible = true;
+            }
+
+            if (this._counters.demoWalk >= this._counters.demoWalkClear) {
+                this._counters.demoWalk = 0;
             }
         }
 

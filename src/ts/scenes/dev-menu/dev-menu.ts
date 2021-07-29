@@ -311,12 +311,12 @@ export class DevMenu {
 //#endregion
 
 //#region Page 2
-        this._page2profiles.leftBottomMiddleProfile = new LeftBottomMiddleProfile(this._scene, ASSETS_CTRL.textures.engineer2Profile, false);
-        this._page2profiles.leftTopMiddleProfile = new LeftTopMiddleProfile(this._scene, ASSETS_CTRL.textures.miningOfficerProfile1, false);
-        this._page2profiles.leftTopProfile = new LeftTopProfile(this._scene, ASSETS_CTRL.textures.engineer2Profile, false);
-        this._page2profiles.rightBottomMiddleProfile = new RightBottomMiddleProfile(this._scene, ASSETS_CTRL.textures.engineer2Profile, false);
-        this._page2profiles.rightTopMiddleProfile = new RightTopMiddleProfile(this._scene, ASSETS_CTRL.textures.engineer2Profile, false);
-        this._page2profiles.rightTopProfile = new RightTopProfile(this._scene, ASSETS_CTRL.textures.scienceOfficerProfile1, false);
+        this._page2profiles.leftBottomMiddleProfile = new LeftBottomMiddleProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
+        this._page2profiles.leftTopMiddleProfile = new LeftTopMiddleProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
+        this._page2profiles.leftTopProfile = new LeftTopProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
+        this._page2profiles.rightBottomMiddleProfile = new RightBottomMiddleProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
+        this._page2profiles.rightTopMiddleProfile = new RightTopMiddleProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
+        this._page2profiles.rightTopProfile = new RightTopProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
         this._page2profiles.leftBottomMiddleProfile.hide();
         this._page2profiles.leftTopMiddleProfile.hide();
         this._page2profiles.leftTopProfile.hide();
@@ -367,7 +367,7 @@ export class DevMenu {
         this._page2buttons.nextPageButton2.hide();
 //#endregion
 //#region Page 3
-        this._page3profiles.leftBottomProfile3 = new LeftBottomProfile(this._scene, ASSETS_CTRL.textures.engineer2Profile, false);
+        this._page3profiles.leftBottomProfile3 = new LeftBottomProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
         this._page3profiles.rightBottomProfile3 = new RightBottomProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, false);
         this._page3profiles.leftBottomProfile3.hide();
         this._page3profiles.rightBottomProfile3.hide();

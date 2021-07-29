@@ -16,7 +16,7 @@ export function createShip() {
     ship.endingPoint = [-2, 0];
     ship.geometry = new PlaneGeometry(4, 2, 96, 96);
     ship.material = new MeshPhongMaterial();
-    ship.material.map = ASSETS_CTRL.textures.spaceshipOutside;
+    ship.material.map = ASSETS_CTRL.textures.asteroid;
     ship.material.map.minFilter = LinearFilter;
     (ship.material as any).shininess = 0;
     ship.material.transparent = true;

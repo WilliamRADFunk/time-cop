@@ -253,7 +253,7 @@ export class Intro {
         // Profile Images
         this._dialogueProfiles.captain = new LeftTopProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, true);
         this._dialogueProfiles.captain.hide();
-        this._dialogueProfiles.commsOfficer = new RightTopProfile(this._scene, ASSETS_CTRL.textures.scienceOfficerProfile1, true);
+        this._dialogueProfiles.commsOfficer = new RightTopProfile(this._scene, ASSETS_CTRL.textures.engineerProfile, true);
         this._dialogueProfiles.commsOfficer.hide();
         
         // Dialogue Text graphics
