@@ -378,7 +378,7 @@ export class Menu {
         this._scene.add(this._barrierOn);
 
         // Main Banner button text
-        this._mainBannerGeometry = new TextGeometry('Template Game',
+        this._mainBannerGeometry = new TextGeometry('Time Cop',
             {
                 font: this._menuFont,
                 size: 0.6,

@@ -1,5 +1,5 @@
 {
-  "name": "template-game",
+  "name": "time-cop",
   "version": "0.1.0",
   "description": "\"A space odyssey to reach home after being flung far into the deep reaches of the galaxy.\"",
   "main": "index.js",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WilliamRADFunk/template-game.git"
+    "url": "git+https://github.com/WilliamRADFunk/time-cop.git"
   },
   "keywords": [
     "game"
@@ -23,14 +23,14 @@
   "author": "William Robert Funk",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/WilliamRADFunk/template-game/issues"
+    "url": "https://github.com/WilliamRADFunk/time-cop/issues"
   },
   "babel": {
     "presets": [
       "es2015"
     ]
   },
-  "homepage": "https://github.com/WilliamRADFunk/template-game#readme",
+  "homepage": "https://github.com/WilliamRADFunk/time-cop#readme",
   "devDependencies": {
     "@babel/core": "^7.10.5",
     "@babel/plugin-proposal-nullish-coalescing-operator": "^7.10.4",

@@ -1,5 +1,5 @@
-# Template Game
-(Complete) The basic framework for my engineless small-scale game projects.</br></br>
+# Time Cop
+(In Progress) You're a cop from the future sent too far back in time. You must fight waves of enemies from each era as your time-jumping device charges to thrust you forward a little at a time until you make it home.</br></br>
 
 ***
 
@@ -31,7 +31,7 @@ Detailed [documentation](docs/README.md)</br></br>
 
 1. Navigate to the root folder where you want your project to reside.</br></br>
 
-2. Run `git clone https://github.com/WilliamRADFunk/template-game.git`.</br></br>
+2. Run `git clone https://github.com/WilliamRADFunk/time-cop.git`.</br></br>
 
 3. Run `npm install`. If failure, see Common Gotchas section below.</br></br>
 

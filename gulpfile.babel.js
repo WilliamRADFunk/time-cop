@@ -42,7 +42,7 @@ gulp.task('readme', () => {
       // Output options (see typedoc docs)
       out: './docs',
       // TypeDoc options (see typedoc docs)
-      name: 'template-game',
+      name: 'time-cop',
       theme: 'markdown',
       plugins: ['mdFlavour bitbucket'],
       ignoreCompilerErrors: false,
