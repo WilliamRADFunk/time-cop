@@ -1,15 +1,10 @@
 import {
-    DoubleSide,
-    Mesh,
-    MeshBasicMaterial,
+    Mesh, 
     MeshPhongMaterial,
     Object3D,
     OrthographicCamera,
     PlaneGeometry,
-    Scene,
-    SphereGeometry,
-    Texture,
-    Vector3 } from 'three';
+    Scene } from 'three';
 
 import { CollisionatorSingleton } from '../../collisionator';
 import { SOUNDS_CTRL } from '../../controls/controllers/sounds-controller';
@@ -25,7 +20,8 @@ import { TextBase } from '../../controls/text/text-base';
 import { SettingsCtrl } from '../../controls/controllers/settings-controllers';
 import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
 import { createActor } from '../../utils/create-actor';
-import { Post } from '../../collidables/post';
+import { Post } from '../../entities/post';
+import { Bandit } from '../../entities/bandit';
 
 /*
  * Grid Values
@@ -59,6 +55,31 @@ export enum MainLevelState {
     'autopilot' = 6,
     'win' = 7
 }
+
+const banditStartPositions: [number, number][] = [
+    [ -5, -5 ], [ 5, -5 ],
+    [ -5, -4 ], [ 5, -4 ],
+    [ -5, -3 ], [ 5, -3 ],
+    [ -5, -2 ], [ 5, -2 ],
+    [ -5, -1 ], [ 5, -1 ],
+    [ -5, 0 ], [ 5, 0 ],
+    [ -5, 1 ], [ 5, 1 ],
+    [ -5, 2 ], [ 5, 2 ],
+    [ -5, 3 ], [ 5, 3 ],
+    [ -5, 4 ], [ 5, 4 ],
+    [ -5, 5 ], [ 5, 5 ],
+
+    [ -4, -5 ], [ 4, -5],
+    [ -3, -5 ], [ 3, -5],
+    [ -2, -5 ], [ 2, -5],
+    [ -1, -5 ], [ 1, -5],
+    [ 0, -5 ], [ 0, -5],
+    [ -4, 5 ], [ 4, 5],
+    [ -3, 5 ], [ 3, 5],
+    [ -2, 5 ], [ 2, 5],
+    [ -1, 5 ], [ 1, 5],
+    [ 0, 5 ], [ 0, 5],
+];
 
 const postPositions: [number, number][] = [
     [ -4, -4 ], [ 4, -4 ],
@@ -266,6 +287,25 @@ export class MainPlayLevel {
             this._posts.push(post);
             CollisionatorSingleton.add(post);
         }
+
+        for (let y = 0; y < banditStartPositions.length; y++) {
+            const banditNormalPathPoints = [
+    
+            ];
+            const startPos = banditStartPositions[y];
+            const bandit = new Bandit(
+                this._scene,
+                [ASSETS_CTRL.textures.astronaut1],
+                startPos[0], startPos[1], startPos[0], startPos[1],
+                0,
+                0.05,
+                1,
+                true,
+                false);
+            bandit.addToScene();
+            CollisionatorSingleton.add(bandit);
+        }
+        
 
         this._helpCtrl = new HelpCtrl(
             this._scene,

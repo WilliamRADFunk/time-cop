@@ -1,4 +1,8 @@
-import { Mesh, MeshPhongMaterial, Scene, SphereGeometry } from "three";
+import {
+    Mesh,
+    MeshPhongMaterial,
+    Scene,
+    SphereGeometry } from "three";
 
 import { CollisionatorSingleton } from '../collisionator';
 import { Collidable } from "../collidable";
@@ -79,7 +83,7 @@ import { Collidable } from "../collidable";
 
         this._post = new Mesh(this._postGeometry, this._postMaterial);
         this._post.position.set(this._centerPoint[0], this._yPos, this._centerPoint[1]);
-        this._post.name = `Post-${index}`;
+        this._post.name = `post-${index}`;
         this._scene.add(this._post);
     }
     
