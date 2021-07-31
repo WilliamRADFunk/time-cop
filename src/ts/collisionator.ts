@@ -41,19 +41,21 @@ class Collisionator {
                 // If second collidable isn't active, don't collide
                 if (!entityJ.getActive()) continue;
                 const isEnemyProjectile = (entityI.getName().indexOf('projectile-enemy') > -1 || entityJ.getName().indexOf('projectile-enemy') > -1);
+                const isPlayerProjectile = (entityI.getName().indexOf('projectile-player') > -1 || entityJ.getName().indexOf('projectile-player') > -1);
+                const isPlayer = (entityI.getName().indexOf('player') === 0 || entityJ.getName().indexOf('player') === 0);
+                const isEnemy = (entityI.getName().indexOf('bandit') === 0 || entityJ.getName().indexOf('bandit') === 0);
+                // Player is safe from their own projectiles.
+                if (isPlayerProjectile && isPlayer) continue;
+                // Enemies are safe from their own projectiles.
+                if (isEnemyProjectile && isEnemy) continue;
                 // Two unexploded enemy projectile should not collide.
                 if (entityI.getName().indexOf('projectile-enemy') > -1 && entityJ.getName().indexOf('projectile-enemy') > -1) continue;
                 // If both collidables are passive (ie. scenery objects) then they should not collide
                 if (entityI.isPassive() && entityJ.isPassive()) continue;
                 // No need to register two explosions colliding; they're already blowing up.
-                if (!entityI.getName().indexOf('explosion') &&
-                    !entityJ.getName().indexOf('explosion')) continue;
+                if (entityI.getName().indexOf('explosion') === 0 && entityJ.getName().indexOf('explosion') === 0) continue;
                 // Two enemy bandits shouldn't collide.
-                if (!entityI.getName().indexOf('bandit') &&
-                    !entityJ.getName().indexOf('bandit')) continue;
-                // Unexploded enemy projectile and bandits should not collide.
-                if ((!entityI.getName().indexOf('bandit') ||
-                    !entityJ.getName().indexOf('bandit')) && isEnemyProjectile) continue;
+                if (entityI.getName().indexOf('bandit') && entityJ.getName().indexOf('bandit')) continue;
 
                 const posI = entityI.getCurrentPosition();
                 const posJ = entityJ.getCurrentPosition();

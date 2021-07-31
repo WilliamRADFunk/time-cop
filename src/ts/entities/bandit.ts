@@ -150,15 +150,15 @@ export class Bandit implements Collidable {
         this._waitToFire = (fireNow) ? 0 : Math.floor((Math.random() * 2000) + 1);
 
         // Once created, missile will fly itself, detonate itself, and rease itself.
-        const miss = new Projectile(
-            this._scene,
-            this._currentPoint[0], this._currentPoint[1],
-            this._currentPoint[0], this._currentPoint[1],
-            Math.abs(this._currentPoint[0]) >= 5 ? 1 : 1,
-            new Color('#FF0000'),
-            true, 0.01, this._yPos, 1);
-        this._projectiles.push(miss);
-        CollisionatorSingleton.add(miss);
+        // const miss = new Projectile(
+        //     this._scene,
+        //     this._currentPoint[0], this._currentPoint[1],
+        //     this._currentPoint[0], this._currentPoint[1],
+        //     Math.abs(this._currentPoint[0]) >= 5 ? 1 : 1,
+        //     new Color('#FF0000'),
+        //     true, 0.01, this._yPos, 1);
+        // this._projectiles.push(miss);
+        // CollisionatorSingleton.add(miss);
     }
     /**
      * (Re)activates the bandit, usually at beginning of new level.

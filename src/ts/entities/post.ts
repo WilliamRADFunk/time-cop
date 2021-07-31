@@ -129,7 +129,7 @@ import { Collidable } from "../collidable";
             this._isActive = false;
             this._scene.remove(this._post);
             CollisionatorSingleton.remove(self);
-            // this.createExplosion(!otherThing.indexOf('Bullet-Player'));
+            // this.createExplosion(!otherCollidable.indexOf('projectile-player'));
             return true;
         }
         return false;

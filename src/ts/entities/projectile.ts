@@ -135,14 +135,15 @@ export class Projectile implements Collidable {
         colllidableAtBirth?: boolean,
         speed?: number,
         y?: number,
-        waitToFire?: number) {
+        waitToFire?: number,
+        playerMissile?: boolean) {
         index++;
         this._headY = y || 0.51;
         this._tailY = (y && (y + 0.04)) || 0.55;
         this._color = color;
         this._speed = speed || this._speed;
         this._isCollidable = !!colllidableAtBirth;
-        this._isEnemyMissile = this._isCollidable;
+        this._isEnemyMissile = !playerMissile;
         this._scene = scene;
         this._originalStartingPoint = [x1, z1];
         this._currentPoint = [x1, z1];
@@ -247,7 +248,8 @@ export class Projectile implements Collidable {
                 this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
             }
             if (this._distanceTraveled >= this._totalDistance) {
-                this.createExplosion(false);
+                // this.createExplosion(false);
+                // play ricochet sound
                 this.removeFromScene(this._scene);
             }
         }
@@ -284,15 +286,14 @@ export class Projectile implements Collidable {
     /**
      * Called when something collides with projectile blast radius, which does nothing unless it hasn't exploded yet.
      * @param self the thing to remove from collidables...and scene.
-     * @param otherThing   the name of the other thing in collision (mainly for shield).
+     * @param otherCollidable   the name of the other thing in collision (mainly for shield).
      * @returns whether or not impact means removing item from the scene.
      */
-    impact(self: Collidable, otherThing: string): boolean {
+    impact(self: Collidable, otherCollidable: string): boolean {
         if (this._isActive) {
             this._isActive = false;
-            const shieldHit = !otherThing.indexOf('Shield');
-            shieldHit ? SOUNDS_CTRL.playFire() : SOUNDS_CTRL.playFire();
-            this.createExplosion(shieldHit);
+            SOUNDS_CTRL.playExplosionSmall();
+            this.createExplosion(false);
             return true;
         }
         return false;

@@ -1,4 +1,5 @@
 import {
+    Color,
     Mesh, 
     MeshPhongMaterial,
     Object3D,
@@ -22,6 +23,7 @@ import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
 import { createActor } from '../../utils/create-actor';
 import { Post } from '../../entities/post';
 import { Bandit } from '../../entities/bandit';
+import { Projectile } from '../../entities/projectile';
 
 /*
  * Grid Values
@@ -73,12 +75,12 @@ const banditStartPositions: [number, number][] = [
     [ -3, -5 ], [ 3, -5],
     [ -2, -5 ], [ 2, -5],
     [ -1, -5 ], [ 1, -5],
-    [ 0, -5 ], [ 0, -5],
+    [ 0, -5 ],
     [ -4, 5 ], [ 4, 5],
     [ -3, 5 ], [ 3, 5],
     [ -2, 5 ], [ 2, 5],
     [ -1, 5 ], [ 1, 5],
-    [ 0, 5 ], [ 0, 5],
+    [ 0, 5 ],
 ];
 
 const postPositions: [number, number][] = [
@@ -149,13 +151,14 @@ export class MainPlayLevel {
 
     private _counters = {
         demoWalk: 0,
-        demoWalkClear: 120
+        demoWalkClear: 120,
+        jobs: 0
     };
 
     /**
      * Direction player is aiming.
      */
-    private _directionAim: number[] = [1, 0];
+    private _directionAim: number[] = [0, 0]; 
 
     /**
      * Direction player is moving.
@@ -171,6 +174,11 @@ export class MainPlayLevel {
      * Reference to _onWindowResize so that it can be removed later.
      */
     private _listenerRef: () => void;
+
+    /**
+     * Keeps track of live projectiles, to pass along endCycle signals, and destroy calls.
+     */
+    private _projectiles: Projectile[] = [];
 
     /**
      * The list of collidable post objects in the level.
@@ -227,19 +235,19 @@ export class MainPlayLevel {
         const demoGuyGeometry = new PlaneGeometry( 0.15, 0.15, 10, 10 );
         const demoGuyMaterialStanding = new MeshPhongMaterial({
             color: '#FFFFFF',
-            map: ASSETS_CTRL.textures.astronaut1,
+            map: ASSETS_CTRL.textures.arrow,
             shininess: 0,
             transparent: true
         });
         const demoGuyMaterialWalking1 = new MeshPhongMaterial({
             color: '#FFFFFF',
-            map: ASSETS_CTRL.textures.astronaut2,
+            map: ASSETS_CTRL.textures.arrow,
             shininess: 0,
             transparent: true
         });
         const demoGuyMaterialWalking2 = new MeshPhongMaterial({
             color: '#FFFFFF',
-            map: ASSETS_CTRL.textures.astronaut3,
+            map: ASSETS_CTRL.textures.arrow,
             shininess: 0,
             transparent: true
         });
@@ -251,7 +259,7 @@ export class MainPlayLevel {
         demoGuyLeft1.mesh.position.set(demoGuyLeft1.currentPoint[0], 1, demoGuyLeft1.currentPoint[1] + 0.02);
         demoGuyLeft1.mesh.rotation.set(-1.5708, 0, 0);
         demoGuyLeft1.mesh.scale.set(10, 10, 10);
-        demoGuyLeft1.mesh.name = 'Demo-Guy-Left-1';
+        demoGuyLeft1.mesh.name = 'player-1';
         const demoGuyLeft2 = createActor();
         demoGuyLeft2.originalStartingPoint = [0, 0];
         demoGuyLeft2.currentPoint = [0, 0];
@@ -260,7 +268,7 @@ export class MainPlayLevel {
         demoGuyLeft2.mesh.position.set(demoGuyLeft2.currentPoint[0], 1, demoGuyLeft2.currentPoint[1] + 0.02);
         demoGuyLeft2.mesh.rotation.set(-1.5708, 0, 0);
         demoGuyLeft2.mesh.scale.set(10, 10, 10);
-        demoGuyLeft2.mesh.name = 'Demo-Guy-Left-2';
+        demoGuyLeft2.mesh.name = 'player-2';
         const demoGuyLeft3 = createActor();
         demoGuyLeft3.originalStartingPoint = [0, 0];
         demoGuyLeft3.currentPoint = [0, 0];
@@ -269,7 +277,7 @@ export class MainPlayLevel {
         demoGuyLeft3.mesh.position.set(demoGuyLeft3.currentPoint[0], 1, demoGuyLeft3.currentPoint[1] + 0.03);
         demoGuyLeft3.mesh.rotation.set(-1.5708, 0, 0);
         demoGuyLeft3.mesh.scale.set(10, 10, 10);
-        demoGuyLeft3.mesh.name = 'Demo-Guy-Left-3';
+        demoGuyLeft3.mesh.name = 'player-3';
 
         this._actors = {
             demoActors: [],
@@ -280,6 +288,35 @@ export class MainPlayLevel {
         this._scene.add(demoGuyLeft2.mesh);
         this._actors.demoActors.push(demoGuyLeft3);
         this._scene.add(demoGuyLeft3.mesh);
+
+        document.onclick = event => {
+            if (this._state === MainLevelState.active && this._directionAim.find(val => !!val)) {
+                // Once created, missile will fly itself, detonate itself, and rease itself.
+                const vert = !!this._directionAim[1];
+                const hori = !!this._directionAim[0];
+                let targetX = hori ? this._directionAim[0] * 10 : demoGuyLeft2.currentPoint[0];
+                let targetZ = vert ? this._directionAim[1] * -10 : demoGuyLeft2.currentPoint[1];
+                const xStep = (targetX - demoGuyLeft2.currentPoint[0]) * (targetX - demoGuyLeft2.currentPoint[0]);
+                const zStep = (targetZ - demoGuyLeft2.currentPoint[1]) * (targetZ - demoGuyLeft2.currentPoint[1]);
+                const dist = Math.sqrt(xStep + zStep);
+                this._projectiles.push(new Projectile(
+                    this._scene,
+                    demoGuyLeft2.currentPoint[0],
+                    demoGuyLeft2.currentPoint[1],
+                    targetX,
+                    targetZ,
+                    dist,
+                    new Color(0xF6C123),
+                    true,
+                    null,
+                    1,
+                    0.00001,
+                    true));
+                CollisionatorSingleton.add(this._projectiles[this._projectiles.length - 1]);
+                SOUNDS_CTRL.playFire();
+                console.log('start and target', demoGuyLeft2.currentPoint, targetX, targetZ, dist);
+            }
+        }
 
         for (let x = 0; x < postPositions.length; x++) {
             const postPos = postPositions[x];
@@ -381,6 +418,8 @@ export class MainPlayLevel {
                     this._directionAim[0] = 1;
                 }
             }
+            
+            console.log(this._directionMove, this._directionAim);
         };
         document.onkeyup = event => {
             if (this._state === MainLevelState.active) {
@@ -402,6 +441,8 @@ export class MainPlayLevel {
                     this._directionMove[0] = 0;
                 }
             }
+            
+            console.log(this._directionMove, this._directionAim);
         };
 
         // Get window dimmensions
@@ -489,7 +530,7 @@ export class MainPlayLevel {
             if (this._state === MainLevelState.newGame) {
                 this._state = MainLevelState.active;
                 this._buttons.startButton.hide();
-                SOUNDS_CTRL.playBackgroundMusicScifi01();
+                // SOUNDS_CTRL.playBackgroundMusicScifi01();
             }
         };
 
@@ -547,6 +588,8 @@ export class MainPlayLevel {
      * @returns whether or not the scene is done.
      */
     public endCycle(): { [key: number]: number } {
+        this._counters.jobs++;
+        if (this._counters.jobs > 10) this._counters.jobs = 0;
         // Game externally paused from control panel. Nothing should progress.
         if (this._state === MainLevelState.paused) {
             return;
@@ -580,6 +623,27 @@ export class MainPlayLevel {
             // Do the victory dance
             // Return level, score, and player lives.
             return;
+        }
+
+        if (this._state === MainLevelState.active) {
+            let tempProjectiles = [];
+            for (let i = 0; i < this._projectiles.length; i++) {
+                let projectile = this._projectiles[i];
+                if (projectile && !projectile.endCycle()) {
+                    CollisionatorSingleton.remove(projectile);
+                    this._projectiles[i] = null;
+                }
+                projectile = this._projectiles[i];
+                if (projectile) {
+                    tempProjectiles.push(projectile);
+                }
+            }
+            this._projectiles = tempProjectiles.slice();
+            tempProjectiles = null;
+        }
+
+        if (this._counters.jobs === 5) {
+            CollisionatorSingleton.checkForCollisions(this._scene);
         }
 
         // Collision detection (bullets against enemy)
