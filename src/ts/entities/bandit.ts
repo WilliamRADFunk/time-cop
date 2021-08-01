@@ -8,7 +8,6 @@ import {
     Texture } from 'three';
     
 import { Collidable } from "../collidable";
-import { Explosion } from '../entities/explosion';
 import { CollisionatorSingleton } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Projectile } from './projectile';
@@ -47,11 +46,6 @@ export class Bandit implements Collidable {
     private _endingPoint: number[];
 
     /**
-     * Explosion from impacted bandit
-     */
-    private explosion: Explosion;
-
-    /**
      * Flag to signal if bandit has been destroyed or not.
      * True = not destroyed. False = destroyed.
      */
@@ -71,6 +65,11 @@ export class Bandit implements Collidable {
      * Keeps track of live projectiles, to pass along endCycle signals, and destroy calls.
      */
     private _projectiles: Projectile[] = [];
+
+    /**
+     * Radius of the circle geometry used to imprint the texture onto and also the collision radius for hit detection.
+     */
+    private _radius: number = 0.35;
 
     /**
      * Reference to the scene, used to remove bandit from rendering cycle once destroyed.
@@ -137,7 +136,7 @@ export class Bandit implements Collidable {
         this._calculateNextPoint();
 
         this._scene = scene;
-		this._banditGeometry = new CircleGeometry(0.35, 16, 16);
+		this._banditGeometry = new CircleGeometry(this._radius, 16, 16);
         this._banditMaterial = new MeshPhongMaterial();
         this._banditMaterial.map = banditTextures[0];
         this._banditMaterial.map.minFilter = LinearFilter;
@@ -146,19 +145,8 @@ export class Bandit implements Collidable {
         this._bandit = new Mesh(this._banditGeometry, this._banditMaterial);
         this._bandit.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]);
         this._bandit.rotation.set(-1.5708, 0, 0);
-        this._bandit.name = `bandit-${index}`;
+        this._bandit.name = `enemy-bandit-${index}`;
         this._waitToFire = (fireNow) ? 0 : Math.floor((Math.random() * 2000) + 1);
-
-        // Once created, missile will fly itself, detonate itself, and rease itself.
-        // const miss = new Projectile(
-        //     this._scene,
-        //     this._currentPoint[0], this._currentPoint[1],
-        //     this._currentPoint[0], this._currentPoint[1],
-        //     Math.abs(this._currentPoint[0]) >= 5 ? 1 : 1,
-        //     new Color('#FF0000'),
-        //     true, 0.01, this._yPos, 1);
-        // this._projectiles.push(miss);
-        // CollisionatorSingleton.add(miss);
     }
     /**
      * (Re)activates the bandit, usually at beginning of new level.
@@ -191,121 +179,109 @@ export class Bandit implements Collidable {
             this._distanceTraveled = 0;
         }
     }
-    /**
-     * Creates an explosion during collision and adds it to the collildables list.
-     * @param isInert flag to let explosion know it isn't a 'real' explosion (hit shield).
-     */
-    // private createExplosion(isInert: boolean): void {
-    //     this.explosion = new Explosion(
-    //         this._scene,
-    //         this._bandit.position.x,
-    //         this._bandit.position.z,
-    //         {
-    //             radius: 0.4,
-    //             renderedInert: isInert
-    //         });
-    //     if (!isInert) {
-    //         CollisionatorSingleton.add(this.explosion);
-    //         SOUNDS_CTRL.playExplosionSmall(false);
-    //     } else {
-    //         SOUNDS_CTRL.playExplosionSmall(true);
-    //     }
-    // }
+
     /**
      * Call to eliminate regardless of current state.
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
-    destroy() {
-        // if (this.explosion) {
-        //     CollisionatorSingleton.remove(this.explosion);
-        //     this._scene.remove(this.explosion.getMesh());
-        //     this.explosion = null;
-        // }
-        console.log('destroying bandit');
+    public destroy() {
         CollisionatorSingleton.remove(this);
         this._scene.remove(this._bandit);
     }
+
     /**
      * At the end of each loop iteration, move the bandit a little.
      * @returns whether or not the bandit is done, and its points calculated.
      */
-    endCycle(): boolean {
-        // if (this.explosion) {
-        //     if (!this.explosion.endCycle()) {
-        //         CollisionatorSingleton.remove(this.explosion);
-        //         this._scene.remove(this.explosion.getMesh());
-        //         this.explosion = null;
-        //         return false;
-        //     }
-        // }
+    public endCycle(): boolean {
+        // TODO: Carry on with dying bandit sequence until complete
         if (this._waitToFire >= 1) {
             this._waitToFire--;
             if (!this._waitToFire && !this.isHelpBandit) {
-                // SOUNDS_CTRL.play
+                SOUNDS_CTRL.playFooPang();
             }
             return true;
         }
         if (this._isActive) {
             this._calculateNextPoint();
             this._bandit.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]);
+
+            // TODO: Bandit fires weapon at ertain intervals.
+            // Once created, missile will fly itself, detonate itself, and rease itself.
+            // const miss = new Projectile(
+            //     this._scene,
+            //     this._currentPoint[0], this._currentPoint[1],
+            //     this._currentPoint[0], this._currentPoint[1],
+            //     Math.abs(this._currentPoint[0]) >= 5 ? 1 : 1,
+            //     new Color('#FF0000'),
+            //     true, 0.01, this._yPos, 1);
+            // this._projectiles.push(miss);
+            // CollisionatorSingleton.add(miss);
         }
         return this._isActive;
     }
+
     /**
      * Gets the viability of the object.
      * @returns flag to signal non-destruction. True = not destroyed. False = destroyed.
      */
-    getActive(): boolean {
+    public getActive(): boolean {
         return this._isActive;
     }
+
     /**
      * Gets the current radius of the bounding box (circle) of the collidable.
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
-    getCollisionRadius(): number {
-        return 0.2;
+    public getCollisionRadius(): number {
+        return this._radius;
     }
+
     /**
      * Gets the current position of the collidable object.
      * @returns the array is of length 2 with x coordinate being first, and then z coordinate.
      */
-    getCurrentPosition(): number[] {
+    public getCurrentPosition(): number[] {
         return [this._bandit.position.x, this._bandit.position.z];
     }
+
     /**
      * Gets the name of the bandit.
      * @returns the name of the bandit.
      */
-    getName(): string {
+    public getName(): string {
         return this._bandit.name;
     }
+
     /**
      * Called when something collides with bandit, which destroys it.
      * @param self         the thing to remove from collidables...and scene.
      * @param otherThing   the name of the other thing in collision (mainly for shield).
      * @returns whether or not impact means calling removeFromScene by collisionator.
      */
-    impact(self: Collidable, otherThing: string): boolean {
+    public impact(self: Collidable, otherThing: string): boolean {
         if (this._isActive) {
             this._isActive = false;
-            // this.createExplosion(!otherThing.indexOf('Shield'));
-            // SOUNDS_CTRL.stop
+            // TODO Dying bandit sequence
+            // SOUNDS_CTRL.enemyDies()
             return true;
         }
         return false;
     }
+
     /**
      * States it is a passive type or not. Two passive types cannot colllide with each other.
      * @returns True is passive | False is not passive
      */
-    isPassive(): boolean {
+    public isPassive(): boolean {
         return false;
     }
+
     /**
      * Removes bandit object from the 'visible' scene by sending it back to its starting location.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
-    removeFromScene(scene: Scene): void {
+    public removeFromScene(scene: Scene): void {
         this._bandit.position.set(this._originalStartingPoint[0], this._yPos, this._originalStartingPoint[1]);
         this._currentPoint = [this._originalStartingPoint[0], this._originalStartingPoint[1]];
         this._distanceTraveled = 0;

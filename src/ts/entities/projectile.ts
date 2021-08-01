@@ -162,9 +162,9 @@ export class Projectile implements Collidable {
         this._headMesh = new Mesh(this._headGeometry, this._headMaterial);
         this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
         this._headMesh.rotation.set(-1.5708, 0, 0);
-        this._headMesh.name = `projectile-${index}`;
+        this._headMesh.name = `projectile-player-${index}`;
         if (this._isEnemyMissile) {
-            this._headMesh.name = `projectile-${index}-enemy`;
+            this._headMesh.name = `projectile-enemy-${index}`;
             this._waitToFire = waitToFire || Math.floor((Math.random() * 900) + 1);
         }
         scene.add(this._headMesh);
@@ -221,7 +221,6 @@ export class Projectile implements Collidable {
         }
         if (this._explosion) {
             if (!this._explosion.endCycle()) {
-                console.log('should remove');
                 CollisionatorSingleton.remove(this._explosion);
                 this._scene.remove(this._explosion.getMesh());
                 this._explosion = null;

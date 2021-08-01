@@ -9,7 +9,6 @@ import { EntityDirection } from "../models/entity";
 export function calculateNewEntityDirection(horizontalDifference: number, verticalDifference: number): EntityDirection {
     // vertical difference * 10 + horrizontal difference = unique number for each of 8 possible directions without all the if-elses.
     const dirCode = (verticalDifference * 10) + horizontalDifference;
-    console.log('calculateNewEntityDirection', dirCode, horizontalDifference, verticalDifference);
     switch(dirCode) {
         case 10: {
             return EntityDirection.Up;

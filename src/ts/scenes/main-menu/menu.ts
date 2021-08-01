@@ -479,7 +479,6 @@ export class Menu {
             const intersecs = getIntersections(event, document.getElementById('mainview'), scene)
             for (let i = 0; i < intersecs.length; i++) {
                 const name = intersecs[i].object.name;
-                console.log('name', name);
                 if (this._mode === 0 && name === 'Start') {
                     this._pressedStart();
                     this._isActive = false;

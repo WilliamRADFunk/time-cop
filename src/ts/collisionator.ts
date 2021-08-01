@@ -3,6 +3,45 @@ import { Scene } from 'three';
 
 import { Collidable } from './collidable';
 
+const enum CollisionType {
+    'Player' = 1,
+    'Player_Projectile' = 2,
+    // 1 + 2 = 3 should not collide
+    'Enemy' = 21,
+    'Enemy_Projectile' = 22,
+    // 21 + 22 = 43 should not collide
+    'Post' = 51,
+    // 51 + 21 = 72 should not collide
+    // 51 + 1 = 52 should not collide
+    'Explosion' = 81
+}
+
+function getCollisionType(name: string): CollisionType {
+    if (name.indexOf('projectile-enemy') === 0) {
+        return CollisionType.Enemy_Projectile;
+    }
+
+    if (name.indexOf('projectile-player') === 0) {
+        return CollisionType.Player_Projectile;
+    }
+
+    if (name.indexOf('player') === 0) {
+        return CollisionType.Player;
+    }
+
+    if (name.indexOf('bandit') === 0) {
+        return CollisionType.Enemy;
+    }
+
+    if (name.indexOf('post') === 0) {
+        return CollisionType.Post;
+    }
+
+    if (name.indexOf('explosion') === 0) {
+        return CollisionType.Explosion;
+    }
+}
+
 /**
  * @class
  * The collision detection system.
@@ -40,22 +79,39 @@ class Collisionator {
                 const entityJ = this._collisionItems[j];
                 // If second collidable isn't active, don't collide
                 if (!entityJ.getActive()) continue;
-                const isEnemyProjectile = (entityI.getName().indexOf('projectile-enemy') > -1 || entityJ.getName().indexOf('projectile-enemy') > -1);
-                const isPlayerProjectile = (entityI.getName().indexOf('projectile-player') > -1 || entityJ.getName().indexOf('projectile-player') > -1);
-                const isPlayer = (entityI.getName().indexOf('player') === 0 || entityJ.getName().indexOf('player') === 0);
-                const isEnemy = (entityI.getName().indexOf('bandit') === 0 || entityJ.getName().indexOf('bandit') === 0);
+                // If either collidables are passive (ie. scenery objects) then they should not collide
+                if (entityI.isPassive() || entityJ.isPassive()) continue;
+
+                const iType = getCollisionType(entityI.getName());
+                const jType = getCollisionType(entityJ.getName());
+                
+                // Two entities of the same type can't collide.
+                if (iType === jType) continue;
+
+                const sum = iType + jType;
+
+                // This unique sum means one is player and the other a player projectile.
+                if (sum === 3) continue;
+
+                // This unique sum means one is an enemy and the other an enemy projectile.
+                if (sum === 43) continue;
+
+                // This unique sum means one is an player and the other a post.
+                if (sum === 52) continue;
+
+                // This unique sum means one is an enemy and the other a post.
+                if (sum === 72) continue;
+
+                const isEnemyProjectile = iType === CollisionType.Enemy_Projectile || jType === CollisionType.Enemy_Projectile;
+                const isPlayerProjectile = iType === CollisionType.Player_Projectile || jType === CollisionType.Player_Projectile;
+                const isPlayer = iType === CollisionType.Player || jType === CollisionType.Player;
+                const isEnemy = iType === CollisionType.Enemy || jType === CollisionType.Enemy;
+                const isPost = iType === CollisionType.Post || jType === CollisionType.Post;
+
                 // Player is safe from their own projectiles.
                 if (isPlayerProjectile && isPlayer) continue;
                 // Enemies are safe from their own projectiles.
                 if (isEnemyProjectile && isEnemy) continue;
-                // Two unexploded enemy projectile should not collide.
-                if (entityI.getName().indexOf('projectile-enemy') > -1 && entityJ.getName().indexOf('projectile-enemy') > -1) continue;
-                // If both collidables are passive (ie. scenery objects) then they should not collide
-                if (entityI.isPassive() && entityJ.isPassive()) continue;
-                // No need to register two explosions colliding; they're already blowing up.
-                if (entityI.getName().indexOf('explosion') === 0 && entityJ.getName().indexOf('explosion') === 0) continue;
-                // Two enemy bandits shouldn't collide.
-                if (entityI.getName().indexOf('bandit') && entityJ.getName().indexOf('bandit')) continue;
 
                 const posI = entityI.getCurrentPosition();
                 const posJ = entityJ.getCurrentPosition();

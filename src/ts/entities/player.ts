@@ -195,12 +195,8 @@ export class Player implements Collidable, Entity {
 
             if (this._isMoving) {
                 animateEntity(this);
-                console.log('direction before', this._currDirection);
                 this._currDirection = calculateNewEntityDirection(dirKeys.right - dirKeys.left, dirKeys.up - dirKeys.down);
-                console.log('direction after', this._currDirection);
-                console.log('rotation before', this._animationMeshes[0].rotation.x, this._animationMeshes[0].rotation.y, this._animationMeshes[0].rotation.z);
                 rotateEntity(this);
-                console.log('rotation after', this._animationMeshes[0].rotation.x, this._animationMeshes[0].rotation.y, this._animationMeshes[0].rotation.z);
             }
 
             let tempProjectiles = [];
@@ -242,13 +238,12 @@ export class Player implements Collidable, Entity {
             dist,
             new Color(0xF6C123),
             true,
-            this._speed + 0.06,
+            this._speed + 0.01,
             -1,
             0.00000001,
             true));
         CollisionatorSingleton.add(this._projectiles[this._projectiles.length - 1]);
         SOUNDS_CTRL.playFire();
-        console.log('start and target', this._currentPoint, targetX, targetZ, dist);
     }
 
     /**

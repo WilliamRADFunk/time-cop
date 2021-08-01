@@ -162,11 +162,6 @@ export class MainPlayLevel {
     };
 
     /**
-     * Direction player is aiming.
-     */
-    private _directionAim: number[] = [0, 0]; 
-
-    /**
      * Direction player is moving.
      */
     private _directionMove: number[] = [0, 0];
@@ -317,14 +312,14 @@ export class MainPlayLevel {
         const container = document.getElementById('mainview');
         document.oncontextmenu = event => {
             event.preventDefault();
-            if (this._state === MainLevelState.active && this._directionAim.find(val => !!val)) {
+            if (this._state === MainLevelState.active) {
                 this._player.fire(true);
             }
             return false;
         };
         document.onclick = event => {
             event.preventDefault();
-            if (this._state === MainLevelState.active && this._directionAim.find(val => !!val)) {
+            if (this._state === MainLevelState.active) {
                 this._player.fire(false);
             }
             // Three JS object intersections.
@@ -343,28 +338,20 @@ export class MainPlayLevel {
                     // Move towards up
                     this._dirKeys.up = 1;
                     this._dirKeys.down = 0;
-                    // Aim towards up
-                    this._directionAim[1] = 1;
                 } else if (key === 's' || key === 'arrowdown') {
                     // Move towards down
                     this._dirKeys.down = 1;
                     this._dirKeys.up = 0;
-                    // Aim towards up
-                    this._directionAim[1] = -1;
                 }
                 
                 if (key === 'a' || key === 'arrowleft') {
                     // Move towards left
                     this._dirKeys.left = 1;
                     this._dirKeys.right = 0;
-                    // Aim towards left
-                    this._directionAim[0] = -1;
                 } else if (key === 'd' || key === 'arrowright') {
                     // Move towards right
                     this._dirKeys.right = 1;
                     this._dirKeys.left = 0;
-                    // Aim towards right
-                    this._directionAim[0] = 1;
                 }
             }
         };
@@ -578,7 +565,6 @@ export class MainPlayLevel {
             this._player.endCycle(this._dirKeys);
             this._bandits = this._bandits.filter(bandit => {
                 if (!bandit.endCycle()) {
-                    console.log('should destroy bandit');
                     bandit.destroy();
                     return false;
                 }
