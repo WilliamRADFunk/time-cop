@@ -195,32 +195,33 @@ export class Bandit implements Collidable {
      * Creates an explosion during collision and adds it to the collildables list.
      * @param isInert flag to let explosion know it isn't a 'real' explosion (hit shield).
      */
-    private createExplosion(isInert: boolean): void {
-        this.explosion = new Explosion(
-            this._scene,
-            this._bandit.position.x,
-            this._bandit.position.z,
-            {
-                radius: 0.4,
-                renderedInert: isInert
-            });
-        if (!isInert) {
-            CollisionatorSingleton.add(this.explosion);
-            SOUNDS_CTRL.playExplosionSmall(false);
-        } else {
-            SOUNDS_CTRL.playExplosionSmall(true);
-        }
-    }
+    // private createExplosion(isInert: boolean): void {
+    //     this.explosion = new Explosion(
+    //         this._scene,
+    //         this._bandit.position.x,
+    //         this._bandit.position.z,
+    //         {
+    //             radius: 0.4,
+    //             renderedInert: isInert
+    //         });
+    //     if (!isInert) {
+    //         CollisionatorSingleton.add(this.explosion);
+    //         SOUNDS_CTRL.playExplosionSmall(false);
+    //     } else {
+    //         SOUNDS_CTRL.playExplosionSmall(true);
+    //     }
+    // }
     /**
      * Call to eliminate regardless of current state.
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
     destroy() {
-        if (this.explosion) {
-            CollisionatorSingleton.remove(this.explosion);
-            this._scene.remove(this.explosion.getMesh());
-            this.explosion = null;
-        }
+        // if (this.explosion) {
+        //     CollisionatorSingleton.remove(this.explosion);
+        //     this._scene.remove(this.explosion.getMesh());
+        //     this.explosion = null;
+        // }
+        console.log('destroying bandit');
         CollisionatorSingleton.remove(this);
         this._scene.remove(this._bandit);
     }
@@ -229,14 +230,14 @@ export class Bandit implements Collidable {
      * @returns whether or not the bandit is done, and its points calculated.
      */
     endCycle(): boolean {
-        if (this.explosion) {
-            if (!this.explosion.endCycle()) {
-                CollisionatorSingleton.remove(this.explosion);
-                this._scene.remove(this.explosion.getMesh());
-                this.explosion = null;
-                return false;
-            }
-        }
+        // if (this.explosion) {
+        //     if (!this.explosion.endCycle()) {
+        //         CollisionatorSingleton.remove(this.explosion);
+        //         this._scene.remove(this.explosion.getMesh());
+        //         this.explosion = null;
+        //         return false;
+        //     }
+        // }
         if (this._waitToFire >= 1) {
             this._waitToFire--;
             if (!this._waitToFire && !this.isHelpBandit) {
@@ -248,7 +249,7 @@ export class Bandit implements Collidable {
             this._calculateNextPoint();
             this._bandit.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]);
         }
-        return true;
+        return this._isActive;
     }
     /**
      * Gets the viability of the object.
@@ -287,7 +288,7 @@ export class Bandit implements Collidable {
     impact(self: Collidable, otherThing: string): boolean {
         if (this._isActive) {
             this._isActive = false;
-            this.createExplosion(!otherThing.indexOf('Shield'));
+            // this.createExplosion(!otherThing.indexOf('Shield'));
             // SOUNDS_CTRL.stop
             return true;
         }

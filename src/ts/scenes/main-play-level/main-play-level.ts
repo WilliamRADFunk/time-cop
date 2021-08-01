@@ -24,6 +24,7 @@ import { createActor } from '../../utils/create-actor';
 import { Post } from '../../entities/post';
 import { Bandit } from '../../entities/bandit';
 import { Projectile } from '../../entities/projectile';
+import { Player } from '../../entities/player';
 
 /*
  * Grid Values
@@ -133,6 +134,11 @@ export class MainPlayLevel {
     private _actors: { [key: string]: Actor[] };
 
     /**
+     * List of bandits in the scene.
+     */
+    private _bandits: Bandit[] = [];
+
+    /**
      * List of buttons
      */
     private _buttons: { [key: string]: ButtonBase } = {
@@ -165,6 +171,13 @@ export class MainPlayLevel {
      */
     private _directionMove: number[] = [0, 0];
 
+    private _dirKeys: { [key: string]: number } = {
+        down: 0,
+        left: 0,
+        right: 0,
+        up: 0
+    };
+
     /**
      * Reference to the Help Controller.
      */
@@ -174,6 +187,8 @@ export class MainPlayLevel {
      * Reference to _onWindowResize so that it can be removed later.
      */
     private _listenerRef: () => void;
+
+    private _player: Player;
 
     /**
      * Keeps track of live projectiles, to pass along endCycle signals, and destroy calls.
@@ -231,96 +246,18 @@ export class MainPlayLevel {
         this._listenerRef = this._onWindowResize.bind(this);
         window.addEventListener('resize', this._listenerRef, false);
 
-        // Create moving sprite example
-        const demoGuyGeometry = new PlaneGeometry( 0.15, 0.15, 10, 10 );
-        const demoGuyMaterialStanding = new MeshPhongMaterial({
-            color: '#FFFFFF',
-            map: ASSETS_CTRL.textures.arrow,
-            shininess: 0,
-            transparent: true
-        });
-        const demoGuyMaterialWalking1 = new MeshPhongMaterial({
-            color: '#FFFFFF',
-            map: ASSETS_CTRL.textures.arrow,
-            shininess: 0,
-            transparent: true
-        });
-        const demoGuyMaterialWalking2 = new MeshPhongMaterial({
-            color: '#FFFFFF',
-            map: ASSETS_CTRL.textures.arrow,
-            shininess: 0,
-            transparent: true
-        });
-        const demoGuyLeft1 = createActor();
-        demoGuyLeft1.originalStartingPoint = [0, 0];
-        demoGuyLeft1.currentPoint = [0, 0];
-        demoGuyLeft1.endingPoint = [0, 0];
-        demoGuyLeft1.mesh = new Mesh(demoGuyGeometry, demoGuyMaterialStanding);
-        demoGuyLeft1.mesh.position.set(demoGuyLeft1.currentPoint[0], 1, demoGuyLeft1.currentPoint[1] + 0.02);
-        demoGuyLeft1.mesh.rotation.set(-1.5708, 0, 0);
-        demoGuyLeft1.mesh.scale.set(10, 10, 10);
-        demoGuyLeft1.mesh.name = 'player-1';
-        const demoGuyLeft2 = createActor();
-        demoGuyLeft2.originalStartingPoint = [0, 0];
-        demoGuyLeft2.currentPoint = [0, 0];
-        demoGuyLeft2.endingPoint = [0, 0];
-        demoGuyLeft2.mesh = new Mesh(demoGuyGeometry, demoGuyMaterialWalking1);
-        demoGuyLeft2.mesh.position.set(demoGuyLeft2.currentPoint[0], 1, demoGuyLeft2.currentPoint[1] + 0.02);
-        demoGuyLeft2.mesh.rotation.set(-1.5708, 0, 0);
-        demoGuyLeft2.mesh.scale.set(10, 10, 10);
-        demoGuyLeft2.mesh.name = 'player-2';
-        const demoGuyLeft3 = createActor();
-        demoGuyLeft3.originalStartingPoint = [0, 0];
-        demoGuyLeft3.currentPoint = [0, 0];
-        demoGuyLeft3.endingPoint = [0, 0];
-        demoGuyLeft3.mesh = new Mesh(demoGuyGeometry, demoGuyMaterialWalking2);
-        demoGuyLeft3.mesh.position.set(demoGuyLeft3.currentPoint[0], 1, demoGuyLeft3.currentPoint[1] + 0.03);
-        demoGuyLeft3.mesh.rotation.set(-1.5708, 0, 0);
-        demoGuyLeft3.mesh.scale.set(10, 10, 10);
-        demoGuyLeft3.mesh.name = 'player-3';
-
-        this._actors = {
-            demoActors: [],
-        };
-        this._actors.demoActors.push(demoGuyLeft1);
-        this._scene.add(demoGuyLeft1.mesh);
-        this._actors.demoActors.push(demoGuyLeft2);
-        this._scene.add(demoGuyLeft2.mesh);
-        this._actors.demoActors.push(demoGuyLeft3);
-        this._scene.add(demoGuyLeft3.mesh);
-
-        document.onclick = event => {
-            if (this._state === MainLevelState.active && this._directionAim.find(val => !!val)) {
-                // Once created, missile will fly itself, detonate itself, and rease itself.
-                const vert = !!this._directionAim[1];
-                const hori = !!this._directionAim[0];
-                let targetX = hori ? this._directionAim[0] * 10 : demoGuyLeft2.currentPoint[0];
-                let targetZ = vert ? this._directionAim[1] * -10 : demoGuyLeft2.currentPoint[1];
-                const xStep = (targetX - demoGuyLeft2.currentPoint[0]) * (targetX - demoGuyLeft2.currentPoint[0]);
-                const zStep = (targetZ - demoGuyLeft2.currentPoint[1]) * (targetZ - demoGuyLeft2.currentPoint[1]);
-                const dist = Math.sqrt(xStep + zStep);
-                this._projectiles.push(new Projectile(
-                    this._scene,
-                    demoGuyLeft2.currentPoint[0],
-                    demoGuyLeft2.currentPoint[1],
-                    targetX,
-                    targetZ,
-                    dist,
-                    new Color(0xF6C123),
-                    true,
-                    null,
-                    1,
-                    0.00001,
-                    true));
-                CollisionatorSingleton.add(this._projectiles[this._projectiles.length - 1]);
-                SOUNDS_CTRL.playFire();
-                console.log('start and target', demoGuyLeft2.currentPoint, targetX, targetZ, dist);
-            }
-        }
+        this._player = new Player(
+            this._scene,
+            ASSETS_CTRL.textures.sheriff,
+            0, 0,
+            0,
+            1,
+            false);
+        this._player.addToScene();
 
         for (let x = 0; x < postPositions.length; x++) {
             const postPos = postPositions[x];
-            const post = new Post(this._scene, postPos[0], postPos[1]);
+            const post = new Post(this._scene, postPos[0], postPos[1], 1);
             this._posts.push(post);
             CollisionatorSingleton.add(post);
         }
@@ -341,6 +278,7 @@ export class MainPlayLevel {
                 false);
             bandit.addToScene();
             CollisionatorSingleton.add(bandit);
+            this._bandits.push(bandit);
         }
         
 
@@ -378,10 +316,17 @@ export class MainPlayLevel {
         // DOM Events
         const container = document.getElementById('mainview');
         document.oncontextmenu = event => {
+            event.preventDefault();
+            if (this._state === MainLevelState.active && this._directionAim.find(val => !!val)) {
+                this._player.fire(true);
+            }
             return false;
         };
         document.onclick = event => {
             event.preventDefault();
+            if (this._state === MainLevelState.active && this._directionAim.find(val => !!val)) {
+                this._player.fire(false);
+            }
             // Three JS object intersections.
             getIntersections(event, container, sceneType).forEach(el => {
 
@@ -394,55 +339,59 @@ export class MainPlayLevel {
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
                 // Up & Down move and aim adjustment.
-                if (!this._directionMove[1] && (key === 'w' || key === 'arrowup')) {
+                if (key === 'w' || key === 'arrowup') {
                     // Move towards up
-                    this._directionMove[1] = 1;
+                    this._dirKeys.up = 1;
+                    this._dirKeys.down = 0;
                     // Aim towards up
                     this._directionAim[1] = 1;
-                } else if (!this._directionMove[1] && (key === 's' || key === 'arrowdown')) {
+                } else if (key === 's' || key === 'arrowdown') {
                     // Move towards down
-                    this._directionMove[1] = -1;
+                    this._dirKeys.down = 1;
+                    this._dirKeys.up = 0;
                     // Aim towards up
                     this._directionAim[1] = -1;
                 }
                 
-                if (!this._directionMove[0] && (key === 'a' || key === 'arrowleft')) {
+                if (key === 'a' || key === 'arrowleft') {
                     // Move towards left
-                    this._directionMove[0] = -1;
+                    this._dirKeys.left = 1;
+                    this._dirKeys.right = 0;
                     // Aim towards left
                     this._directionAim[0] = -1;
-                } else if (!this._directionMove[0] && (key === 'd' || key === 'arrowright')) {
+                } else if (key === 'd' || key === 'arrowright') {
                     // Move towards right
-                    this._directionMove[0] = 1;
+                    this._dirKeys.right = 1;
+                    this._dirKeys.left = 0;
                     // Aim towards right
                     this._directionAim[0] = 1;
                 }
             }
-            
-            console.log(this._directionMove, this._directionAim);
         };
         document.onkeyup = event => {
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
                 // Up & Down move and aim adjustment.
-                if (this._directionMove[1] === 1 && (key === 'w' || key === 'arrowup')) {
+                if (key === 'w' || key === 'arrowup') {
                     // Cancel move towards vertical.
-                    this._directionMove[1] = 0;
-                } else if (this._directionMove[1] === -1 && (key === 's' || key === 'arrowdown')) {
-                    // Cancel move towards vertical.
-                    this._directionMove[1] = 0;
+                    this._dirKeys.up = 0;
                 }
                 
-                if (this._directionMove[0] === -1 && (key === 'a' || key === 'arrowleft')) {
+                if (key === 's' || key === 'arrowdown') {
+                    // Cancel move towards vertical.
+                    this._dirKeys.down = 0;
+                }
+                
+                if (key === 'a' || key === 'arrowleft') {
                     // Cancel move towards horizontal
-                    this._directionMove[0] = 0;
-                } else if (this._directionMove[0] === 1 && (key === 'd' || key === 'arrowright')) {
+                    this._dirKeys.left = 0;
+                }
+                
+                if (key === 'd' || key === 'arrowright') {
                     // Cancel move towards horizontal
-                    this._directionMove[0] = 0;
+                    this._dirKeys.right = 0;
                 }
             }
-            
-            console.log(this._directionMove, this._directionAim);
         };
 
         // Get window dimmensions
@@ -626,25 +575,18 @@ export class MainPlayLevel {
         }
 
         if (this._state === MainLevelState.active) {
-            let tempProjectiles = [];
-            for (let i = 0; i < this._projectiles.length; i++) {
-                let projectile = this._projectiles[i];
-                if (projectile && !projectile.endCycle()) {
-                    CollisionatorSingleton.remove(projectile);
-                    this._projectiles[i] = null;
+            this._player.endCycle(this._dirKeys);
+            this._bandits = this._bandits.filter(bandit => {
+                if (!bandit.endCycle()) {
+                    console.log('should destroy bandit');
+                    bandit.destroy();
+                    return false;
                 }
-                projectile = this._projectiles[i];
-                if (projectile) {
-                    tempProjectiles.push(projectile);
-                }
-            }
-            this._projectiles = tempProjectiles.slice();
-            tempProjectiles = null;
+                return true;
+            });
         }
 
-        if (this._counters.jobs === 5) {
-            CollisionatorSingleton.checkForCollisions(this._scene);
-        }
+        CollisionatorSingleton.checkForCollisions(this._scene);
 
         // Collision detection (bullets against enemy)
         if (false) {

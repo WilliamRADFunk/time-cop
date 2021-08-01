@@ -221,6 +221,7 @@ export class Projectile implements Collidable {
         }
         if (this._explosion) {
             if (!this._explosion.endCycle()) {
+                console.log('should remove');
                 CollisionatorSingleton.remove(this._explosion);
                 this._scene.remove(this._explosion.getMesh());
                 this._explosion = null;

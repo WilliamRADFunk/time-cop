@@ -87,21 +87,27 @@ export class Explosion implements Collidable {
     endCycle(): boolean {
         if (this.isActive) {
             if (this.isExplosionGrowing) {
+                console.log('1');
                 this.currentExplosionScale += 0.02;
                 this.explosion.scale.set(this.currentExplosionScale, this.currentExplosionScale, this.currentExplosionScale);
             } else {
+                console.log('2');
                 this.currentExplosionScale -= 0.02;
                 this.explosionMaterial.transparent = true;
                 this.explosionMaterial.opacity = this.currentExplosionScale;
+                this.explosionMaterial.needsUpdate = true;
             }
             if (this.isExplosionGrowing && this.currentExplosionScale >= 2) {
+                console.log('3');
                 this.currentExplosionScale = 1;
                 this.isExplosionGrowing = false;
             } else if (!this.isExplosionGrowing && this.currentExplosionScale <= 0) {
+                console.log('4');
                 this.isActive = false;
             }
             return true;
         }
+        console.log('5');
         return false;
     }
     /**
