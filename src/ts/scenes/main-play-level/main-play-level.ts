@@ -21,8 +21,8 @@ import { TextBase } from '../../controls/text/text-base';
 import { SettingsCtrl } from '../../controls/controllers/settings-controllers';
 import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
 import { createActor } from '../../utils/create-actor';
-import { Post } from '../../entities/post';
-import { Bandit } from '../../entities/bandit';
+import { Post, postPositions } from '../../entities/post';
+import { Bandit, banditStartPositions } from '../../entities/bandit';
 import { Projectile } from '../../entities/projectile';
 import { Player } from '../../entities/player';
 
@@ -58,70 +58,6 @@ export enum MainLevelState {
     'autopilot' = 6,
     'win' = 7
 }
-
-const banditStartPositions: [number, number][] = [
-    [ -5, -5 ], [ 5, -5 ],
-    [ -5, -4 ], [ 5, -4 ],
-    [ -5, -3 ], [ 5, -3 ],
-    [ -5, -2 ], [ 5, -2 ],
-    [ -5, -1 ], [ 5, -1 ],
-    [ -5, 0 ], [ 5, 0 ],
-    [ -5, 1 ], [ 5, 1 ],
-    [ -5, 2 ], [ 5, 2 ],
-    [ -5, 3 ], [ 5, 3 ],
-    [ -5, 4 ], [ 5, 4 ],
-    [ -5, 5 ], [ 5, 5 ],
-
-    [ -4, -5 ], [ 4, -5],
-    [ -3, -5 ], [ 3, -5],
-    [ -2, -5 ], [ 2, -5],
-    [ -1, -5 ], [ 1, -5],
-    [ 0, -5 ],
-    [ -4, 5 ], [ 4, 5],
-    [ -3, 5 ], [ 3, 5],
-    [ -2, 5 ], [ 2, 5],
-    [ -1, 5 ], [ 1, 5],
-    [ 0, 5 ],
-];
-
-const postPositions: [number, number][] = [
-    [ -4, -4 ], [ 4, -4 ],
-    [ -4, -3.5 ], [ 4, -3.5 ],
-    [ -4, -3 ], [ 4, -3 ],
-    [ -4, -2.5 ], [ 4, -2.5 ],
-    [ -4, -2 ], [ 4, -2 ],
-    [ -4, -1.5 ], [ 4, -1.5 ],
-    [ -4, -1 ], [ 4, -1 ],
-    [ -4, -0.5 ], [ 4, -0.5 ],
-    [ -4, 0 ], [ 4, 0 ],
-    [ -4, 0.5 ], [ 4, 0.5 ],
-    [ -4, 1 ], [ 4, 1 ],
-    [ -4, 1.5 ], [ 4, 1.5 ],
-    [ -4, 2 ], [ 4, 2 ],
-    [ -4, 2.5 ], [ 4, 2.5 ],
-    [ -4, 3 ], [ 4, 3 ],
-    [ -4, 3.5 ], [ 4, 3.5 ],
-    [ -4, 4 ], [ 4, 4 ],
-
-    [ -3.5, 4 ], [ 3.5, 4 ],
-    [ -3, 4 ], [ 3, 4 ],
-    [ -2.5, 4 ], [ 2.5, 4 ],
-    [ -2, 4 ], [ 2, 4 ],
-    [ -1, 4 ], [ 1, 4 ],
-    [ -1.5, 4 ], [ 1.5, 4 ],
-    [ 0.5, 4 ],
-    [ 0, 4 ],
-    [ -0.5, 4 ],
-    [ -3.5, -4 ], [ 3.5, -4 ],
-    [ -3, -4 ], [ 3, -4 ],
-    [ -2.5, -4 ], [ 2.5, -4 ],
-    [ -2, -4 ], [ 2, -4 ],
-    [ -1.5, -4 ], [ 1.5, -4 ],
-    [ -1, -4 ], [ 1, -4 ],
-    [ -0.5, -4 ],
-    [ 0, -4 ],
-    [ 0.5, -4 ]
-];
 
 /**
  * @class
@@ -249,6 +185,7 @@ export class MainPlayLevel {
             1,
             false);
         this._player.addToScene();
+        CollisionatorSingleton.add(this._player);
 
         for (let x = 0; x < postPositions.length; x++) {
             const postPos = postPositions[x];
@@ -264,9 +201,10 @@ export class MainPlayLevel {
             const startPos = banditStartPositions[y];
             const bandit = new Bandit(
                 this._scene,
-                [ASSETS_CTRL.textures.astronaut1],
-                startPos[0], startPos[1], startPos[0], startPos[1],
-                0,
+                ASSETS_CTRL.textures.bandit,
+                startPos[0],
+                startPos[1],
+                startPos[2],
                 0.05,
                 1,
                 true,

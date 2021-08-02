@@ -298,6 +298,7 @@ const TEXTURES: { [key: string]: [string, Texture] } = {
     astronaut1: ['assets/images/astronaut-01.png', null],
     astronaut2: ['assets/images/astronaut-02.png', null],
     astronaut3: ['assets/images/astronaut-03.png', null],
+    bandit: ['assets/images/sprite-map-bandit.png', null],
     // The loaded texture, used for the ship layout dialogue engineer profile 1.
     engineerProfile: ['assets/images/ship-layout-profile.png', null],
     keysForDown: ['assets/images/keys-down.png', null],

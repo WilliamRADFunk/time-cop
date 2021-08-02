@@ -10,15 +10,82 @@ import {
 import { Collidable } from "../collidable";
 import { CollisionatorSingleton } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
+import { Entity, EntityDirection } from '../models/entity';
+import { animateEntity } from '../utils/animate-entity';
+import { makeEntity } from '../utils/make-entity';
+import { makeEntityMaterial } from '../utils/make-entity-material';
 import { Projectile } from './projectile';
+
+export const banditMovePoints: [number, number][] = [
+    [ -5, 5 ], // Lower Left Corner
+    [ 5, 5 ], // Lower Right Corner
+    [ 5, -5 ], // Upper Right Corner
+    [ -5, -5 ] // Upper Left Corner
+];
+
+export const banditStartPositions: [number, number, number][] = [
+    [ -5, -5, 0 ], // Left Going down
+    [ -5, -4, 0 ],
+    [ -5, -3, 0 ],
+    [ -5, -2, 0 ],
+    [ -5, -1, 0 ],
+    [ -5, 0, 0 ],
+    [ -5, 1, 0 ],
+    [ -5, 2, 0 ],
+    [ -5, 3, 0 ],
+    [ -5, 4, 0 ],
+
+    [ -5, 5, 1 ], // Bottom Going Right
+    [ -4, 5, 1 ],
+    [ -3, 5, 1 ],
+    [ -2, 5, 1 ],
+    [ -1, 5, 1 ],
+    [ 0, 5, 1 ],
+    [ 1, 5, 1],
+    [ 2, 5, 1],
+    [ 3, 5, 1],
+    [ 4, 5, 1],
+
+    [ 5, 5, 2 ], // Right Going Up
+    [ 5, 4, 2 ],
+    [ 5, 3, 2 ],
+    [ 5, 2, 2 ],
+    [ 5, 1, 2 ],
+    [ 5, 0, 2 ],
+    [ 5, -1, 2 ],
+    [ 5, -2, 2 ],
+    [ 5, -3, 2 ],
+    [ 5, -4, 2 ],
+
+    [ 5, -5, 3 ], // Top Going Left
+    [ -4, -5, 3 ],
+    [ -3, -5, 3 ],
+    [ -2, -5, 3 ],
+    [ -1, -5, 3 ],
+    [ 0, -5, 3 ],
+    [ 1, -5, 3],
+    [ 2, -5, 3],
+    [ 3, -5, 3],
+    [ 4, -5, 3],
+];
 
 let index: number = 0;
 
-export class Bandit implements Collidable {
+export class Bandit implements Collidable, Entity {
     /**
-     * Controls the overall rendering of the bandit
+     * Tracks position in walking animation sequence to know which animation to switch to next frame.
      */
-    private _bandit: Mesh;
+     _animationCounter: number = 0;
+
+    /**
+     * The three meshes to flip through to simulate a walking animation.
+     */
+     _animationMeshes: [Mesh, Mesh, Mesh] = [ null, null, null ];
+
+     /**
+      * Current direction crew member should be facing.
+      */
+    _currDirection: EntityDirection = EntityDirection.Right;
 
     /**
      * Controls size and shape of the bandit
@@ -26,14 +93,14 @@ export class Bandit implements Collidable {
     private _banditGeometry: CircleGeometry;
 
     /**
-     * Controls the color of the bandit material
-     */
-	private _banditMaterial: MeshPhongMaterial;
-
-    /**
      * Keeps track of the x,z point the bandit is at currently.
      */
     private _currentPoint: number[];
+
+    /**
+     * Keeps track of the banditMovePoint index.
+     */
+    private _currentWalkIndex: number;
 
     /**
      * Tracks the distance traveled thus far to update the calculateNextPoint calculation.
@@ -57,9 +124,25 @@ export class Bandit implements Collidable {
     private isHelpBandit: boolean = false;
 
     /**
+     * Flag to signal walking animation should be active.
+     */
+    _isMoving?: boolean = true;
+
+    /**
+     * Flag to signal walking animation sound isPlaying.
+     */
+    _isMovingSound?: boolean;
+
+    /**
      * Keeps track of the x,z point where bandit fired from.
      */
     private _originalStartingPoint: number[];
+
+    /**
+     * Tiles in order that make up the crew member's path to travel.
+     * Row, Column coordinates for each tile.
+     */
+    _path: [number, number][] = [];
 
     /**
      * Keeps track of live projectiles, to pass along endCycle signals, and destroy calls.
@@ -102,9 +185,7 @@ export class Bandit implements Collidable {
      * @param scene        graphic rendering scene object. Used each iteration to redraw things contained in scene.
      * @param x1           origin point x of where the bandit starts.
      * @param z1           origin point z of where the bandit starts.
-     * @param x2           final point x of where the bandit starts.
-     * @param z2           final point z of where the bandit starts.
-     * @param dist         total distance the bandit must travel.
+     * @param walkIndex    index in walk positions array for bandits to head towards
      * @param speedMod     speed modifier at time of bandit instantiation.
      * @param yPos         layer level for bandit to appear.
      * @param fireNow      optional choice not to wait to have bandit start moving.
@@ -113,12 +194,10 @@ export class Bandit implements Collidable {
      */
     constructor(
         scene: Scene,
-        banditTextures: Texture[],
+        banditTexture: Texture,
         x1:number,
         z1: number,
-        x2: number,
-        z2: number,
-        dist: number,
+        walkIndex: number,
         speedMod: number,
         yPos?: number,
         fireNow?: boolean,
@@ -128,24 +207,31 @@ export class Bandit implements Collidable {
         this._speed += (speedMod / 1000);
         this._originalStartingPoint = [x1, z1];
         this._currentPoint = [x1, z1];
-        this._endingPoint = [x2, z2];
-        this._totalDistance = dist;
+        this._currentWalkIndex = walkIndex;
+        this._endingPoint = banditMovePoints[walkIndex];
+        const xDiff = this._endingPoint[0] - this._currentPoint[0];
+        const zDiff = this._endingPoint[1] - this._currentPoint[1];
+        this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
         this._distanceTraveled = 0;
         this.isHelpBandit = isHelpScreen;
         // Calculates the first (second vertices) point.
         this._calculateNextPoint();
-
+        
         this._scene = scene;
 		this._banditGeometry = new CircleGeometry(this._radius, 16, 16);
-        this._banditMaterial = new MeshPhongMaterial();
-        this._banditMaterial.map = banditTextures[0];
-        this._banditMaterial.map.minFilter = LinearFilter;
-        this._banditMaterial.shininess = 0;
-        this._banditMaterial.transparent = true;
-        this._bandit = new Mesh(this._banditGeometry, this._banditMaterial);
-        this._bandit.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]);
-        this._bandit.rotation.set(-1.5708, 0, 0);
-        this._bandit.name = `enemy-bandit-${index}`;
+        [0, 1, 2].forEach((val: number) => {
+            const offCoordsX = 3 + val;
+            const offCoordsY = 5;
+            const size = [8, 8];
+            const material = makeEntityMaterial(banditTexture, offCoordsX, offCoordsY, size);
+            makeEntity(
+                this._animationMeshes,
+                this._banditGeometry,
+                material,
+                val,
+                [this._currentPoint[0], this._yPos, this._currentPoint[1]],
+                `enemy-bandit-${index}-${val}`);
+        });
         this._waitToFire = (fireNow) ? 0 : Math.floor((Math.random() * 2000) + 1);
     }
     /**
@@ -162,7 +248,7 @@ export class Bandit implements Collidable {
      * Adds bandit object to the three.js scene.
      */
     addToScene(): void {
-        this._scene.add(this._bandit);
+        this._animationMeshes.forEach(mesh => this._scene.add(mesh));
     }
     /**
      * Calculates the next point in the bandit's path.
@@ -173,10 +259,17 @@ export class Bandit implements Collidable {
         const t = this._distanceTraveled / this._totalDistance;
         this._currentPoint[0] = ((1 - t) * this._originalStartingPoint[0]) + (t * this._endingPoint[0]);
         this._currentPoint[1] = ((1 - t) * this._originalStartingPoint[1]) + (t * this._endingPoint[1]);
-        if (this._distanceTraveled >= this._totalDistance - 0.5) {
-            this._currentPoint[0] = this._originalStartingPoint[0];
-            this._currentPoint[1] = this._originalStartingPoint[1];
+        if (this._distanceTraveled >= this._totalDistance - this._speed) {
             this._distanceTraveled = 0;
+            this._currentPoint[0] = this._endingPoint[0];
+            this._currentPoint[1] = this._endingPoint[1];
+            this._originalStartingPoint[0] = this._endingPoint[0];
+            this._originalStartingPoint[1] = this._endingPoint[1];
+            this._currentWalkIndex = this._currentWalkIndex + 1 >= banditMovePoints.length ? 0 : this._currentWalkIndex + 1;
+            this._endingPoint = banditMovePoints[this._currentWalkIndex];
+            const xDiff = this._endingPoint[0] - this._currentPoint[0];
+            const zDiff = this._endingPoint[1] - this._currentPoint[1];
+            this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
         }
     }
 
@@ -186,7 +279,7 @@ export class Bandit implements Collidable {
      */
     public destroy() {
         CollisionatorSingleton.remove(this);
-        this._scene.remove(this._bandit);
+        this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
     }
 
     /**
@@ -203,8 +296,14 @@ export class Bandit implements Collidable {
             return true;
         }
         if (this._isActive) {
-            this._calculateNextPoint();
-            this._bandit.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]);
+            // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
+            if (this._isMoving) {
+                animateEntity(this);
+                this._calculateNextPoint();
+                this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
+                // rotateEntity(this);
+            }
+            
 
             // TODO: Bandit fires weapon at ertain intervals.
             // Once created, missile will fly itself, detonate itself, and rease itself.
@@ -242,7 +341,7 @@ export class Bandit implements Collidable {
      * @returns the array is of length 2 with x coordinate being first, and then z coordinate.
      */
     public getCurrentPosition(): number[] {
-        return [this._bandit.position.x, this._bandit.position.z];
+        return [this._currentPoint[0], this._currentPoint[1]];
     }
 
     /**
@@ -250,7 +349,7 @@ export class Bandit implements Collidable {
      * @returns the name of the bandit.
      */
     public getName(): string {
-        return this._bandit.name;
+        return this._animationMeshes[0].name;
     }
 
     /**
@@ -282,8 +381,7 @@ export class Bandit implements Collidable {
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
     public removeFromScene(scene: Scene): void {
-        this._bandit.position.set(this._originalStartingPoint[0], this._yPos, this._originalStartingPoint[1]);
-        this._currentPoint = [this._originalStartingPoint[0], this._originalStartingPoint[1]];
-        this._distanceTraveled = 0;
+        this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        CollisionatorSingleton.remove(this);
     }
 }

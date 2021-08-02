@@ -313,6 +313,7 @@ export class Player implements Collidable, Entity {
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
     public removeFromScene(scene: Scene): void {
-        // Remove the player object.
+        this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        CollisionatorSingleton.remove(this);
     }
 }

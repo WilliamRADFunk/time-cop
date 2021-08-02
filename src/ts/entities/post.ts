@@ -7,6 +7,44 @@ import {
 import { CollisionatorSingleton } from '../collisionator';
 import { Collidable } from "../collidable";
 
+export const postPositions: [number, number][] = [
+    [ -4, -4 ], [ 4, -4 ],
+    [ -4, -3.5 ], [ 4, -3.5 ],
+    [ -4, -3 ], [ 4, -3 ],
+    [ -4, -2.5 ], [ 4, -2.5 ],
+    [ -4, -2 ], [ 4, -2 ],
+    [ -4, -1.5 ], [ 4, -1.5 ],
+    [ -4, -1 ], [ 4, -1 ],
+    [ -4, -0.5 ], [ 4, -0.5 ],
+    [ -4, 0 ], [ 4, 0 ],
+    [ -4, 0.5 ], [ 4, 0.5 ],
+    [ -4, 1 ], [ 4, 1 ],
+    [ -4, 1.5 ], [ 4, 1.5 ],
+    [ -4, 2 ], [ 4, 2 ],
+    [ -4, 2.5 ], [ 4, 2.5 ],
+    [ -4, 3 ], [ 4, 3 ],
+    [ -4, 3.5 ], [ 4, 3.5 ],
+    [ -4, 4 ], [ 4, 4 ],
+
+    [ -3.5, 4 ], [ 3.5, 4 ],
+    [ -3, 4 ], [ 3, 4 ],
+    [ -2.5, 4 ], [ 2.5, 4 ],
+    [ -2, 4 ], [ 2, 4 ],
+    [ -1, 4 ], [ 1, 4 ],
+    [ -1.5, 4 ], [ 1.5, 4 ],
+    [ 0.5, 4 ],
+    [ 0, 4 ],
+    [ -0.5, 4 ],
+    [ -3.5, -4 ], [ 3.5, -4 ],
+    [ -3, -4 ], [ 3, -4 ],
+    [ -2.5, -4 ], [ 2.5, -4 ],
+    [ -2, -4 ], [ 2, -4 ],
+    [ -1.5, -4 ], [ 1.5, -4 ],
+    [ -1, -4 ], [ 1, -4 ],
+    [ -0.5, -4 ],
+    [ 0, -4 ],
+    [ 0.5, -4 ]
+];
 
 /**
  * Static index to help name one post differenly than another.
@@ -86,6 +124,13 @@ import { Collidable } from "../collidable";
         this._post.name = `post-${index}`;
         this._scene.add(this._post);
     }
+
+    /**
+     * Adds player object to the three.js scene.
+     */
+    public addToScene(): void {
+        this._scene.add(this._post);
+    }
     
     /**
      * Gets the viability of the post.
@@ -150,5 +195,6 @@ import { Collidable } from "../collidable";
     removeFromScene(): void {
         this._isActive = false;
         this._scene.remove(this._post);
+        CollisionatorSingleton.remove(this);
     }
  }
