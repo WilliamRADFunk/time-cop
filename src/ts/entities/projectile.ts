@@ -248,8 +248,8 @@ export class Projectile implements Collidable {
                 this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
             }
             if (this._distanceTraveled >= this._totalDistance) {
-                // this.createExplosion(false);
-                // play ricochet sound
+                this.createExplosion(false);
+                // TODO: Play ricochet sound
                 this.removeFromScene(this._scene);
             }
         }

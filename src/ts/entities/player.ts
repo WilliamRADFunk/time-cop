@@ -79,6 +79,9 @@ export class Player implements Collidable, Entity {
      */
     private _projectiles: Projectile[] = [];
 
+    /**
+     * Radius of the circle geometry on which the texture in imprinted and also the collision radius for hit box detection.
+     */
     private _radius: number = 0.75;
 
     /**
@@ -174,6 +177,7 @@ export class Player implements Collidable, Entity {
      */
     public endCycle(dirKeys: { [key: string]: number }): boolean {
         if (this._isActive) {
+            // Calculates how far to move the player when moving and walls them in by the post barrier.
             if (dirKeys.up && this._currentPoint[1] >= -3.8) {
                 this._isMoving = true;
                 this._currentPoint[1] -= this._speed;
@@ -193,12 +197,14 @@ export class Player implements Collidable, Entity {
             }
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
 
+            // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
                 animateEntity(this);
                 this._currDirection = calculateNewEntityDirection(dirKeys.right - dirKeys.left, dirKeys.up - dirKeys.down);
                 rotateEntity(this);
             }
 
+            // Work through each projectile the player has fired.
             let tempProjectiles = [];
             for (let i = 0; i < this._projectiles.length; i++) {
                 let projectile = this._projectiles[i];
@@ -238,7 +244,7 @@ export class Player implements Collidable, Entity {
             dist,
             new Color(0xF6C123),
             true,
-            this._speed + 0.01,
+            this._speed + 0.02,
             -1,
             0.00000001,
             true));

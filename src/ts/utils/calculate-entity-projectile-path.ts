@@ -4,31 +4,37 @@ export function calculateEntityProjectilePathMain(dir: EntityDirection, position
     switch(dir) {
         case EntityDirection.Up: {
             return [
-                position[0],
-                position[1] - radius,
-                position[0],
+                position[0] - (radius * 0.11),
+                position[1] - radius + (radius * 0.1),
+                position[0] - (radius * 0.11),
                 -5.7
             ];
         }
         case EntityDirection.Up_Right: {
             const rad = (radius / 2);
             const x1 = position[0] + rad;
-            const z1 = position[1] - rad;
-            const maxZDist = 6 + z1;
-            const maxXDist = 6 - x1
-            const dist = Math.sqrt(maxZDist * maxZDist + maxXDist * maxXDist);
-            const x2 = dist * Math.cos(0.785398);
-            const z2 = dist * Math.sin(0.785398);
+            const z1 = position[1] - rad - (radius * 0.2);
+            const maxZDist = 5.7 + z1;
+            const maxXDist = 5.7 - x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 - maxZDist;
+                x2 = x1 + maxZDist;
+            } else {
+                z2 = z1 - maxXDist;
+                x2 = x1 + maxXDist;
+            }
             return [
                 x1,
                 z1,
                 x2,
-                -z2
+                z2
             ];
         }
         case EntityDirection.Right: {
             return  [
-                position[0] + radius - (radius * 0.2),
+                position[0] + radius - (radius * 0.1),
                 position[1] - (radius * 0.15),
                 5.7,
                 position[1] - (radius * 0.15),
@@ -36,33 +42,59 @@ export function calculateEntityProjectilePathMain(dir: EntityDirection, position
         }
         case EntityDirection.Down_Right: {
             const rad = (radius / 2);
-            return  [
-                position[0] + rad,
-                position[1] + rad,
-                5.7,
-                5.7
+            const x1 = position[0] + rad;
+            const z1 = position[1] + rad;
+            const maxZDist = 5.7 + z1;
+            const maxXDist = 5.7 + x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 + maxZDist;
+                x2 = x1 + maxZDist;
+            } else {
+                z2 = z1 + maxXDist;
+                x2 = x1 + maxXDist;
+            }
+            return [
+                x1,
+                z1,
+                x2,
+                z2
             ];
         }
         case EntityDirection.Down: {
             return  [
-                position[0],
-                position[1] + radius,
-                position[0],
+                position[0] + (radius * 0.11),
+                position[1] + radius - (radius * 0.1),
+                position[0] + (radius * 0.11),
                 5.7
             ];
         }
         case EntityDirection.Down_Left: {
             const rad = (radius / 2);
+            const x1 = position[0] - rad;
+            const z1 = position[1] + rad;
+            const maxZDist = 5.7 + z1;
+            const maxXDist = 5.7 - x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 + maxZDist;
+                x2 = x1 - maxZDist;
+            } else {
+                z2 = z1 + maxXDist;
+                x2 = x1 - maxXDist;
+            }
             return [
-                position[0] - rad,
-                position[1] + rad,
-                -5.7,
-                5.7
+                x1,
+                z1,
+                x2,
+                z2
             ];
         }
         case EntityDirection.Left: {
             return  [
-                position[0] - radius + (radius * 0.2),
+                position[0] - radius + (radius * 0.1),
                 position[1] + (radius * 0.1),
                 -5.7,
                 position[1] + (radius * 0.1)
@@ -70,11 +102,24 @@ export function calculateEntityProjectilePathMain(dir: EntityDirection, position
         }
         case EntityDirection.Up_Left: {
             const rad = (radius / 2);
-            return  [
-                position[0] - rad,
-                position[1] - rad,
-                -5.7,
-                -5.7
+            const x1 = position[0] - rad;
+            const z1 = position[1] - rad;
+            const maxZDist = 5.7 - z1;
+            const maxXDist = 5.7 - x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 - maxZDist;
+                x2 = x1 - maxZDist;
+            } else {
+                z2 = z1 - maxXDist;
+                x2 = x1 - maxXDist;
+            }
+            return [
+                x1,
+                z1,
+                x2,
+                z2
             ];
         }
         default: {
@@ -87,24 +132,37 @@ export function calculateEntityProjectilePathSecondary(dir: EntityDirection, pos
     switch(dir) {
         case EntityDirection.Up: {
             return  [
-                position[0],
-                position[1] + radius,
-                position[0],
+                position[0] - (radius * 0.05),
+                position[1] + radius - (radius * 0.1),
+                position[0] - (radius * 0.05),
                 5.7
             ];
         }
         case EntityDirection.Up_Right: {
             const rad = (radius / 2);
+            const x1 = position[0] - rad - (radius * 0.15);
+            const z1 = position[1] + rad + (radius * 0.1);
+            const maxZDist = 5.7 - z1;
+            const maxXDist = 5.7 + x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 + maxZDist;
+                x2 = x1 - maxZDist;
+            } else {
+                z2 = z1 + maxXDist;
+                x2 = x1 - maxXDist;
+            }
             return [
-                position[0] - rad,
-                position[1] + rad,
-                -5.7,
-                5.7
+                x1,
+                z1,
+                x2,
+                z2
             ];
         }
         case EntityDirection.Right: {
             return  [
-                position[0] - radius + (radius * 0.2),
+                position[0] - radius + (radius * 0.1),
                 position[1] - (radius * 0.1),
                 -5.7,
                 position[1] - (radius * 0.1),
@@ -112,33 +170,59 @@ export function calculateEntityProjectilePathSecondary(dir: EntityDirection, pos
         }
         case EntityDirection.Down_Right: {
             const rad = (radius / 2);
-            return  [
-                position[0] - rad,
-                position[1] - rad,
-                -5.7,
-                -5.7
+            const x1 = position[0] - rad;
+            const z1 = position[1] - rad;
+            const maxZDist = 5.7 - z1;
+            const maxXDist = 5.7 - x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 - maxZDist;
+                x2 = x1 - maxZDist;
+            } else {
+                z2 = z1 - maxXDist;
+                x2 = x1 - maxXDist;
+            }
+            return [
+                x1,
+                z1,
+                x2,
+                z2
             ];
         }
         case EntityDirection.Down: {
             return [
-                position[0],
-                position[1] - radius,
-                position[0],
+                position[0] + (radius * 0.05),
+                position[1] - radius + (radius * 0.1),
+                position[0] + (radius * 0.05),
                 -5.7
             ];
         }
         case EntityDirection.Down_Left: {
             const rad = (radius / 2);
+            const x1 = position[0] + rad;
+            const z1 = position[1] - rad;
+            const maxZDist = 5.7 + z1;
+            const maxXDist = 5.7 - x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 - maxZDist;
+                x2 = x1 + maxZDist;
+            } else {
+                z2 = z1 - maxXDist;
+                x2 = x1 + maxXDist;
+            }
             return [
-                position[0] + rad,
-                position[1] - rad,
-                5.7,
-                -5.7
+                x1,
+                z1,
+                x2,
+                z2
             ];
         }
         case EntityDirection.Left: {
             return  [
-                position[0] + radius - (radius * 0.2),
+                position[0] + radius - (radius * 0.1),
                 position[1] + (radius * 0.05),
                 5.7,
                 position[1] + (radius * 0.05),
@@ -146,11 +230,24 @@ export function calculateEntityProjectilePathSecondary(dir: EntityDirection, pos
         }
         case EntityDirection.Up_Left: {
             const rad = (radius / 2);
-            return  [
-                position[0] + rad,
-                position[1] + rad,
-                5.7,
-                5.7
+            const x1 = position[0] + rad;
+            const z1 = position[1] + rad;
+            const maxZDist = 5.7 + z1;
+            const maxXDist = 5.7 + x1;
+            let x2;
+            let z2;
+            if (maxZDist < maxXDist) {
+                z2 = z1 + maxZDist;
+                x2 = x1 + maxZDist;
+            } else {
+                z2 = z1 + maxXDist;
+                x2 = x1 + maxXDist;
+            }
+            return [
+                x1,
+                z1,
+                x2,
+                z2
             ];
         }
         default: {
