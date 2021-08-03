@@ -18,10 +18,10 @@ import { Projectile } from './projectile';
 import { rotateEntity } from '../utils/rotate-entity';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
-    [ -5, 5, EntityDirection.Down ], // Lower Left Corner
-    [ 5, 5, EntityDirection.Right ], // Lower Right Corner
-    [ 5, -5, EntityDirection.Up ], // Upper Right Corner
-    [ -5, -5, EntityDirection.Left ] // Upper Left Corner
+    [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
+    [ 5, 5, EntityDirection.Left ],     // Lower Right Corner
+    [ 5, -5, EntityDirection.Down ],    // Upper Right Corner
+    [ -5, -5, EntityDirection.Right ]   // Upper Left Corner
 ];
 
 export const banditStartPositions: [number, number, number][] = [
@@ -236,9 +236,9 @@ export class Bandit implements Collidable, Entity {
         this._scene = scene;
 		this._banditGeometry = new CircleGeometry(this._radius, 16, 16);
         [0, 1, 2].forEach((val: number) => {
-            const offCoordsX = 3 + val;
-            const offCoordsY = 5;
-            const size = [8, 8];
+            const offCoordsX = val;
+            const offCoordsY = 0;
+            const size = [3, 1];
             const material = makeEntityMaterial(banditTexture, offCoordsX, offCoordsY, size);
             makeEntity(
                 this._animationMeshes,
@@ -324,6 +324,8 @@ export class Bandit implements Collidable, Entity {
 
             // TODO: Bandit fires weapon at certain intervals.
             if (Math.random() <= (0.0005 * this._level)) {
+                let x1 = this._currentPoint[0];
+                let z1 = this._currentPoint[1];
                 let x2;
                 let z2;
                 const dist = (Math.floor(Math.random() * (10 - 6) + 6));
@@ -331,29 +333,37 @@ export class Bandit implements Collidable, Entity {
                 switch(this._currDirection) {
                     case EntityDirection.Right: {
                         if (this._currentPoint[0] < -3.8 || this._currentPoint[0] > 3.8) break;
-                        z2 = this._currentPoint[1] - dist;
-                        x2 = this._currentPoint[0];
+                        z1 = this._currentPoint[1] + this._radius;
+                        z2 = this._currentPoint[1] + dist;
+                        x1 = this._currentPoint[0] - 0.02;
+                        x2 = this._currentPoint[0] - 0.02;
                         skip = false;
                         break;
                     }
                     case EntityDirection.Up: {
                         if (this._currentPoint[1] < -3.8 || this._currentPoint[1] > 3.8) break;
-                        z2 = this._currentPoint[1];
-                        x2 = this._currentPoint[0] - dist;;
+                        z1 = this._currentPoint[1] + 0.02;
+                        z2 = this._currentPoint[1] + 0.02;
+                        x1 = this._currentPoint[0] + this._radius;
+                        x2 = this._currentPoint[0] + dist;;
                         skip = false;
                         break;
                     }
                     case EntityDirection.Left: {
                         if (this._currentPoint[0] < -3.8 || this._currentPoint[0] > 3.8) break;
-                        z2 = this._currentPoint[1] + dist;
-                        x2 = this._currentPoint[0];
+                        z1 = this._currentPoint[1] - this._radius;
+                        z2 = this._currentPoint[1] - dist;
+                        x1 = this._currentPoint[0] + 0.02;
+                        x2 = this._currentPoint[0] + 0.02;
                         skip = false;
                         break;
                     }
                     case EntityDirection.Down: {
                         if (this._currentPoint[1] < -3.8 || this._currentPoint[1] > 3.8) break;
-                        z2 = this._currentPoint[1];
-                        x2 = this._currentPoint[0] + dist;;
+                        z1 = this._currentPoint[1] - 0.02;
+                        z2 = this._currentPoint[1] - 0.02;
+                        x1 = this._currentPoint[0] - this._radius;
+                        x2 = this._currentPoint[0] - dist;;
                         skip = false;
                         break;
                     }
@@ -361,7 +371,7 @@ export class Bandit implements Collidable, Entity {
                 if (!skip) {
                     const miss = new Projectile(
                         this._scene,
-                        this._currentPoint[0], this._currentPoint[1],
+                        x1, z1,
                         x2, z2,
                         dist,
                         new Color('#FF0000'),
@@ -460,6 +470,8 @@ export class Bandit implements Collidable, Entity {
      */
     public removeFromScene(scene: Scene): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        this._projectiles.forEach(projectile => projectile.destroy());
+        this._projectiles.length = 0;
         CollisionatorSingleton.remove(this);
     }
 }

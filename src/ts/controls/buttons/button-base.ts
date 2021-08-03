@@ -10,7 +10,7 @@ export class ButtonBase {
     /**
      * Callback for onClick event.
      */
-    private _callback: () => void;
+    private _callback: (e?: any) => void;
 
     /**
      * Colors of the buttons at the different stages of its lifecycle.
@@ -39,7 +39,7 @@ export class ButtonBase {
      * @param onClick callback for onClick event.
      * @param visible whether or not to start the button in a visible state.
      */
-    constructor(id: string, colors: ButtonColors, onClick: () => void, visible: boolean) {
+    constructor(id: string, colors: ButtonColors, onClick: (e?: any) => void, visible: boolean) {
         this.element = document.createElement('button');
         this.element.id = this.id = id;
         this.element.style.outline = 'none';

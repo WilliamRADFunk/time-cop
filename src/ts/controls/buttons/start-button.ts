@@ -20,7 +20,7 @@ export class StartButton extends ButtonBase {
      * @param visible whether or not to start the button in a visible state.
      * @param scale scale to apply to button dimensions.
      */
-    constructor(position: HTMLElementPosition, colors: ButtonColors, onClick: () => void, visible: boolean, scale?: number) {
+    constructor(position: HTMLElementPosition, colors: ButtonColors, onClick: (e?: any) => void, visible: boolean, scale?: number) {
         super('start-button', colors, onClick, visible);
 
         this._scale = scale || 1;

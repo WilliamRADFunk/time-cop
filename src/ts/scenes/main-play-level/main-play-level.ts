@@ -1,10 +1,6 @@
 import {
-    Color,
-    Mesh, 
-    MeshPhongMaterial,
     Object3D,
     OrthographicCamera,
-    PlaneGeometry,
     Scene } from 'three';
 
 import { CollisionatorSingleton } from '../../collisionator';
@@ -20,30 +16,17 @@ import { HelpCtrl } from './controllers/help-controller';
 import { TextBase } from '../../controls/text/text-base';
 import { SettingsCtrl } from '../../controls/controllers/settings-controllers';
 import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
-import { createActor } from '../../utils/create-actor';
 import { Post, postPositions } from '../../entities/post';
 import { Bandit, banditStartPositions } from '../../entities/bandit';
-import { Projectile } from '../../entities/projectile';
 import { Player } from '../../entities/player';
-
-/*
- * Grid Values
- * 00: Empty space/sky. Null values
- * 01: Escape Zone. Contact means exit
- * 02: Escape Zone Line. Ship Bottom must be above.
- * 03: Water or ice
- * 04: Mined Block.
- * 05: Ore type
- * 06: Common Rock
- * 07: Danger square: lava, acid, explosive gas, etc.
- * 08: Life (plants mostly)
- */
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
  */
-const border: string = '1px solid #FFF';
-// const border: string = 'none';
+// const border: string = '1px solid #FFF';
+const border: string = 'none';
+
+const debounceTime = 250;
 
 /**
  * The game state mode enum for this scene.
@@ -91,6 +74,9 @@ export class MainPlayLevel {
      */
     private _controlPanel: ControlPanel;
 
+    /**
+     * EndCycle counters to help with various timing and animation uses.
+     */
     private _counters = {
         demoWalk: 0,
         demoWalkClear: 120,
@@ -98,10 +84,18 @@ export class MainPlayLevel {
     };
 
     /**
+     * Set when user clicks mouse to have something to compare against for debounce purposes.
+     */
+    private _delayStartTime: Date;
+
+    /**
      * Direction player is moving.
      */
     private _directionMove: number[] = [0, 0];
 
+    /**
+     * The movement keys the player currently has pressed.
+     */
     private _dirKeys: { [key: string]: number } = {
         down: 0,
         left: 0,
@@ -119,12 +113,10 @@ export class MainPlayLevel {
      */
     private _listenerRef: () => void;
 
-    private _player: Player;
-
     /**
-     * Keeps track of live projectiles, to pass along endCycle signals, and destroy calls.
+     * Reference to the Player entity instance.
      */
-    private _projectiles: Projectile[] = [];
+    private _player: Player;
 
     /**
      * The list of collidable post objects in the level.
@@ -195,14 +187,11 @@ export class MainPlayLevel {
         }
 
         for (let y = 0; y < banditStartPositions.length; y++) {
-            const banditNormalPathPoints = [
-    
-            ];
             const startPos = banditStartPositions[y];
             const bandit = new Bandit(
                 level,
                 this._scene,
-                ASSETS_CTRL.textures.bandit,
+                ASSETS_CTRL.textures.banditCowboy,
                 startPos[0],
                 startPos[1],
                 startPos[2],
@@ -258,7 +247,10 @@ export class MainPlayLevel {
         };
         document.onclick = event => {
             event.preventDefault();
-            if (this._state === MainLevelState.active) {
+            if (!this._delayStartTime) return;
+    
+            const timeDiff = new Date().getTime() - this._delayStartTime.getTime();
+            if (this._state === MainLevelState.active && timeDiff >= debounceTime) {
                 this._player.fire(false);
             }
             // Three JS object intersections.
@@ -401,8 +393,9 @@ export class MainPlayLevel {
 
 
 
-        let onClick = () => {
+        let onClick = (e: Event) => {
             if (this._state === MainLevelState.newGame) {
+                this._delayStartTime = new Date();
                 this._state = MainLevelState.active;
                 this._buttons.startButton.hide();
                 // SOUNDS_CTRL.playBackgroundMusicScifi01();

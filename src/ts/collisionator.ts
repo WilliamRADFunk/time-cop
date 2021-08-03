@@ -3,7 +3,7 @@ import { Scene } from 'three';
 
 import { Collidable } from './collidable';
 
-const enum CollisionType {
+export const enum CollisionType {
     'Player' = 1,
     'Player_Projectile' = 2,
     // 1 + 2 = 3 should not collide
@@ -16,7 +16,7 @@ const enum CollisionType {
     'Explosion' = 81
 }
 
-function getCollisionType(name: string): CollisionType {
+export function getCollisionType(name: string): CollisionType {
     if (name.indexOf('projectile-enemy') === 0) {
         return CollisionType.Enemy_Projectile;
     }

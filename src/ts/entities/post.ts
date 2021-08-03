@@ -4,7 +4,7 @@ import {
     Scene,
     SphereGeometry } from "three";
 
-import { CollisionatorSingleton } from '../collisionator';
+import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { Collidable } from "../collidable";
 
 export const postPositions: [number, number][] = [
@@ -170,11 +170,10 @@ export const postPositions: [number, number][] = [
      * @returns whether or not impact means removing item from the scene.
      */
     impact(self: Collidable, otherCollidable?: string): boolean {
-        if (this._isActive) {
+        if (this._isActive && getCollisionType(otherCollidable) !== CollisionType.Enemy_Projectile) {
             this._isActive = false;
             this._scene.remove(this._post);
             CollisionatorSingleton.remove(self);
-            // this.createExplosion(!otherCollidable.indexOf('projectile-player'));
             return true;
         }
         return false;

@@ -2,6 +2,7 @@ import {
     CircleGeometry,
     Color,
     Mesh,
+    MeshBasicMaterial,
     Scene,
     Texture } from 'three';
     
@@ -18,6 +19,7 @@ import { rotateEntity } from '../utils/rotate-entity';
 import { Projectile } from './projectile';
 
 let index: number = 0;
+const showHitBox = true;
 
 export class Player implements Collidable, Entity {
     /**
@@ -97,6 +99,8 @@ export class Player implements Collidable, Entity {
      */
     private _yPos: number;
 
+    private mesh: Mesh;
+
     /**
      * Constructor for the Bandit class
      * @param scene        graphic rendering scene object. Used each iteration to redraw things contained in scene.
@@ -127,6 +131,19 @@ export class Player implements Collidable, Entity {
 
         this._scene = scene;
 		this._playerGeometry = new CircleGeometry(this._radius, 16, 16);
+		const hitBoxGeometry = new CircleGeometry(this._radius / 2.5, 64, 64);
+        const material: MeshBasicMaterial = new MeshBasicMaterial({
+            color: 0xFFFFFF,
+            opacity: 1,
+            transparent: true
+        });
+
+        if (showHitBox) {
+            this.mesh = new Mesh(hitBoxGeometry, material);
+            this.mesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
+            this.mesh.rotation.set(-1.5708, 0, 0);
+            this._scene.add(this.mesh);
+        }
 
         [0, 1, 2].forEach((val: number) => {
             const offCoordsX = val;
@@ -194,6 +211,7 @@ export class Player implements Collidable, Entity {
                 this._currentPoint[0] += this._speed;
             }
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
+            showHitBox && this.mesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
 
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
@@ -263,7 +281,7 @@ export class Player implements Collidable, Entity {
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
     public getCollisionRadius(): number {
-        return this._radius / 2;
+        return this._radius / 2.5;
     }
 
     /**
@@ -312,6 +330,8 @@ export class Player implements Collidable, Entity {
      */
     public removeFromScene(scene: Scene): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        this._projectiles.forEach(projectile => projectile.destroy());
+        this._projectiles.length = 0;
         CollisionatorSingleton.remove(this);
     }
 }
