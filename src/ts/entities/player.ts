@@ -1,9 +1,7 @@
 import {
     CircleGeometry,
     Color,
-    LinearFilter,
     Mesh,
-    MeshPhongMaterial,
     Scene,
     Texture } from 'three';
     

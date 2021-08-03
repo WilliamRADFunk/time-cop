@@ -15,12 +15,13 @@ import { animateEntity } from '../utils/animate-entity';
 import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
 import { Projectile } from './projectile';
+import { rotateEntity } from '../utils/rotate-entity';
 
-export const banditMovePoints: [number, number][] = [
-    [ -5, 5 ], // Lower Left Corner
-    [ 5, 5 ], // Lower Right Corner
-    [ 5, -5 ], // Upper Right Corner
-    [ -5, -5 ] // Upper Left Corner
+export const banditMovePoints: [number, number, EntityDirection][] = [
+    [ -5, 5, EntityDirection.Down ], // Lower Left Corner
+    [ 5, 5, EntityDirection.Right ], // Lower Right Corner
+    [ 5, -5, EntityDirection.Up ], // Upper Right Corner
+    [ -5, -5, EntityDirection.Left ] // Upper Left Corner
 ];
 
 export const banditStartPositions: [number, number, number][] = [
@@ -134,6 +135,11 @@ export class Bandit implements Collidable, Entity {
     _isMovingSound?: boolean;
 
     /**
+     * The current level.
+     */
+    private _level: number = 1;
+
+    /**
      * Keeps track of the x,z point where bandit fired from.
      */
     private _originalStartingPoint: number[];
@@ -143,6 +149,11 @@ export class Bandit implements Collidable, Entity {
      * Row, Column coordinates for each tile.
      */
     _path: [number, number][] = [];
+
+    /**
+     * Number of points scored for killing this bandit.
+     */
+    private _points: number = 50;
 
     /**
      * Keeps track of live projectiles, to pass along endCycle signals, and destroy calls.
@@ -182,6 +193,7 @@ export class Bandit implements Collidable, Entity {
 
     /**
      * Constructor for the Bandit class
+     * @param level        current level the bandit exists on.
      * @param scene        graphic rendering scene object. Used each iteration to redraw things contained in scene.
      * @param x1           origin point x of where the bandit starts.
      * @param z1           origin point z of where the bandit starts.
@@ -193,6 +205,7 @@ export class Bandit implements Collidable, Entity {
      * @hidden
      */
     constructor(
+        level: number,
         scene: Scene,
         banditTexture: Texture,
         x1:number,
@@ -203,12 +216,15 @@ export class Bandit implements Collidable, Entity {
         fireNow?: boolean,
         isHelpScreen?: boolean) {
         index++;
+        this._level = level;
+        this._points *= level;
         this._yPos = yPos || 0.6;
         this._speed += (speedMod / 1000);
         this._originalStartingPoint = [x1, z1];
         this._currentPoint = [x1, z1];
         this._currentWalkIndex = walkIndex;
-        this._endingPoint = banditMovePoints[walkIndex];
+        this._endingPoint = banditMovePoints[walkIndex].slice(0, 2);
+        this._currDirection = banditMovePoints[walkIndex][2];
         const xDiff = this._endingPoint[0] - this._currentPoint[0];
         const zDiff = this._endingPoint[1] - this._currentPoint[1];
         this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
@@ -232,6 +248,7 @@ export class Bandit implements Collidable, Entity {
                 [this._currentPoint[0], this._yPos, this._currentPoint[1]],
                 `enemy-bandit-${index}-${val}`);
         });
+        rotateEntity(this);
         this._waitToFire = (fireNow) ? 0 : Math.floor((Math.random() * 2000) + 1);
     }
     /**
@@ -266,10 +283,12 @@ export class Bandit implements Collidable, Entity {
             this._originalStartingPoint[0] = this._endingPoint[0];
             this._originalStartingPoint[1] = this._endingPoint[1];
             this._currentWalkIndex = this._currentWalkIndex + 1 >= banditMovePoints.length ? 0 : this._currentWalkIndex + 1;
-            this._endingPoint = banditMovePoints[this._currentWalkIndex];
+            this._endingPoint = banditMovePoints[this._currentWalkIndex].slice(0, 2);
+            this._currDirection = banditMovePoints[this._currentWalkIndex][2];
             const xDiff = this._endingPoint[0] - this._currentPoint[0];
             const zDiff = this._endingPoint[1] - this._currentPoint[1];
             this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
+            rotateEntity(this);
         }
     }
 
@@ -301,21 +320,72 @@ export class Bandit implements Collidable, Entity {
                 animateEntity(this);
                 this._calculateNextPoint();
                 this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
-                // rotateEntity(this);
             }
-            
 
-            // TODO: Bandit fires weapon at ertain intervals.
-            // Once created, missile will fly itself, detonate itself, and rease itself.
-            // const miss = new Projectile(
-            //     this._scene,
-            //     this._currentPoint[0], this._currentPoint[1],
-            //     this._currentPoint[0], this._currentPoint[1],
-            //     Math.abs(this._currentPoint[0]) >= 5 ? 1 : 1,
-            //     new Color('#FF0000'),
-            //     true, 0.01, this._yPos, 1);
-            // this._projectiles.push(miss);
-            // CollisionatorSingleton.add(miss);
+            // TODO: Bandit fires weapon at certain intervals.
+            if (Math.random() <= (0.0005 * this._level)) {
+                let x2;
+                let z2;
+                const dist = (Math.floor(Math.random() * (10 - 6) + 6));
+                let skip = true;
+                switch(this._currDirection) {
+                    case EntityDirection.Right: {
+                        if (this._currentPoint[0] < -3.8 || this._currentPoint[0] > 3.8) break;
+                        z2 = this._currentPoint[1] - dist;
+                        x2 = this._currentPoint[0];
+                        skip = false;
+                        break;
+                    }
+                    case EntityDirection.Up: {
+                        if (this._currentPoint[1] < -3.8 || this._currentPoint[1] > 3.8) break;
+                        z2 = this._currentPoint[1];
+                        x2 = this._currentPoint[0] - dist;;
+                        skip = false;
+                        break;
+                    }
+                    case EntityDirection.Left: {
+                        if (this._currentPoint[0] < -3.8 || this._currentPoint[0] > 3.8) break;
+                        z2 = this._currentPoint[1] + dist;
+                        x2 = this._currentPoint[0];
+                        skip = false;
+                        break;
+                    }
+                    case EntityDirection.Down: {
+                        if (this._currentPoint[1] < -3.8 || this._currentPoint[1] > 3.8) break;
+                        z2 = this._currentPoint[1];
+                        x2 = this._currentPoint[0] + dist;;
+                        skip = false;
+                        break;
+                    }
+                }
+                if (!skip) {
+                    const miss = new Projectile(
+                        this._scene,
+                        this._currentPoint[0], this._currentPoint[1],
+                        x2, z2,
+                        dist,
+                        new Color('#FF0000'),
+                        true, 0.01 * this._level, this._yPos, 0.0000001, false);
+                    this._projectiles.push(miss);
+                    CollisionatorSingleton.add(miss);
+                }
+            }
+
+            // Work through each projectile the bandit has fired.
+            let tempProjectiles = [];
+            for (let i = 0; i < this._projectiles.length; i++) {
+                let projectile = this._projectiles[i];
+                if (projectile && !projectile.endCycle()) {
+                    CollisionatorSingleton.remove(projectile);
+                    this._projectiles[i] = null;
+                }
+                projectile = this._projectiles[i];
+                if (projectile) {
+                    tempProjectiles.push(projectile);
+                }
+            }
+            this._projectiles = tempProjectiles.slice();
+            tempProjectiles = null;
         }
         return this._isActive;
     }
@@ -350,6 +420,14 @@ export class Bandit implements Collidable, Entity {
      */
     public getName(): string {
         return this._animationMeshes[0].name;
+    }
+
+    /**
+     * Gets the points awarded for killing the bandit.
+     * @returns the points awarded for killing the bandit.
+     */
+    public getPoints(): number {
+        return this._points;
     }
 
     /**

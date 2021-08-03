@@ -200,6 +200,7 @@ export class MainPlayLevel {
             ];
             const startPos = banditStartPositions[y];
             const bandit = new Bandit(
+                level,
                 this._scene,
                 ASSETS_CTRL.textures.bandit,
                 startPos[0],
