@@ -1,7 +1,7 @@
 import { CircleGeometry, Mesh, MeshBasicMaterial, Scene } from 'three';
 
 import { Collidable } from '../collidable';
-import { ExplosionOptions } from '../models/explosions';
+import { ExplosionOptions, ExplosionType } from '../models/explosions';
 
 /**
  * Static index to help name one explosion differenly than another.
@@ -16,44 +16,49 @@ export class Explosion implements Collidable {
     /**
      * Keeps track of how big explosions scale is at moment.
      */
-    private currentExplosionScale: number = 1;
+    private _currentExplosionScale: number = 1;
 
     /**
      * Controls size and shape of the explosion
      */
-    private explosionGeometry: CircleGeometry;
+    private _explosionGeometry: CircleGeometry;
 
     /**
      * Controls the color of the explosion material
      */
-	private explosionMaterial: MeshBasicMaterial;
+	private _explosionMaterial: MeshBasicMaterial;
 
     /**
      * Controls the overall rendering of the explosion
      */
-    private explosion: Mesh;
+    private _explosion: Mesh;
 
     /**
      * Flag to signal if explosion is in its collidable state.
      * True = collidable. False = not collidable.
      */
-    private isActive: boolean = true;
+    private _isActive: boolean = true;
 
     /**
      * Flag to signal if the explosion is expanding/contracting.
      * True is expanding. False is contracting..
      */
-    private isExplosionGrowing: boolean = true;
+    private _isExplosionGrowing: boolean = true;
 
     /**
      * Starting size of the explosion. Usually the size of the thing that went boom.
      */
-    private radius: number;
+    private _radius: number;
 
     /**
      * Reference to the scene, used to remove projectile from rendering cycle once destroyed.
      */
-    private scene: Scene;
+    private _scene: Scene;
+
+    /**
+     * The speed at which the graphics of the explosion expand and fade away.
+     */
+    private _speed: number = 0.02;
 
     /**
      * Constructor for the Explosion class
@@ -65,41 +70,52 @@ export class Explosion implements Collidable {
      */
     constructor(scene: Scene, x:number, z: number, options?: ExplosionOptions) {
         const _options = options || ({} as ExplosionOptions);
-        this.scene = scene;
-        this.radius = _options.radius || 0.25;
+        this._scene = scene;
+        this._radius = _options.radius || 0.25;
+        this._speed = (!!_options.speed) ? _options.speed : this._speed;
         index++;
-        this.explosionGeometry = new CircleGeometry(_options.radius, 32);
-        this.explosionMaterial = new MeshBasicMaterial({
-            color: (!!_options.renderedInert) ? 0x05EDFF : 0xF9A602,
+        this._explosionGeometry = new CircleGeometry(_options.radius, 32);
+        this._explosionMaterial = new MeshBasicMaterial({
+            color: (!!_options.color) ? _options.color : ExplosionType.Fire,
             opacity: 1,
             transparent: false
         });
-        this.explosion = new Mesh(this.explosionGeometry, this.explosionMaterial);
-        this.explosion.position.set(x, (_options.y || -0.25), z);
-        this.explosion.rotation.set(-1.5708, 0, 0);
-        this.explosion.name = `explosion-${index}`;
-        this.scene.add(this.explosion);
+        this._explosion = new Mesh(this._explosionGeometry, this._explosionMaterial);
+        this._explosion.position.set(x, (_options.y || -0.25), z);
+        this._explosion.rotation.set(-1.5708, 0, 0);
+        this._explosion.name = `explosion-${index}`;
+        this._scene.add(this._explosion);
+    }
+    /**
+     * Call to eliminate regardless of current state.
+     * Mainly used for non-game instantiations of this (ie. help screen animations).
+     */
+    destroy() {
+        if (this._explosion) {
+            this._scene.remove(this._explosion);
+            this._explosion = null;
+        }
     }
     /**
      * At the end of each loop iteration, expand or contract the explosion a little.
      * @returns whether or not the explosion is done, and should be removed from owner (false).
      */
     endCycle(): boolean {
-        if (this.isActive) {
-            if (this.isExplosionGrowing) {
-                this.currentExplosionScale += 0.02;
-                this.explosion.scale.set(this.currentExplosionScale, this.currentExplosionScale, this.currentExplosionScale);
+        if (this._isActive) {
+            if (this._isExplosionGrowing) {
+                this._currentExplosionScale += this._speed;
+                this._explosion.scale.set(this._currentExplosionScale, this._currentExplosionScale, this._currentExplosionScale);
             } else {
-                this.currentExplosionScale -= 0.02;
-                this.explosionMaterial.transparent = true;
-                this.explosionMaterial.opacity = this.currentExplosionScale;
-                this.explosionMaterial.needsUpdate = true;
+                this._currentExplosionScale -= this._speed;
+                this._explosionMaterial.transparent = true;
+                this._explosionMaterial.opacity = this._currentExplosionScale;
+                this._explosionMaterial.needsUpdate = true;
             }
-            if (this.isExplosionGrowing && this.currentExplosionScale >= 2) {
-                this.currentExplosionScale = 1;
-                this.isExplosionGrowing = false;
-            } else if (!this.isExplosionGrowing && this.currentExplosionScale <= 0) {
-                this.isActive = false;
+            if (this._isExplosionGrowing && this._currentExplosionScale >= 2) {
+                this._currentExplosionScale = 1;
+                this._isExplosionGrowing = false;
+            } else if (!this._isExplosionGrowing && this._currentExplosionScale <= 0) {
+                this._isActive = false;
             }
             return true;
         }
@@ -110,28 +126,28 @@ export class Explosion implements Collidable {
      * @returns flag to signal non-destruction. True = not destroyed. False = destroyed.
      */
     getActive(): boolean {
-        return this.isActive;
+        return this._isActive;
     }
     /**
-     * Gets the current radius of the bounding box (circle) of the collidable.
+     * Gets the current _radius of the bounding box (circle) of the collidable.
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
     getCollisionRadius(): number {
-        return this.explosion.scale.x * this.radius;
+        return this._explosion.scale.x * this._radius;
     }
     /**
      * Gets the current position of the collidable object.
      * @returns the array is of length 2 with x coordinate being first, and then z coordinate.
      */
     getCurrentPosition(): number[] {
-        return [this.explosion.position.x, this.explosion.position.z];
+        return [this._explosion.position.x, this._explosion.position.z];
     }
     /**
      * Gets the name of the explosion.
      * @returns the name of the explosion.
      */
     getName(): string {
-        return this.explosion.name;
+        return this._explosion.name;
     }
     /**
      * Call to collidable object that it has been struck.
@@ -153,6 +169,6 @@ export class Explosion implements Collidable {
      * @returns the explosion mesh
      */
     getMesh(): Mesh {
-        return this.explosion;
+        return this._explosion;
     }
 }

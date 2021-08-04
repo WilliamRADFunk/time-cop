@@ -10,12 +10,14 @@ import { Collidable } from "../collidable";
 import { CollisionatorSingleton } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
+import { ExplosionType } from '../models/explosions';
 import { animateEntity } from '../utils/animate-entity';
 import { calculateEntityProjectilePathMain, calculateEntityProjectilePathSecondary } from '../utils/calculate-entity-projectile-path';
 import { calculateNewEntityDirection } from '../utils/calculate-new-entity-direction';
 import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
 import { rotateEntity } from '../utils/rotate-entity';
+import { Explosion } from './explosion';
 import { Projectile } from './projectile';
 
 let index: number = 0;
@@ -88,6 +90,11 @@ export class Player implements Collidable, Entity {
      * Reference to the scene, used to remove player from rendering cycle once destroyed.
      */
     private _scene: Scene;
+
+    /**
+     * The list of smoke explosions the player has fired.
+     */
+    private _smokeExplosions: Explosion[] = [];
 
     /**
      * The speed at which the player travels.
@@ -235,6 +242,22 @@ export class Player implements Collidable, Entity {
             }
             this._projectiles = tempProjectiles.slice();
             tempProjectiles = null;
+
+            // Work through each smoke explosion the bandit has fired.
+            let tempSmokeExplosion = [];
+            for (let i = 0; i < this._smokeExplosions.length; i++) {
+                let smokeExplosion = this._smokeExplosions[i];
+                if (smokeExplosion && !smokeExplosion.endCycle()) {
+                    CollisionatorSingleton.remove(smokeExplosion);
+                    this._smokeExplosions[i] = null;
+                }
+                smokeExplosion = this._smokeExplosions[i];
+                if (smokeExplosion) {
+                    tempSmokeExplosion.push(smokeExplosion);
+                }
+            }
+            this._smokeExplosions = tempSmokeExplosion.slice();
+            tempSmokeExplosion = null;
         }
         return true;
     }
@@ -266,6 +289,18 @@ export class Player implements Collidable, Entity {
             true));
         CollisionatorSingleton.add(this._projectiles[this._projectiles.length - 1]);
         SOUNDS_CTRL.playFire();
+
+        this._smokeExplosions.push(new Explosion(
+            this._scene,
+            bulletPoints[0],
+            bulletPoints[1],
+            {
+                color: ExplosionType.Smoke,
+                radius: 0.08,
+                speed: 0.04,
+                y: this._yPos - 0.26
+            }
+        ));
     }
 
     /**
@@ -331,6 +366,7 @@ export class Player implements Collidable, Entity {
     public removeFromScene(scene: Scene): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
         this._projectiles.forEach(projectile => projectile.destroy());
+        this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
         this._projectiles.length = 0;
         CollisionatorSingleton.remove(this);
     }

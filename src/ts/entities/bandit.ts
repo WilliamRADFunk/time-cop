@@ -16,6 +16,8 @@ import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
 import { Projectile } from './projectile';
 import { rotateEntity } from '../utils/rotate-entity';
+import { Explosion } from './explosion';
+import { ExplosionType } from '../models/explosions';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -171,6 +173,11 @@ export class Bandit implements Collidable, Entity {
     private _scene: Scene;
 
     /**
+     * The list of smoke explosions the bandit has fired.
+     */
+    private _smokeExplosions: Explosion[] = [];
+
+    /**
      * The speed at which the bandit travels.
      */
     private _speed: number = 0.008;
@@ -323,7 +330,7 @@ export class Bandit implements Collidable, Entity {
             }
 
             // TODO: Bandit fires weapon at certain intervals.
-            if (Math.random() <= (0.0005 * this._level)) {
+            if (Math.random() <= (0.001 * this._level) && this._projectiles.length < this._level) {
                 let x1 = this._currentPoint[0];
                 let z1 = this._currentPoint[1];
                 let x2;
@@ -378,6 +385,16 @@ export class Bandit implements Collidable, Entity {
                         true, 0.01 * this._level, this._yPos, 0.0000001, false);
                     this._projectiles.push(miss);
                     CollisionatorSingleton.add(miss);
+
+                    this._smokeExplosions.push(new Explosion(
+                        this._scene,
+                        x1, z1,
+                        {
+                            color: ExplosionType.Smoke,
+                            radius: 0.08,
+                            y: this._yPos - 0.26
+                        }
+                    ));
                 }
             }
 
@@ -396,6 +413,47 @@ export class Bandit implements Collidable, Entity {
             }
             this._projectiles = tempProjectiles.slice();
             tempProjectiles = null;
+
+            // Work through each smoke explosion the bandit has fired.
+            let tempSmokeExplosion = [];
+            for (let i = 0; i < this._smokeExplosions.length; i++) {
+                let smokeExplosion = this._smokeExplosions[i];
+                if (smokeExplosion && !smokeExplosion.endCycle()) {
+                    CollisionatorSingleton.remove(smokeExplosion);
+                    this._smokeExplosions[i] = null;
+                }
+                smokeExplosion = this._smokeExplosions[i];
+                if (smokeExplosion) {
+                    let x1 = this._currentPoint[0];
+                    let z1 = this._currentPoint[1];
+                    switch(this._currDirection) {
+                        case EntityDirection.Right: {
+                            z1 = this._currentPoint[1] + this._radius;
+                            x1 = this._currentPoint[0] - 0.02;
+                            break;
+                        }
+                        case EntityDirection.Up: {
+                            z1 = this._currentPoint[1] + 0.02;
+                            x1 = this._currentPoint[0] + this._radius;
+                            break;
+                        }
+                        case EntityDirection.Left: {
+                            z1 = this._currentPoint[1] - this._radius;
+                            x1 = this._currentPoint[0] + 0.02;
+                            break;
+                        }
+                        case EntityDirection.Down: {
+                            z1 = this._currentPoint[1] - 0.02;
+                            x1 = this._currentPoint[0] - this._radius;
+                            break;
+                        }
+                    }
+                    smokeExplosion.getMesh().position.set(x1, this._yPos - 0.26, z1);
+                    tempSmokeExplosion.push(smokeExplosion);
+                }
+            }
+            this._smokeExplosions = tempSmokeExplosion.slice();
+            tempSmokeExplosion = null;
         }
         return this._isActive;
     }
@@ -471,6 +529,7 @@ export class Bandit implements Collidable, Entity {
     public removeFromScene(scene: Scene): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
         this._projectiles.forEach(projectile => projectile.destroy());
+        this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
         this._projectiles.length = 0;
         CollisionatorSingleton.remove(this);
     }

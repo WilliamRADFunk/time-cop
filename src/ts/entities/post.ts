@@ -6,6 +6,7 @@ import {
 
 import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { Collidable } from "../collidable";
+import { SOUNDS_CTRL } from "../controls/controllers/sounds-controller";
 
 export const postPositions: [number, number][] = [
     [ -4, -4 ], [ 4, -4 ],

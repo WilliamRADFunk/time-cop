@@ -11,8 +11,9 @@ import {
 
 import { Collidable } from '../collidable';
 import { Explosion } from './explosion';
-import { CollisionatorSingleton } from '../collisionator';
+import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
+import { ExplosionType } from '../models/explosions';
 /**
  * Static index to help name one projectile differenly than another.
  */
@@ -191,12 +192,11 @@ export class Projectile implements Collidable {
             this._headMesh.position.x,
             this._headMesh.position.z,
             {
-                renderedInert: isInert,
+                color: isInert ? ExplosionType.Electric : ExplosionType.Fire,
                 radius: 0.12,
                 y: this._headY + 0.26
             });
         if (!isInert) CollisionatorSingleton.add(this._explosion);
-        if (!this._isEnemyMissile) SOUNDS_CTRL.playFire();
     }
     /**
      * Call to eliminate regardless of current state.
@@ -249,7 +249,7 @@ export class Projectile implements Collidable {
             }
             if (this._distanceTraveled >= this._totalDistance) {
                 this.createExplosion(false);
-                // TODO: Play ricochet sound
+                // SOUNDS_CTRL.playFooPang();
                 this.removeFromScene(this._scene);
             }
         }
@@ -292,7 +292,11 @@ export class Projectile implements Collidable {
     impact(self: Collidable, otherCollidable: string): boolean {
         if (this._isActive) {
             this._isActive = false;
-            SOUNDS_CTRL.playExplosionSmall();
+            if (getCollisionType(self.getName()) === CollisionType.Enemy_Projectile && getCollisionType(otherCollidable) === CollisionType.Post) {
+                SOUNDS_CTRL.playFooPang();
+            } else {
+                SOUNDS_CTRL.playExplosionSmall();
+            }
             this.createExplosion(false);
             return true;
         }

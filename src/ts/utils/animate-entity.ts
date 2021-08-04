@@ -10,13 +10,13 @@ export function animateEntity(entity: Entity): void {
     const currIndex = entity._animationCounter;
     // Middle Posture
     if (currIndex < 10 || (currIndex > 19 && currIndex < 30)) {
-        meshes[0].visible = true;
-        meshes[1].visible = false;
-        meshes[2].visible = false;
-    } else if (currIndex > 29) {
         meshes[0].visible = false;
         meshes[1].visible = false;
         meshes[2].visible = true;
+    } else if (currIndex > 29) {
+        meshes[0].visible = true;
+        meshes[1].visible = false;
+        meshes[2].visible = false;
     } else {
         meshes[0].visible = false;
         meshes[1].visible = true;
