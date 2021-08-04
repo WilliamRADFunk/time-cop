@@ -86,21 +86,23 @@ export class Explosion implements Collidable {
         this._explosion.name = `explosion-${index}`;
         this._scene.add(this._explosion);
     }
+
     /**
      * Call to eliminate regardless of current state.
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
-    destroy() {
+    public destroy(): void {
         if (this._explosion) {
             this._scene.remove(this._explosion);
             this._explosion = null;
         }
     }
+
     /**
      * At the end of each loop iteration, expand or contract the explosion a little.
      * @returns whether or not the explosion is done, and should be removed from owner (false).
      */
-    endCycle(): boolean {
+    public endCycle(): boolean {
         if (this._isActive) {
             if (this._isExplosionGrowing) {
                 this._currentExplosionScale += this._speed;
@@ -121,54 +123,61 @@ export class Explosion implements Collidable {
         }
         return false;
     }
+
     /**
      * Gets the viability of the object.
      * @returns flag to signal non-destruction. True = not destroyed. False = destroyed.
      */
-    getActive(): boolean {
+    public getActive(): boolean {
         return this._isActive;
     }
+
     /**
      * Gets the current _radius of the bounding box (circle) of the collidable.
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
-    getCollisionRadius(): number {
+    public getCollisionRadius(): number {
         return this._explosion.scale.x * this._radius;
     }
+
     /**
      * Gets the current position of the collidable object.
      * @returns the array is of length 2 with x coordinate being first, and then z coordinate.
      */
-    getCurrentPosition(): number[] {
+    public getCurrentPosition(): number[] {
         return [this._explosion.position.x, this._explosion.position.z];
     }
+
     /**
      * Gets the name of the explosion.
      * @returns the name of the explosion.
      */
-    getName(): string {
+    public getName(): string {
         return this._explosion.name;
     }
+
     /**
      * Call to collidable object that it has been struck.
      * @param self the thing to remove from collidables...and scene.
      * @returns whether or not impact means removing item from the scene.
      */
-    impact(self: Collidable): boolean {
+    public impact(self: Collidable): boolean {
         return false;
     }
+
     /**
      * States it is a passive type or not. Two passive types cannot colllide with each other.
      * @returns True is passive | False is not passive
      */
-    isPassive(): boolean {
+    public isPassive(): boolean {
         return true;
     }
+
     /**
      * Returns mesh so it can be removed from scene.
      * @returns the explosion mesh
      */
-    getMesh(): Mesh {
+    public getMesh(): Mesh {
         return this._explosion;
     }
 }

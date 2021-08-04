@@ -1,5 +1,3 @@
-import { Color } from "three";
-
 export interface ExplosionOptions {
     /**
      * Starting size of the explosions, used for collision reference.

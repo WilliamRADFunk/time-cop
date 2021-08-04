@@ -16,9 +16,10 @@ import { HelpCtrl } from './controllers/help-controller';
 import { TextBase } from '../../controls/text/text-base';
 import { SettingsCtrl } from '../../controls/controllers/settings-controllers';
 import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
-import { Post, postPositions } from '../../entities/post';
+import { Post, PostPositions } from '../../entities/post';
 import { Bandit, banditStartPositions } from '../../entities/bandit';
 import { Player } from '../../entities/player';
+import { ScoreController } from '../../controls/controllers/score-controller';
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
@@ -109,6 +110,16 @@ export class MainPlayLevel {
     private _helpCtrl: HelpCtrl;
 
     /**
+     * Current level player is on.
+     */
+    private _level: number;
+
+    /**
+     * Current number of lives player has.
+     */
+    private _lives: number;
+
+    /**
      * Reference to _onWindowResize so that it can be removed later.
      */
     private _listenerRef: () => void;
@@ -127,6 +138,11 @@ export class MainPlayLevel {
      * Reference to the scene, used to remove elements from rendering cycle once destroyed.
      */
     private _scene: Scene;
+
+    /**
+     * The instance of scoreboard used for this level instance.
+     */
+    private _scoreboard: ScoreController;
 
     /**
      * Reference to this scene's settings controller.
@@ -158,18 +174,37 @@ export class MainPlayLevel {
     constructor(
         scene: SceneType,
         level: number,
-        lives: number,
-        score: number) {
+        lives: number) {
 
         this._camera = scene.camera as OrthographicCamera;
         this._scene = scene.scene;
+        this._level = level;
+        this._lives = lives;
 
         // Text, Button, and Event Listeners
         this._onInitialize(scene);
         this._listenerRef = this._onWindowResize.bind(this);
         window.addEventListener('resize', this._listenerRef, false);
 
+        for (let x = 0; x < PostPositions.length; x++) {
+            const postPos = PostPositions[x];
+            const post = new Post(this._scene, postPos[0], postPos[1], 1);
+            this._posts.push(post);
+            CollisionatorSingleton.add(post);
+        }
+
+        this._helpCtrl = new HelpCtrl(
+            this._scene,
+            border);
+        
+        this._settingsCtrl = new SettingsCtrl(
+            this._scene,
+            border);
+    }
+
+    private addEntities(): void {
         this._player = new Player(
+            this._scoreboard,
             this._scene,
             ASSETS_CTRL.textures.sheriff,
             0, 0,
@@ -179,17 +214,11 @@ export class MainPlayLevel {
         this._player.addToScene();
         CollisionatorSingleton.add(this._player);
 
-        for (let x = 0; x < postPositions.length; x++) {
-            const postPos = postPositions[x];
-            const post = new Post(this._scene, postPos[0], postPos[1], 1);
-            this._posts.push(post);
-            CollisionatorSingleton.add(post);
-        }
-
         for (let y = 0; y < banditStartPositions.length; y++) {
             const startPos = banditStartPositions[y];
             const bandit = new Bandit(
-                level,
+                this._scoreboard,
+                this._level,
                 this._scene,
                 ASSETS_CTRL.textures.banditCowboy,
                 startPos[0],
@@ -203,15 +232,6 @@ export class MainPlayLevel {
             CollisionatorSingleton.add(bandit);
             this._bandits.push(bandit);
         }
-        
-
-        this._helpCtrl = new HelpCtrl(
-            this._scene,
-            border);
-        
-        this._settingsCtrl = new SettingsCtrl(
-            this._scene,
-            border);
     }
 
     /**
@@ -429,6 +449,15 @@ export class MainPlayLevel {
     }
 
     /**
+     * Passes the instance of the scoreboard to the level for use in adding points and regaining lives.
+     * @param scoreBoard the instance of scoreboard used for this level instance.
+     */
+    public addScoreBoard(scoreBoard: ScoreController): void {
+        this._scoreboard = scoreBoard;
+        this.addEntities();
+    }
+
+    /**
      * Removes any attached DOM elements, event listeners, or anything separate from ThreeJS
      */
     public dispose(): void {
@@ -455,7 +484,7 @@ export class MainPlayLevel {
      * At the end of each loop iteration, check for end state.
      * @returns whether or not the scene is done.
      */
-    public endCycle(): { [key: number]: number } {
+    public endCycle(): { [key: string]: number } {
         this._counters.jobs++;
         if (this._counters.jobs > 10) this._counters.jobs = 0;
         // Game externally paused from control panel. Nothing should progress.
@@ -490,7 +519,10 @@ export class MainPlayLevel {
         if (this._state === MainLevelState.win) {
             // Do the victory dance
             // Return level, score, and player lives.
-            return;
+            return {
+                score: this._scoreboard.getScore(),
+                lives: this._lives
+            };
         }
 
         if (this._state === MainLevelState.active) {
@@ -502,6 +534,9 @@ export class MainPlayLevel {
                 }
                 return true;
             });
+            if (!this._bandits.length) {
+                this._state = MainLevelState.win;
+            }
         }
 
         CollisionatorSingleton.checkForCollisions(this._scene);

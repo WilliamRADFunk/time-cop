@@ -390,7 +390,7 @@ export class Menu {
                 bevelSegments: 3
             });
         this._mainBanner = new Mesh( this._mainBannerGeometry, this._menuSelectedMaterial );
-        this._mainBanner.position.set(-3.85, -0.5, -3);
+        this._mainBanner.position.set(-1.75, -0.5, -3);
         this._mainBanner.rotation.x = -1.5708;
         this._scene.add(this._mainBanner);
 

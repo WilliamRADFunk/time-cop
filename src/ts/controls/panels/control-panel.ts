@@ -145,6 +145,9 @@ export class ControlPanel {
         this.resize(position);
     }
 
+    /**
+     * Handles the hiding, showing, and enabling of relevant buttons after exiting help mode, and tracks state.
+     */
     private _onExitHelpClicked(): void {
         SOUNDS_CTRL.resumeSound();
 
@@ -162,6 +165,9 @@ export class ControlPanel {
         this._buttons.playButton.enable();
     }
 
+    /**
+     * Handles the hiding, showing, and enabling of relevant buttons after exiting settings mode, and tracks state.
+     */
     private _onExitSettingsClicked(): void {
         SOUNDS_CTRL.resumeSound();
 
@@ -179,6 +185,9 @@ export class ControlPanel {
         this._buttons.playButton.enable();
     }
 
+    /**
+     * Handles the hiding, showing, and enabling of relevant buttons after entering help mode, and tracks state.
+     */
     private _onHelpClicked(): void {
         SOUNDS_CTRL.pauseSound();
 
@@ -207,6 +216,9 @@ export class ControlPanel {
         }
     }
 
+    /**
+     * Handles the hiding, showing, and enabling of relevant buttons after play button clicked, and tracks state.
+     */
     private _onPlayClicked(): void {
         SOUNDS_CTRL.resumeSound();
 
@@ -217,6 +229,9 @@ export class ControlPanel {
         this._prevState = null;
     }
 
+    /**
+     * Handles the hiding, showing, and enabling of relevant buttons after entering settings mode, and tracks state.
+     */
     private _onSettingsClicked(): void {
         SOUNDS_CTRL.pauseSound();
 
@@ -233,6 +248,9 @@ export class ControlPanel {
         this._buttons.playButton.disable();
     }
 
+    /**
+     * Handles the hiding, showing, and enabling of relevant buttons after sound off is clicked, and tracks state.
+     */
     private _onSoundOffClicked(): void {
         SOUNDS_CTRL.resumeSound();
 
@@ -240,6 +258,9 @@ export class ControlPanel {
         this._buttons.soundOnButton.show();
     }
 
+    /**
+     * Handles the hiding, showing, and enabling of relevant buttons after sound on is clicked, and tracks state.
+     */
     private _onSoundOnClicked(): void {
         SOUNDS_CTRL.pauseSound();
 
@@ -250,7 +271,7 @@ export class ControlPanel {
     /**
      * Remove the element from the DOM
      */
-    public dispose() {
+    public dispose(): void {
         Object.values(this._buttons).forEach(button => button && button.dispose());
         this.element && this.element.remove();
     }
@@ -265,7 +286,7 @@ export class ControlPanel {
     /**
      * Hides the button from visibility.
      */
-    public hide() {
+    public hide(): void {
         this.element.style.visibility = 'hidden';
     }
 
@@ -273,7 +294,7 @@ export class ControlPanel {
      * Sets the height, width, left and top positioning of the element.
      * @param position height, width, left and top position of the button.
      */
-    public resize(position: HTMLElementPosition) {
+    public resize(position: HTMLElementPosition): void {
         this.element.style.maxWidth = `${0.1425 * position.width}px`;
         this.element.style.width = `${0.1425 * position.width}px`;
         this.element.style.maxHeight = `${0.04 * position.height}px`;
@@ -296,7 +317,7 @@ export class ControlPanel {
     /**
      * Makes the button visible.
      */
-    public show() {
+    public show(): void {
         this.element.style.visibility = 'visible';
     }
 }

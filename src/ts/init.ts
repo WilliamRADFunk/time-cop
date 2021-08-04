@@ -9,23 +9,13 @@ import { Menu } from './scenes/main-menu/menu';
 
 import { ENVIRONMENT } from './environment';
 
-import * as stats from 'stats.js';
-
 import { createSceneModule } from './utils/create-scene-module';
 import { disposeScene } from './utils/dispose-scene';
 import { adjustWindowDimensions } from './utils/on-window-resize';
-
-const statsPanel = new stats();
+import { ScoreController } from './controls/controllers/score-controller';
+import { Color } from 'three';
 
 const scenes: { [ key: string ]: SceneType } = {
-    ancientRuins: {
-        active: false,
-        camera: null,
-        instance: null,
-        raycaster: null,
-        renderer: null,
-        scene: null
-    },
     devMenu: {
         active: false,
         camera: null,
@@ -51,14 +41,6 @@ const scenes: { [ key: string ]: SceneType } = {
         scene: null
     },
     menu: {
-        active: false,
-        camera: null,
-        instance: null,
-        raycaster: null,
-        renderer: null,
-        scene: null
-    },
-    shipLayout: {
         active: false,
         camera: null,
         instance: null,
@@ -92,12 +74,12 @@ const loadDevMenu = () => {
             loadGameMenu();
         }, 50);
     };
-    const activateMainPlayLevelScene = (level: number, score: number, lives: number) => {
+    const activateMainPlayLevelScene = (level: number, lives: number) => {
         scenes.devMenu.active = false;
         window.removeEventListener( 'resize', sceneMod.onWindowResizeRef, false);
         sceneMod.container.removeChild( (scenes.devMenu.renderer as any).domElement );
         setTimeout(() => {
-            loadMainPlayLevelScene(level, score, lives);
+            loadMainPlayLevelScene(level, lives);
         }, 50);
     };
     
@@ -151,7 +133,7 @@ const loadGameMenu = () => {
                 disposeScene(scenes.menu);
 
                 // TODO: Load ship lost in wormhole scene. For now, launch most recently completed mini-section.
-                loadMainPlayLevelScene(1, 0, 3);
+                loadMainPlayLevelScene(1, 3);
             }, 750);
         } else {
             scenes.menu.renderer.render( scenes.menu.scene, scenes.menu.camera );
@@ -203,10 +185,13 @@ const loadIntroScene = () => {
 /**
  * Game's main level scene, where player actually plays the game. Only starts when all assets are finished loading.
  */
-const loadMainPlayLevelScene = (level: number, score: number, lives: number) => {
+const loadMainPlayLevelScene = (level: number, lives: number) => {
     const sceneMod = createSceneModule(scenes.mainPlayLevel);
     // Create instance of game section.
-    scenes.mainPlayLevel.instance = new MainPlayLevel(scenes.mainPlayLevel, level, score, lives);
+    scenes.mainPlayLevel.instance = new MainPlayLevel(scenes.mainPlayLevel, level, lives);
+    // Create instance of score keeper.
+    const scoreboard = new ScoreController(scenes.mainPlayLevel.scene, new Color(0xFFFFFF), ASSETS_CTRL.gameFont);
+    scenes.mainPlayLevel.instance.addScoreBoard(scoreboard);
 
     /**
      * The render loop. Everything that should be checked, called, or drawn in each animation frame.
@@ -221,13 +206,11 @@ const loadMainPlayLevelScene = (level: number, score: number, lives: number) => 
             disposeScene(scenes.mainPlayLevel);
             return;
         } else {
-            statsPanel.begin();
             const layout: { [key: number]: number } = scenes.mainPlayLevel.instance.endCycle();
-            statsPanel.end();
             if (layout) {
                 scenes.mainPlayLevel.instance.dispose();
                 scenes.mainPlayLevel.active = false;
-                window.alert(layout);
+                window.alert(JSON.stringify(layout));
                 // Remove renderer from the html container, and remove event listeners.
                 window.removeEventListener( 'resize', sceneMod.onWindowResizeRef, false);
                 sceneMod.container.removeChild( (scenes.mainPlayLevel.renderer as any).domElement );

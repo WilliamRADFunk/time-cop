@@ -68,8 +68,8 @@ export class PanelBase {
         barrier.name = `${id} - Outter Box`;
         barrier.position.set(x, -1, z);
         barrier.rotation.set(1.5708, 0, 0);
-        scene.add(barrier);
         this._innerbox = barrier;
+        scene.add(barrier);
 
         this._outermaterial = new MeshBasicMaterial({
             color: 0x000000,
@@ -82,24 +82,37 @@ export class PanelBase {
         barrier.name = `${id} - Inner Box`;
         barrier.position.set(x, -6, z);
         barrier.rotation.set(1.5708, 0, 0);
-        scene.add(barrier);
         this._outerbox = barrier;
+        scene.add(barrier);
     }
 
-    public dispose() {
-        this._scene.remove();
+    /**
+     * Removes the panel from the scene.
+     */
+    public dispose(): void {
+        this._scene.remove(this._innerbox);
+        this._scene.remove(this._outerbox);
     }
 
+    /**
+     * Hides the panel from view.
+     */
     public hide(): void {
         this._outerbox.visible = false;
         this._innerbox.visible = false;
     }
 
+    /**
+     * Makes the panel visible.
+     */
     public show(): void {
         this._outerbox.visible = true;
         this._innerbox.visible = true;
     }
 
+    /**
+     * Adjusts the opacity if the panel from partly transparent to completely opaque.
+     */
     public toggleOpacity(): void {
         if (this._outermaterial.opacity < 1) {
             this._innermaterial.opacity = 1;

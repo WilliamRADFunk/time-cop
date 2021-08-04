@@ -1,61 +1,26 @@
 import {
     DoubleSide,
-    LinearFilter,
     Mesh,
     MeshBasicMaterial,
-    MeshPhongMaterial,
     Object3D,
     PlaneGeometry,
-    Scene,
-    Texture } from "three";
+    Scene } from "three";
 
 // Local utilities
 
 // Panels
-import { LeftBottomMiddlePanel } from "../../controls/panels/left-bottom-middle-panel";
-import { LeftBottomPanel } from "../../controls/panels/left-bottom-panel";
-import { LeftTopMiddlePanel } from "../../controls/panels/left-top-middle-panel";
-import { LeftTopPanel } from "../../controls/panels/left-top-panel";
 import { PanelBase } from "../../controls/panels/panel-base";
-import { RightBottomMiddlePanel } from "../../controls/panels/right-bottom-middle-panel";
-import { RightBottomPanel } from "../../controls/panels/right-bottom-panel";
-import { RightTopMiddlePanel } from "../../controls/panels/right-top-middle-panel";
-import { RightTopPanel } from "../../controls/panels/right-top-panel";
 
 // HTML Texts
-import { FreestyleText } from "../../controls/text/freestyle-text";
-import { RightTopStatsText4 } from "../../controls/text/stats/right-top-stats-text-4";
 import { TextBase } from "../../controls/text/text-base";
-import { TextType } from "../../controls/text/text-type";
-import { LeftBottomMiddleTitleText } from "../../controls/text/title/left-bottom-middle-title-text";
-import { LeftBottomTitleText } from "../../controls/text/title/left-bottom-title-text";
-import { LeftTopMiddleTitleText } from "../../controls/text/title/left-top-middle-title-text";
-import { LeftTopTitleText } from "../../controls/text/title/left-top-title-text";
-import { RightBottomMiddleTitleText } from "../../controls/text/title/right-bottom-middle-title-text";
-import { RightBottomTitleText } from "../../controls/text/title/right-bottom-title-text";
-import { RightTopMiddleTitleText } from "../../controls/text/title/right-top-middle-title-text";
-import { RightTopTitleText } from "../../controls/text/title/right-top-title-text";
 
 // Buttons
 import { ButtonBase } from "../../controls/buttons/button-base";
-import { BUTTON_COLORS, BUTTON_COLORS_INVERSE } from "../../styles/button-colors";
 
 // Interfaces
-import { Actor } from "../../models/actor";
-import { HTMLElementPosition } from "../../models/html-element-position";
 
 // Constants and Singletons
-import { SOUNDS_CTRL } from "./sounds-controller";
-import { COLORS } from "../../styles/colors";
-import { colorLuminance } from "../../utils/color-shader";
-import { noOp } from "../../utils/no-op";
-import { Explosion } from "../../entities/explosion";
-import { ReloadButton } from "../buttons/reload-button";
-import { LoadButton } from "../../controls/buttons/load-button";
 import { ProfileBase } from "../../controls/profiles/profile-base";
-import { RightBottomMiddleProfile } from "../../controls/profiles/right-bottom-middle-profile";
-import { RightBottomMiddleDialogueText } from "../../controls/text/dialogue/right-bottom-middle-dialogue-text";
-import { FreestyleSquareButton } from "../../controls/buttons/freestyle-square-button";
 import { SettingsPanel } from "../panels/settings-panel";
 
 /**
@@ -68,7 +33,6 @@ let border: string;
  * The settings controller class - coordinates everything on the help screen.
  */
 export class SettingsCtrl {
-
     /**
      * All of the actors contained in the settings screen.
      */
@@ -120,14 +84,11 @@ export class SettingsCtrl {
      * @param scene ThreeJS scene to add meshes to for settings screen.
      * @param brdr  dev environment brdr set in creating class.
      */
-    constructor(
-        scene: Scene,
-        brdr: string) {
+    constructor(scene: Scene, brdr: string) {
         this._scene = scene;
         border = brdr;
         this._buildSettingsScreen();
     }
-
 
     /**
      * Coordinates the creation of all the help screen content.
@@ -189,6 +150,10 @@ export class SettingsCtrl {
 
     /**
      * Resizes non-threejs content to the new window size.
+     * @param height window height.
+     * @param left left point of the threejs area.
+     * @param top top point of the threejs area.
+     * @param width window width.
      */
     public onWindowResize(height: number, left: number, top: number, width: number): void {
         Object.keys(this._settingsTexts)

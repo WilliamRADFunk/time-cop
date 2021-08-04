@@ -24,10 +24,11 @@ export class ProfileBase {
 
     /**
      * Constructor for the Right Top Profile class.
-     * @param scene scene into which the profile should be added.
-     * @param texture texture for the engineer's image.
-     * @param position x, z location of the profile image.
-     * @param size height and width of the profile rectangle.
+     * @param scene         scene into which the profile should be added.
+     * @param actor         actor frame to allow for non-interactive animation of the profile element.
+     * @param texture       texture for the engineer's image.
+     * @param position      x, z location of the profile image.
+     * @param size          height and width of the profile rectangle.
      * @param titledVersion flag to adjust size for title.
      */
     constructor(

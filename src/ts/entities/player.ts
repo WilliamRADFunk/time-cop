@@ -8,6 +8,7 @@ import {
     
 import { Collidable } from "../collidable";
 import { CollisionatorSingleton } from '../collisionator';
+import { ScoreController } from '../controls/controllers/score-controller';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
 import { ExplosionType } from '../models/explosions';
@@ -21,6 +22,7 @@ import { Explosion } from './explosion';
 import { Projectile } from './projectile';
 
 let index: number = 0;
+let hitBoxMesh: Mesh;
 const showHitBox = true;
 
 export class Player implements Collidable, Entity {
@@ -92,6 +94,11 @@ export class Player implements Collidable, Entity {
     private _scene: Scene;
 
     /**
+     * The instance of scoreboard used for this level instance.
+     */
+    private _scoreboard: ScoreController;
+
+    /**
      * The list of smoke explosions the player has fired.
      */
     private _smokeExplosions: Explosion[] = [];
@@ -106,23 +113,20 @@ export class Player implements Collidable, Entity {
      */
     private _yPos: number;
 
-    private mesh: Mesh;
-
     /**
      * Constructor for the Bandit class
-     * @param scene        graphic rendering scene object. Used each iteration to redraw things contained in scene.
-     * @param x1           origin point x of where the player starts.
-     * @param z1           origin point z of where the player starts.
-     * @param x2           final point x of where the player starts.
-     * @param z2           final point z of where the player starts.
-     * @param dist         total distance the player must travel.
-     * @param speed        speed for player instantiation.
-     * @param yPos         layer level for player to appear.
-     * @param fireNow      optional choice not to wait to have player start moving.
-     * @param isHelpScreen lets player know it's a help screen iteration and not to play sound effects.
+     * @param scoreboard    the instance of scoreboard used for this level instance.
+     * @param scene         graphic rendering scene object. Used each iteration to redraw things contained in scene.
+     * @param playerTexture sprite sheet texture used to represent this level's player animation frames.
+     * @param x1            origin point x of where the player starts.
+     * @param z1            origin point z of where the player starts.
+     * @param speed         speed for player instantiation.
+     * @param yPos          layer level for player to appear.
+     * @param isHelpScreen  lets player know it's a help screen iteration and not to play sound effects.
      * @hidden
      */
     constructor(
+        scoreboard: ScoreController,
         scene: Scene,
         playerTexture: Texture,
         x1:number,
@@ -131,6 +135,7 @@ export class Player implements Collidable, Entity {
         yPos?: number,
         isHelpScreen?: boolean) {
         index++;
+        this._scoreboard = scoreboard;
         this._yPos = yPos || 0.6;
         this._speed = speed || this._speed;
         this._currentPoint = [x1, z1];
@@ -146,10 +151,10 @@ export class Player implements Collidable, Entity {
         });
 
         if (showHitBox) {
-            this.mesh = new Mesh(hitBoxGeometry, material);
-            this.mesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
-            this.mesh.rotation.set(-1.5708, 0, 0);
-            this._scene.add(this.mesh);
+            hitBoxMesh = new Mesh(hitBoxGeometry, material);
+            hitBoxMesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
+            hitBoxMesh.rotation.set(-1.5708, 0, 0);
+            this._scene.add(hitBoxMesh);
         }
 
         [0, 1, 2].forEach((val: number) => {
@@ -218,7 +223,7 @@ export class Player implements Collidable, Entity {
                 this._currentPoint[0] += this._speed;
             }
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
-            showHitBox && this.mesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
+            showHitBox && hitBoxMesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
 
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
@@ -262,6 +267,10 @@ export class Player implements Collidable, Entity {
         return true;
     }
 
+    /**
+     * Signals a click of the mouse to fire a projectile from one of the player's weapons.
+     * @param isSecondary signals that the player should fire from the opposite direction they are facing.
+     */
     public fire(isSecondary: boolean): void {
         let bulletPoints;
         if (isSecondary) {
@@ -286,7 +295,8 @@ export class Player implements Collidable, Entity {
             this._speed + 0.02,
             -1,
             0.00000001,
-            true));
+            true,
+            this._scoreboard));
         CollisionatorSingleton.add(this._projectiles[this._projectiles.length - 1]);
         SOUNDS_CTRL.playFire();
 

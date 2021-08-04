@@ -14,10 +14,13 @@ import { Explosion } from './explosion';
 import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { ExplosionType } from '../models/explosions';
+import { ScoreController } from '../controls/controllers/score-controller';
+
 /**
  * Static index to help name one projectile differenly than another.
  */
 let index: number = 0;
+
 /**
  * @class
  * Projectile that represents missile unit in the game. It hits something, it blows up.
@@ -27,89 +30,120 @@ export class Projectile implements Collidable {
      * Holds tail color.
      */
     private _color: Color;
+
     /**
      * Keeps track of the x,z point the missile is at currently.
      */
     private _currentPoint: number[];
+
     /**
      * Tracks the distance traveled thus far to update the _calculateNextPoint calculation.
      */
     private _distanceTraveled: number;
+
     /**
      * Keeps track of the x,z point of player's click point.
      */
     private _endingPoint: number[];
+
     /**
      * Explosion from impacted missile
      */
     private _explosion: Explosion;
+
     /**
      * Controls size and shape of the missile's glowing head.
      */
     private _headGeometry: CircleGeometry;
+
     /**
      * Controls the color of the missile's glowing head material.
      */
     private _headMaterial: MeshBasicMaterial;
+
     /**
      * Controls the overall rendering of the glowing head.
      */
     private _headMesh: Mesh;
+
     /**
      * Allows for a variable y value in head of missile
      */
     private _headY: number;
+
     /**
      * Flag to signal if the missile has been destroyed.
      * True is not destroyed. False is destroyed.
      */
     private _isActive: boolean = true;
+
     /**
      * Flag to signal if the missile can be considered for collisions.
      * True is collidable. False is not collidable.
      */
     private _isCollidable: boolean = false;
+
     /**
      * Flag to determine enemy allegiance of missile.
      */
     private _isEnemyMissile: boolean;
+
     /**
      * Keeps track of the x,z point where missile fired from.
      */
     private _originalStartingPoint: number[];
+
+    /**
+     * Number of points scored for destroying enemy projectile.
+     */
+    private _points: number = 5;
+
     /**
      * Reference to the scene, used to remove projectile from rendering cycle once destroyed.
      */
     private _scene: Scene;
+
+    /**
+     * The instance of scoreboard used for this level instance.
+     */
+    private _scoreboard: ScoreController;
+
     /**
      * The speed at which the missile travels.
      */
     private _speed: number = 0.03;
+
     /**
      * Controls size and shape of the missile's fiery trail.
      */
     private _tailGeometry: Geometry;
+
     /**
      * Controls the color of the missile's fiery trail material.
      */
     private _tailMaterial: LineBasicMaterial;
+
     /**
      * Controls the overall rendering of the missile's fiery trail.
      */
     private _tailMesh: Line;
+
     /**
      * Allows for a variable y value in tail of missile
      */
     private _tailY: number;
+
     /**
      * The total distance from satellite to player's click point.
      */
     private _totalDistance: number;
+
     /**
      * The wait number of iterations before loosing the enemy missile.
      * Prevents new level creation from throwing all missiles at once.
      */
     private _waitToFire: number = 0;
+
     /**
      * Constructor for the Projectile class
      * @param scene              graphic rendering scene object. Used each iteration to redraw things contained in scene.
@@ -123,6 +157,8 @@ export class Projectile implements Collidable {
      * @param speed              optional speed modifier for missiles.
      * @param y                  optional y value for missile (for help screen demo).
      * @param waitToFire         optional wait time (instead of randomized wait time).
+     * @param playerMissile      signals if this projectile was fired by the player.
+     * @param scoreboard         reference to the scoreboard used to get and add points throughout play.
      * @hidden
      */
     constructor(
@@ -137,8 +173,10 @@ export class Projectile implements Collidable {
         speed?: number,
         y?: number,
         waitToFire?: number,
-        playerMissile?: boolean) {
+        playerMissile?: boolean,
+        scoreboard?: ScoreController) {
         index++;
+        this._scoreboard = scoreboard;
         this._headY = y || 0.51;
         this._tailY = (y && (y + 0.04)) || 0.55;
         this._color = color;
@@ -186,7 +224,7 @@ export class Projectile implements Collidable {
      * Creates an explosion during collision and adds it to the collidables list.
      * @param isInert flag to let explosion know it isn't a 'real' explosion (hit shield).
      */
-    private createExplosion(isInert: boolean): void {
+    private _createExplosion(isInert: boolean): void {
         this._explosion = new Explosion(
             this._scene,
             this._headMesh.position.x,
@@ -198,11 +236,12 @@ export class Projectile implements Collidable {
             });
         if (!isInert) CollisionatorSingleton.add(this._explosion);
     }
+
     /**
      * Call to eliminate regardless of current state.
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
-    destroy() {
+    public destroy(): void {
         if (this._explosion) {
             CollisionatorSingleton.remove(this._explosion);
             this._scene.remove(this._explosion.getMesh());
@@ -210,11 +249,12 @@ export class Projectile implements Collidable {
         }
         this.removeFromScene(this._scene);
     }
+
     /**
      * At the end of each loop iteration, move the projectile a little.
      * @returns whether or not the projectile is done, and should be removed from satellite's list.
      */
-    endCycle(): boolean {
+    public endCycle(): boolean {
         if (this._waitToFire >= 1) {
             this._waitToFire--;
             return true;
@@ -248,48 +288,53 @@ export class Projectile implements Collidable {
                 this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
             }
             if (this._distanceTraveled >= this._totalDistance) {
-                this.createExplosion(false);
+                this._createExplosion(false);
                 // SOUNDS_CTRL.playFooPang();
                 this.removeFromScene(this._scene);
             }
         }
         return true;
     }
+
     /**
      * Gets the viability of the explosive blast head.
      * @returns flag to signal non-destruction. True = not destroyed. False = destroyed.
      */
-    getActive(): boolean {
+    public getActive(): boolean {
         return this._isCollidable;
     }
+
     /**
      * Gets the current radius of the bounding box (circle) of the collidable.
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
-    getCollisionRadius(): number {
+    public getCollisionRadius(): number {
         return this._headMesh.scale.x * 0.06;
     }
+
     /**
      * Gets the current position of the explosive blast head.
      * @returns the array is of length 2 with x coordinate being first, and then z coordinate.
      */
-    getCurrentPosition(): number[] {
+    public getCurrentPosition(): number[] {
         return [this._headMesh.position.x, this._headMesh.position.z];
     }
+
     /**
      * Gets the name of the missile.
      * @returns the name of the missile.
      */
-    getName(): string {
+    public getName(): string {
         return this._headMesh.name;
     }
+
     /**
      * Called when something collides with projectile blast radius, which does nothing unless it hasn't exploded yet.
      * @param self the thing to remove from collidables...and scene.
      * @param otherCollidable   the name of the other thing in collision (mainly for shield).
      * @returns whether or not impact means removing item from the scene.
      */
-    impact(self: Collidable, otherCollidable: string): boolean {
+    public impact(self: Collidable, otherCollidable: string): boolean {
         if (this._isActive) {
             this._isActive = false;
             if (getCollisionType(self.getName()) === CollisionType.Enemy_Projectile && getCollisionType(otherCollidable) === CollisionType.Post) {
@@ -297,23 +342,28 @@ export class Projectile implements Collidable {
             } else {
                 SOUNDS_CTRL.playExplosionSmall();
             }
-            this.createExplosion(false);
+            if (this._scoreboard && getCollisionType(otherCollidable) === CollisionType.Enemy_Projectile) {
+                this._scoreboard.addPoints(this._points);
+            }
+            this._createExplosion(false);
             return true;
         }
         return false;
     }
+
     /**
      * States it is a passive type or not. Two passive types cannot colllide with each other.
      * @returns True is passive | False is not passive
      */
-    isPassive(): boolean {
+    public isPassive(): boolean {
         return false;
     }
+
     /**
      * Removes missile object from the 'visible' scene by removing non-explosion parts from scene.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
-    removeFromScene(scene: Scene): void {
+    public removeFromScene(scene: Scene): void {
         this._isCollidable = false;
         this._isActive = false;
         this._scene.remove(this._tailMesh);

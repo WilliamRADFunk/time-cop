@@ -18,6 +18,7 @@ import { Projectile } from './projectile';
 import { rotateEntity } from '../utils/rotate-entity';
 import { Explosion } from './explosion';
 import { ExplosionType } from '../models/explosions';
+import { ScoreController } from '../controls/controllers/score-controller';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -173,6 +174,11 @@ export class Bandit implements Collidable, Entity {
     private _scene: Scene;
 
     /**
+     * The instance of scoreboard used for this level instance.
+     */
+    private _scoreboard: ScoreController;
+
+    /**
      * The list of smoke explosions the bandit has fired.
      */
     private _smokeExplosions: Explosion[] = [];
@@ -200,18 +206,21 @@ export class Bandit implements Collidable, Entity {
 
     /**
      * Constructor for the Bandit class
-     * @param level        current level the bandit exists on.
-     * @param scene        graphic rendering scene object. Used each iteration to redraw things contained in scene.
-     * @param x1           origin point x of where the bandit starts.
-     * @param z1           origin point z of where the bandit starts.
-     * @param walkIndex    index in walk positions array for bandits to head towards
-     * @param speedMod     speed modifier at time of bandit instantiation.
-     * @param yPos         layer level for bandit to appear.
-     * @param fireNow      optional choice not to wait to have bandit start moving.
-     * @param isHelpScreen lets bandit know it's a help screen iteration and not to play sound effects.
+     * @param scoreboard    the instance of scoreboard used for this level instance.
+     * @param level         current level the bandit exists on.
+     * @param scene         graphic rendering scene object. Used each iteration to redraw things contained in scene.
+     * @param banditTexture sprite sheet texture used to represent this level's bandit animation frames.
+     * @param x1            origin point x of where the bandit starts.
+     * @param z1            origin point z of where the bandit starts.
+     * @param walkIndex     index in walk positions array for bandits to head towards
+     * @param speedMod      speed modifier at time of bandit instantiation.
+     * @param yPos          layer level for bandit to appear.
+     * @param fireNow       optional choice not to wait to have bandit start moving.
+     * @param isHelpScreen  lets bandit know it's a help screen iteration and not to play sound effects.
      * @hidden
      */
     constructor(
+        scoreboard: ScoreController,
         level: number,
         scene: Scene,
         banditTexture: Texture,
@@ -223,6 +232,7 @@ export class Bandit implements Collidable, Entity {
         fireNow?: boolean,
         isHelpScreen?: boolean) {
         index++;
+        this._scoreboard = scoreboard;
         this._level = level;
         this._points *= level;
         this._yPos = yPos || 0.6;
@@ -258,22 +268,25 @@ export class Bandit implements Collidable, Entity {
         rotateEntity(this);
         this._waitToFire = (fireNow) ? 0 : Math.floor((Math.random() * 2000) + 1);
     }
+
     /**
      * (Re)activates the bandit, usually at beginning of new level.
      */
-    activate(): void {
+    public activate(): void {
         // If bandit was never destroyed (game over), let him "wait" on his own loop.
         if (!this._isActive) {
             this._waitToFire = Math.floor((Math.random() * 2000) + 1);
         }
         this._isActive = true;
     }
+
     /**
      * Adds bandit object to the three.js scene.
      */
-    addToScene(): void {
+    public addToScene(): void {
         this._animationMeshes.forEach(mesh => this._scene.add(mesh));
     }
+
     /**
      * Calculates the next point in the bandit's path.
      */
@@ -303,7 +316,7 @@ export class Bandit implements Collidable, Entity {
      * Call to eliminate regardless of current state.
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
-    public destroy() {
+    public destroy(): void {
         CollisionatorSingleton.remove(this);
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
     }
@@ -509,6 +522,7 @@ export class Bandit implements Collidable, Entity {
             this._isActive = false;
             // TODO Dying bandit sequence
             // SOUNDS_CTRL.enemyDies()
+            this._scoreboard.addPoints(this._points);
             return true;
         }
         return false;

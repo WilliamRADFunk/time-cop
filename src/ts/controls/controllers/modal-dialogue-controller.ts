@@ -125,6 +125,7 @@ export class ModalDialogueCtrl {
      * Updates the content of the modal with main description/choices, and possible choices.
      * @param mainText the main description and request for user decision.
      * @param choices the options available to player to choose from.
+     * @param selectionCallback callback function to call when a user has made a dialogue choice.
      */
     public updateContent(mainText: string, choices: string[], selectionCallback: (choice: number) => void): void {
         this._options.innerHTML = '';

@@ -378,7 +378,6 @@ export class AssetsCtrl {
      * each fitted with their chance to check if all others are done.
      */
     private _loadAssets(): void {
-        SOUNDS_CTRL.addListener(SOUNDS_CTRL.audioListener);
         const loadingBar = document.getElementById('loading').getElementsByClassName('ldBar')[0];
         Object.keys(TEXTURES).forEach(key => {
             (new TextureLoader()).load( TEXTURES[key][0], texture => {

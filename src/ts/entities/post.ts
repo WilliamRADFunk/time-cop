@@ -6,9 +6,8 @@ import {
 
 import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { Collidable } from "../collidable";
-import { SOUNDS_CTRL } from "../controls/controllers/sounds-controller";
 
-export const postPositions: [number, number][] = [
+export const PostPositions: [number, number][] = [
     [ -4, -4 ], [ 4, -4 ],
     [ -4, -3.5 ], [ 4, -3.5 ],
     [ -4, -3 ], [ 4, -3 ],
@@ -137,7 +136,7 @@ export const postPositions: [number, number][] = [
      * Gets the viability of the post.
      * @returns flag to signal non-destruction. True = not destroyed. False = destroyed.
      */
-    getActive(): boolean {
+    public getActive(): boolean {
         return this._isActive;
     }
 
@@ -145,7 +144,7 @@ export const postPositions: [number, number][] = [
      * Gets the current radius of the bounding box (circle) of the post.
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
-    getCollisionRadius(): number {
+    public getCollisionRadius(): number {
         return this._radius;
     }
 
@@ -153,7 +152,7 @@ export const postPositions: [number, number][] = [
      * Gets the current position of the post.
      * @returns the array is of length 2 with x coordinate being first, and then z coordinate.
      */
-    getCurrentPosition(): number[] {
+    public getCurrentPosition(): number[] {
         return this._centerPoint.slice();
     }
 
@@ -161,16 +160,17 @@ export const postPositions: [number, number][] = [
      * Gets the name of the post.
      * @returns the name of the post.
      */
-    getName(): string {
+    public getName(): string {
         return this._post.name;
     }
+
     /**
      * Call to post that it has been struck.
      * @param self              the thing to remove from collidables...and scene.
      * @param otherCollidable   the name of the other thing in collision.
      * @returns whether or not impact means removing item from the scene.
      */
-    impact(self: Collidable, otherCollidable?: string): boolean {
+    public impact(self: Collidable, otherCollidable?: string): boolean {
         if (this._isActive && getCollisionType(otherCollidable) !== CollisionType.Enemy_Projectile) {
             this._isActive = false;
             this._scene.remove(this._post);
@@ -184,7 +184,7 @@ export const postPositions: [number, number][] = [
      * States it is a passive type or not. Two passive types cannot collide with each other.
      * @returns True is passive | False is not passive
      */
-    isPassive(): boolean {
+    public isPassive(): boolean {
         return false;
     }
 
@@ -192,7 +192,7 @@ export const postPositions: [number, number][] = [
      * Removes object from the three.js scene.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
-    removeFromScene(): void {
+    public removeFromScene(): void {
         this._isActive = false;
         this._scene.remove(this._post);
         CollisionatorSingleton.remove(this);
