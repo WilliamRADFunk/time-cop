@@ -252,10 +252,11 @@ export class Bandit implements Collidable, Entity {
         
         this._scene = scene;
 		this._banditGeometry = new CircleGeometry(this._radius, 16, 16);
+        const variationChoice = Math.random() < 0.5 ? 0 : 1;
         [0, 1, 2].forEach((val: number) => {
             const offCoordsX = val;
-            const offCoordsY = 0;
-            const size = [3, 1];
+            const offCoordsY = variationChoice;
+            const size = [3, 2];
             const material = makeEntityMaterial(banditTexture, offCoordsX, offCoordsY, size);
             makeEntity(
                 this._animationMeshes,
