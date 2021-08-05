@@ -278,7 +278,7 @@ export class DevMenu {
 
         onClick = () => {
             this._page1buttons.launchMainPlayLevelSceneButton.disable();
-            callbacks.activateMainPlayLevelScene(1, 0, 3);
+            callbacks.activateMainPlayLevelScene(1, 3);
         };
 
         this._page1buttons.launchMainPlayLevelSceneButton = new LoadButton(

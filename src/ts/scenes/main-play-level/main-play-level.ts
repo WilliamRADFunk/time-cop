@@ -20,6 +20,7 @@ import { Post, PostPositions } from '../../entities/post';
 import { Bandit, banditStartPositions } from '../../entities/bandit';
 import { Player } from '../../entities/player';
 import { ScoreController } from '../../controls/controllers/score-controller';
+import { ActorController } from './controllers/actor-controller';
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
@@ -28,6 +29,8 @@ import { ScoreController } from '../../controls/controllers/score-controller';
 const border: string = 'none';
 
 const debounceTime = 250;
+
+const runningDelay: number = 10000; // 10 Seconds.
 
 /**
  * The game state mode enum for this scene.
@@ -49,9 +52,9 @@ export enum MainLevelState {
  */
 export class MainPlayLevel {
     /**
-     * List of actors in the scene.
+     * Reference to this scene's actor controller.
      */
-    private _actors: { [key: string]: Actor[] };
+    private _actorCtrl: ActorController;
 
     /**
      * List of bandits in the scene.
@@ -87,7 +90,7 @@ export class MainPlayLevel {
     /**
      * Set when user clicks mouse to have something to compare against for debounce purposes.
      */
-    private _delayStartTime: Date;
+    private _delayStartTime: number;
 
     /**
      * Direction player is moving.
@@ -150,6 +153,11 @@ export class MainPlayLevel {
     private _settingsCtrl: SettingsCtrl;
 
     /**
+     * Flag to communicate the start click calculations were already done once.
+     */
+    private _started: boolean = false;
+
+    /**
      * Tracks current game state mode.
      */
     private _state: MainLevelState = MainLevelState.newGame;
@@ -200,6 +208,8 @@ export class MainPlayLevel {
         this._settingsCtrl = new SettingsCtrl(
             this._scene,
             border);
+        
+        this._actorCtrl = new ActorController(this._scene);
     }
 
     private addEntities(): void {
@@ -269,8 +279,12 @@ export class MainPlayLevel {
             event.preventDefault();
             if (!this._delayStartTime) return;
     
-            const timeDiff = new Date().getTime() - this._delayStartTime.getTime();
+            const timeDiff = this._started ? 10000 : new Date().getTime() - this._delayStartTime;
             if (this._state === MainLevelState.active && timeDiff >= debounceTime) {
+                if (!this._started) {
+                    this._delayStartTime = new Date().getTime();
+                }
+                this._started = true;
                 this._player.fire(false);
             }
             // Three JS object intersections.
@@ -415,7 +429,7 @@ export class MainPlayLevel {
 
         let onClick = (e: Event) => {
             if (this._state === MainLevelState.newGame) {
-                this._delayStartTime = new Date();
+                this._delayStartTime = new Date().getTime();
                 this._state = MainLevelState.active;
                 this._buttons.startButton.hide();
                 // SOUNDS_CTRL.playBackgroundMusicScifi01();
@@ -534,49 +548,22 @@ export class MainPlayLevel {
                 }
                 return true;
             });
+
             if (!this._bandits.length) {
                 this._state = MainLevelState.win;
+            } else if (this._bandits.filter(bandit => bandit.getRunning()).length) {
+                // There are bandits already running, don't activate anyone else.
+            } else if (new Date().getTime() - this._delayStartTime > runningDelay && Math.random() > 0.8) {
+                this._bandits
+                    .filter(bandit => bandit.getRunCapability())
+                    .filter(bandit => bandit.activateRunning())
+                    .length ? this._actorCtrl.activateArrows() : null;
             }
+
+            this._actorCtrl.endCycle();
         }
 
         CollisionatorSingleton.checkForCollisions(this._scene);
-
-        // Collision detection (bullets against enemy)
-        if (false) {
-            
-        }
-
-        // Collision detection (bullets against player)
-        if (false) {
-            
-        }
-
-        // Collision detection (barriers)
-        if (false) {
-            
-        }
-
-        if (this._state === MainLevelState.active && this._directionMove.some(x => !!x)) {
-            this._counters.demoWalk++;
-            const val = this._counters.demoWalk % 3;
-            if (val === 0) {
-                this._actors.demoActors[0].mesh.visible = true;
-                this._actors.demoActors[1].mesh.visible = false;
-                this._actors.demoActors[2].mesh.visible = false;
-            } else if (val === 1) {
-                this._actors.demoActors[0].mesh.visible = false;
-                this._actors.demoActors[1].mesh.visible = true;
-                this._actors.demoActors[2].mesh.visible = false;
-            } else {
-                this._actors.demoActors[0].mesh.visible = false;
-                this._actors.demoActors[1].mesh.visible = false;
-                this._actors.demoActors[2].mesh.visible = true;
-            }
-
-            if (this._counters.demoWalk >= this._counters.demoWalkClear) {
-                this._counters.demoWalk = 0;
-            }
-        }
 
         return;
     }

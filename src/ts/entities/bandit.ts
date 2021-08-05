@@ -1,9 +1,7 @@
 import {
     CircleGeometry,
     Color,
-    LinearFilter,
     Mesh,
-    MeshPhongMaterial,
     Scene,
     Texture } from 'three';
     
@@ -27,7 +25,60 @@ export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, -5, EntityDirection.Right ]   // Upper Left Corner
 ];
 
+export const banditIntMovePoints: [number, number, EntityDirection][] = [
+    [ -2.5, 2.5, EntityDirection.Up ],      // Lower Left Corner
+    [ 2.5, 2.5, EntityDirection.Left ],     // Lower Right Corner
+    [ 2.5, -2.5, EntityDirection.Down ],    // Upper Right Corner
+    [ -2.5, -2.5, EntityDirection.Right ]   // Upper Left Corner
+];
+
 export const banditStartPositions: [number, number, number][] = [
+    [ -5, -5, 0 ], // Left Going down
+    [ -5, -4, 0 ],
+    [ -5, -3, 0 ],
+    [ -5, -2, 0 ],
+    [ -5, -1, 0 ],
+    [ -5, 0, 0 ],
+    [ -5, 1, 0 ],
+    [ -5, 2, 0 ],
+    [ -5, 3, 0 ],
+    [ -5, 4, 0 ],
+
+    [ -5, 5, 1 ], // Bottom Going Right
+    [ -4, 5, 1 ],
+    [ -3, 5, 1 ],
+    [ -2, 5, 1 ],
+    [ -1, 5, 1 ],
+    [ 0, 5, 1 ],
+    [ 1, 5, 1],
+    [ 2, 5, 1],
+    [ 3, 5, 1],
+    [ 4, 5, 1],
+
+    [ 5, 5, 2 ], // Right Going Up
+    [ 5, 4, 2 ],
+    [ 5, 3, 2 ],
+    [ 5, 2, 2 ],
+    [ 5, 1, 2 ],
+    [ 5, 0, 2 ],
+    [ 5, -1, 2 ],
+    [ 5, -2, 2 ],
+    [ 5, -3, 2 ],
+    [ 5, -4, 2 ],
+
+    [ 5, -5, 3 ], // Top Going Left
+    [ -4, -5, 3 ],
+    [ -3, -5, 3 ],
+    [ -2, -5, 3 ],
+    [ -1, -5, 3 ],
+    [ 0, -5, 3 ],
+    [ 1, -5, 3],
+    [ 2, -5, 3],
+    [ 3, -5, 3],
+    [ 4, -5, 3],
+];
+
+export const banditIntStartPositions: [number, number, number][] = [
     [ -5, -5, 0 ], // Left Going down
     [ -5, -4, 0 ],
     [ -5, -3, 0 ],
@@ -138,6 +189,16 @@ export class Bandit implements Collidable, Entity {
     _isMovingSound?: boolean;
 
     /**
+     * Flag to signal running is possible if level is ready.
+     */
+    private _isRunCapable?: boolean = false;
+
+    /**
+     * Flag to signal running animation and speed should be active.
+     */
+    private _isRunning?: boolean = false;
+
+    /**
      * The current level.
      */
     private _level: number = 1;
@@ -189,6 +250,11 @@ export class Bandit implements Collidable, Entity {
     private _speed: number = 0.008;
 
     /**
+     * The speed at which the bandit travels when running toward the interior.
+     */
+    private _speedRunning: number = 0.016;
+
+    /**
      * The total distance from bandit to final destination.
      */
     private _totalDistance: number;
@@ -237,6 +303,7 @@ export class Bandit implements Collidable, Entity {
         this._points *= level;
         this._yPos = yPos || 0.6;
         this._speed += (speedMod / 1000);
+        this._speedRunning = this._speed * 2;
         this._originalStartingPoint = [x1, z1];
         this._currentPoint = [x1, z1];
         this._currentWalkIndex = walkIndex;
@@ -292,7 +359,7 @@ export class Bandit implements Collidable, Entity {
      * Calculates the next point in the bandit's path.
      */
     private _calculateNextPoint(): void {
-        this._distanceTraveled += this._speed;
+        this._distanceTraveled += this._isRunning ? this._speedRunning : this._speed;
         // (xt, yt) = ( ( (1 − t) * x0 + t * x1 ), ( (1 − t) * y0 + t * y1) )
         const t = this._distanceTraveled / this._totalDistance;
         this._currentPoint[0] = ((1 - t) * this._originalStartingPoint[0]) + (t * this._endingPoint[0]);
@@ -303,14 +370,53 @@ export class Bandit implements Collidable, Entity {
             this._currentPoint[1] = this._endingPoint[1];
             this._originalStartingPoint[0] = this._endingPoint[0];
             this._originalStartingPoint[1] = this._endingPoint[1];
-            this._currentWalkIndex = this._currentWalkIndex + 1 >= banditMovePoints.length ? 0 : this._currentWalkIndex + 1;
-            this._endingPoint = banditMovePoints[this._currentWalkIndex].slice(0, 2);
-            this._currDirection = banditMovePoints[this._currentWalkIndex][2];
+
+            if (!this._isRunning) {
+                this._isRunCapable = true;
+                this._currentWalkIndex = this._currentWalkIndex + 1 >= banditMovePoints.length ? 0 : this._currentWalkIndex + 1;
+                this._endingPoint = banditMovePoints[this._currentWalkIndex].slice(0, 2);
+                this._currDirection = banditMovePoints[this._currentWalkIndex][2];
+            } else {
+                this._isRunCapable = false;
+                this._currentWalkIndex = this._currentWalkIndex + 1 >= banditIntMovePoints.length ? 0 : this._currentWalkIndex + 1;
+                this._endingPoint = banditIntMovePoints[this._currentWalkIndex].slice(0, 2);
+                this._currDirection = banditIntMovePoints[this._currentWalkIndex][2];
+            }
+
             const xDiff = this._endingPoint[0] - this._currentPoint[0];
             const zDiff = this._endingPoint[1] - this._currentPoint[1];
             this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
             rotateEntity(this);
+            return;
         }
+        this._isRunCapable = false;
+    }
+
+    /**
+     * Tells the bandits in the corners to make their way to the interior.
+     * @returns true if this bandit was capable of running and false if not.
+     */
+    public activateRunning(): boolean {
+        if (this._isRunCapable && !this._isRunning) {
+            this._isRunCapable = false;
+            this._isRunning = true;
+
+            this._currentWalkIndex = this._currentWalkIndex - 1 < 0 ? banditIntMovePoints.length - 1 : this._currentWalkIndex - 1;
+            this._endingPoint = banditIntMovePoints[this._currentWalkIndex].slice(0, 2);
+            this._currDirection = banditIntMovePoints[this._currentWalkIndex][2];
+            const xDiff = this._endingPoint[0] - this._currentPoint[0];
+            const zDiff = this._endingPoint[1] - this._currentPoint[1];
+            this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * The level manager chose not to have bandits race to the interior.
+     */
+    public cancelRunCapable(): void {
+        this._isRunCapable = false;
     }
 
     /**
@@ -344,7 +450,7 @@ export class Bandit implements Collidable, Entity {
             }
 
             // TODO: Bandit fires weapon at certain intervals.
-            if (Math.random() <= (0.001 * this._level) && this._projectiles.length < this._level) {
+            if (Math.random() <= (0.0005 * this._level) && this._projectiles.length < this._level) {
                 let x1 = this._currentPoint[0];
                 let z1 = this._currentPoint[1];
                 let x2;
@@ -510,6 +616,22 @@ export class Bandit implements Collidable, Entity {
      */
     public getPoints(): number {
         return this._points;
+    }
+
+    /**
+     * Communicates whether this bandit can run to the interior.
+     * @returns True if this bandit is in a position to run toward the interior.
+     */
+    public getRunCapability(): boolean {
+        return this._isRunCapable;
+    }
+
+    /**
+     * Communicates whether this bandit can run to the interior.
+     * @returns True if this bandit is in a position to run toward the interior.
+     */
+    public getRunning(): boolean {
+        return this._isRunning;
     }
 
     /**

@@ -4,9 +4,10 @@ import {
     MeshStandardMaterial,
     SphereGeometry } from "three";
 
+import { Actor } from "../../../models/actor";
 import { createActor } from "../../../utils/create-actor";
 
-export function createEntryEffect() {
+export function createEntryEffect(): Actor {
     const entryEffect = createActor();
     entryEffect.currentPoint = [0, 0];
     entryEffect.endingPoint = [0, 0];

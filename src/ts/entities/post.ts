@@ -8,8 +8,6 @@ import { CollisionatorSingleton, CollisionType, getCollisionType } from '../coll
 import { Collidable } from "../collidable";
 
 export const PostPositions: [number, number][] = [
-    [ -4, -4 ], [ 4, -4 ],
-    [ -4, -3.5 ], [ 4, -3.5 ],
     [ -4, -3 ], [ 4, -3 ],
     [ -4, -2.5 ], [ 4, -2.5 ],
     [ -4, -2 ], [ 4, -2 ],
@@ -23,10 +21,7 @@ export const PostPositions: [number, number][] = [
     [ -4, 2 ], [ 4, 2 ],
     [ -4, 2.5 ], [ 4, 2.5 ],
     [ -4, 3 ], [ 4, 3 ],
-    [ -4, 3.5 ], [ 4, 3.5 ],
-    [ -4, 4 ], [ 4, 4 ],
 
-    [ -3.5, 4 ], [ 3.5, 4 ],
     [ -3, 4 ], [ 3, 4 ],
     [ -2.5, 4 ], [ 2.5, 4 ],
     [ -2, 4 ], [ 2, 4 ],
@@ -35,7 +30,6 @@ export const PostPositions: [number, number][] = [
     [ 0.5, 4 ],
     [ 0, 4 ],
     [ -0.5, 4 ],
-    [ -3.5, -4 ], [ 3.5, -4 ],
     [ -3, -4 ], [ 3, -4 ],
     [ -2.5, -4 ], [ 2.5, -4 ],
     [ -2, -4 ], [ 2, -4 ],
@@ -171,7 +165,7 @@ export const PostPositions: [number, number][] = [
      * @returns whether or not impact means removing item from the scene.
      */
     public impact(self: Collidable, otherCollidable?: string): boolean {
-        if (this._isActive && getCollisionType(otherCollidable) !== CollisionType.Enemy_Projectile) {
+        if (this._isActive) {// && getCollisionType(otherCollidable) !== CollisionType.Enemy_Projectile) {
             this._isActive = false;
             this._scene.remove(this._post);
             CollisionatorSingleton.remove(self);
