@@ -1,81 +1,44 @@
+import { ActorEventType } from "../../../models/actor-event";
+
 export const SEQUENCE01 = {
     actorEvents: [
         {
             actorIndex: 17, // Ship lifts off from Earth
             duration: 180,
             endPoint: [ 0, 0 ],
+            maxScale: 1,
             moveSpeed: 0,
             startingFrame: 1,
             startPoint: [ 0, 0 ],
-            type: "Grow"
-        },
-        {
-            actorIndex: -1, // Stars in motion
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0,
-            startingFrame: 181,
-            startPoint: [ 0, 0 ],
-            type: "Stars Moving"
-        },
-        {
-            actorIndex: 17, // Ship warbles
-            duration: 240,
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0.1,
-            startingFrame: 181,
-            startPoint: [ 0, 0 ],
-            type: "Warble"
-        },
-        {
-            actorIndex: 0, // Earth warbles
-            duration: 100,
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0.1,
-            startingFrame: 191,
-            startPoint: [ 0, 0 ],
-            type: "Warble"
+            type: ActorEventType.Grow
         },
         {
             actorIndex: 0, // Earth exits stage left
             endPoint: [ -15, 0 ],
+            maxScale: 1,
             moveSpeed: 0.2,
             startingFrame: 241,
             startPoint: [ 0, 0 ],
-            type: "Moving"
+            type: ActorEventType.Moving
         },
         {
             actorIndex: 1, // Mars enter stage right
             endPoint: [ 0, 0 ],
+            maxScale: 1,
             moveSpeed: 0.05,
             startingFrame: 181,
             startPoint: [ 20, 0 ],
-            type: "Moving"
-        },
-        {
-            actorIndex: -1, // Stars stop moving
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0,
-            startingFrame: 579,
-            startPoint: [ 0, 0 ],
-            type: "Stars Stopping"
-        },
-        {
-            actorIndex: 16, // Entry flame effect
-            duration: 220,
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0,
-            startingFrame: 360,
-            startPoint: [ 0, 0 ],
-            type: "Flaming"
+            type: ActorEventType.Moving
         },
         {
             actorIndex: 17, // Ship lands on Mars
             duration: 180,
             endPoint: [ 0, 0 ],
+            maxScale: 1,
             moveSpeed: 0,
             startingFrame: 400,
             startPoint: [ 0, 0 ],
-            type: "Shrink"
+            type: ActorEventType.Shrink
         }
     ],
     endingFrame: 780,

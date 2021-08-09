@@ -6,7 +6,7 @@ import {
     RAD_180_DEG_RIGHT,
     RAD_225_DEG_RIGHT,
     RAD_270_DEG_RIGHT,
-    RAD_315_DEG_RIGHT } from "./radians-x-degrees-left";
+    RAD_315_DEG_RIGHT } from "./radians-x-degrees-right";
 
 export function rotateEntity(entity: Entity): void {
     const zRot = entity._animationMeshes[0].rotation.z;

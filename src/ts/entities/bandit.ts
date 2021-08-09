@@ -6,7 +6,7 @@ import {
     Texture } from 'three';
     
 import { Collidable } from "../collidable";
-import { CollisionatorSingleton } from '../collisionator';
+import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
 import { animateEntity } from '../utils/animate-entity';
@@ -252,7 +252,7 @@ export class Bandit implements Collidable, Entity {
     /**
      * The speed at which the bandit travels when running toward the interior.
      */
-    private _speedRunning: number = 0.016;
+    private _speedRunning: number = 0.012;
 
     /**
      * The total distance from bandit to final destination.
@@ -641,7 +641,7 @@ export class Bandit implements Collidable, Entity {
      * @returns whether or not impact means calling removeFromScene by collisionator.
      */
     public impact(self: Collidable, otherThing: string): boolean {
-        if (this._isActive) {
+        if (this._isActive && getCollisionType(otherThing) !== CollisionType.Player) {
             this._isActive = false;
             // TODO Dying bandit sequence
             // SOUNDS_CTRL.enemyDies()

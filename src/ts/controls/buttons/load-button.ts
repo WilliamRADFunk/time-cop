@@ -1,6 +1,6 @@
-import { ButtonBase } from "./button-base";
-import { HTMLElementPosition } from "../../models/html-element-position";
-import { ButtonColors } from "../../models/button-colors";
+import { ButtonBase } from './button-base';
+import { HTMLElementPosition } from '../../models/html-element-position';
+import { ButtonColors } from '../../models/button-colors';
 
 /**
  * @class

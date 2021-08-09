@@ -1,85 +1,373 @@
-import { Scene } from "three";
-import { Actor } from "../../../models/actor";
-import { ActorEvent } from "../../../models/actor-event";
-import { RAD_135_DEG_RIGHT, RAD_225_DEG_RIGHT, RAD_45_DEG_RIGHT } from "../../../utils/radians-x-degrees-left";
-import { createArrow } from "../actors/create-arrow";
+import { Scene } from 'three';
+import { Actor } from '../../../models/actor';
+import { ActorEvent, ActorEventType } from '../../../models/actor-event';
+import { RAD_135_DEG_RIGHT, RAD_225_DEG_RIGHT, RAD_45_DEG_RIGHT } from '../../../utils/radians-x-degrees-right';
+import { createArrow } from '../actors/create-arrow';
 
 export const SEQUENCE = {
     actorEvents: [
         {
             actorIndex: 0, // ArrowTopLeft,
-            duration: 360,
-            endPoint: [ 0, 0 ],
+            duration: 1,
+            endPoint: [ -4.5, -4.5 ],
+            maxScale: 0.5,
             moveSpeed: 0,
             startingFrame: 1,
-            startPoint: [ 0, 0 ],
-            type: "Grow"
+            startPoint: [ -4.5, -4.5 ],
+            type: ActorEventType.Appear
         },
         {
             actorIndex: 1, // ArrowBottomLeft,
-            duration: 360,
-            endPoint: [ 0, 0 ],
+            duration: 1,
+            endPoint: [ -4.5, 4.5 ],
+            maxScale: 0.5,
             moveSpeed: 0,
             startingFrame: 1,
-            startPoint: [ 0, 0 ],
-            type: "Grow"
+            startPoint: [ -4.5, 4.5 ],
+            type: ActorEventType.Appear
         },
         {
             actorIndex: 2, // ArrowBottomRight,
-            duration: 360,
-            endPoint: [ 0, 0 ],
+            duration: 1,
+            endPoint: [ 4.5, 4.5 ],
+            maxScale: 0.5,
             moveSpeed: 0,
             startingFrame: 1,
-            startPoint: [ 0, 0 ],
-            type: "Grow"
+            startPoint: [ 4.5, 4.5 ],
+            type: ActorEventType.Appear
         },
         {
             actorIndex: 3, // ArrowTopRight,
-            duration: 360,
-            endPoint: [ 0, 0 ],
+            duration: 1,
+            endPoint: [ 4.5, -4.5 ],
+            maxScale: 0.5,
             moveSpeed: 0,
             startingFrame: 1,
-            startPoint: [ 0, 0 ],
-            type: "Grow"
+            startPoint: [ 4.5, -4.5 ],
+            type: ActorEventType.Appear
         },
         {
             actorIndex: 0, // ArrowTopLeft,
-            duration: 360,
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0,
-            startingFrame: 360,
-            startPoint: [ 0, 0 ],
-            type: "Shrink"
+            duration: 60,
+            endPoint: [ -3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 2,
+            startPoint: [ -4.5, -4.5 ],
+            type: ActorEventType.Moving
         },
         {
             actorIndex: 1, // ArrowBottomLeft,
-            duration: 360,
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0,
-            startingFrame: 360,
-            startPoint: [ 0, 0 ],
-            type: "Shrink"
+            duration: 60,
+            endPoint: [ -3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 2,
+            startPoint: [ -4.5, 4.5 ],
+            type: ActorEventType.Moving
         },
         {
             actorIndex: 2, // ArrowBottomRight,
-            duration: 360,
-            endPoint: [ 0, 0 ],
-            moveSpeed: 0,
-            startingFrame: 360,
-            startPoint: [ 0, 0 ],
-            type: "Shrink"
+            duration: 60,
+            endPoint: [ 3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 2,
+            startPoint: [ 4.5, 4.5 ],
+            type: ActorEventType.Moving
         },
         {
             actorIndex: 3, // ArrowTopRight,
-            duration: 360,
-            endPoint: [ 0, 0 ],
+            duration: 60,
+            endPoint: [ 3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 2,
+            startPoint: [ 4.5, -4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 0, // ArrowTopLeft,
+            duration: 1,
+            endPoint: [ -3.5, -3.5 ],
+            maxScale: 0.5,
             moveSpeed: 0,
-            startingFrame: 360,
-            startPoint: [ 0, 0 ],
-            type: "Shrink"
+            startingFrame: 62,
+            startPoint: [ -3.5, -3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 1, // ArrowBottomLeft,
+            duration: 1,
+            endPoint: [ -3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 62,
+            startPoint: [ -3.5, 3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 2, // ArrowBottomRight,
+            duration: 1,
+            endPoint: [ 3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 62,
+            startPoint: [ 3.5, 3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 3, // ArrowTopRight,
+            duration: 1,
+            endPoint: [ 3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 62,
+            startPoint: [ 3.5, -3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 0, // ArrowTopLeft,
+            duration: 1,
+            endPoint: [ -4.5, -4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 63,
+            startPoint: [ -4.5, -4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 1, // ArrowBottomLeft,
+            duration: 1,
+            endPoint: [ -4.5, 4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 63,
+            startPoint: [ -4.5, 4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 2, // ArrowBottomRight,
+            duration: 1,
+            endPoint: [ 4.5, 4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 63,
+            startPoint: [ 4.5, 4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 3, // ArrowTopRight,
+            duration: 1,
+            endPoint: [ 4.5, -4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 63,
+            startPoint: [ 4.5, -4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 0, // ArrowTopLeft,
+            duration: 60,
+            endPoint: [ -3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 64,
+            startPoint: [ -4.5, -4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 1, // ArrowBottomLeft,
+            duration: 60,
+            endPoint: [ -3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 64,
+            startPoint: [ -4.5, 4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 2, // ArrowBottomRight,
+            duration: 60,
+            endPoint: [ 3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 64,
+            startPoint: [ 4.5, 4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 3, // ArrowTopRight,
+            duration: 60,
+            endPoint: [ 3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 64,
+            startPoint: [ 4.5, -4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 0, // ArrowTopLeft,
+            duration: 1,
+            endPoint: [ -3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 124,
+            startPoint: [ -3.5, -3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 1, // ArrowBottomLeft,
+            duration: 1,
+            endPoint: [ -3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 124,
+            startPoint: [ -3.5, 3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 2, // ArrowBottomRight,
+            duration: 1,
+            endPoint: [ 3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 124,
+            startPoint: [ 3.5, 3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 3, // ArrowTopRight,
+            duration: 1,
+            endPoint: [ 3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 124,
+            startPoint: [ 3.5, -3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 0, // ArrowTopLeft,
+            duration: 1,
+            endPoint: [ -4.5, -4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 125,
+            startPoint: [ -4.5, -4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 1, // ArrowBottomLeft,
+            duration: 1,
+            endPoint: [ -4.5, 4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 125,
+            startPoint: [ -4.5, 4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 2, // ArrowBottomRight,
+            duration: 1,
+            endPoint: [ 4.5, 4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 125,
+            startPoint: [ 4.5, 4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 3, // ArrowTopRight,
+            duration: 1,
+            endPoint: [ 4.5, -4.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 125,
+            startPoint: [ 4.5, -4.5 ],
+            type: ActorEventType.Appear
+        },
+        {
+            actorIndex: 0, // ArrowTopLeft,
+            duration: 60,
+            endPoint: [ -3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 126,
+            startPoint: [ -4.5, -4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 1, // ArrowBottomLeft,
+            duration: 60,
+            endPoint: [ -3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 126,
+            startPoint: [ -4.5, 4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 2, // ArrowBottomRight,
+            duration: 60,
+            endPoint: [ 3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 126,
+            startPoint: [ 4.5, 4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 3, // ArrowTopRight,
+            duration: 60,
+            endPoint: [ 3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0.0236,
+            startingFrame: 126,
+            startPoint: [ 4.5, -4.5 ],
+            type: ActorEventType.Moving
+        },
+        {
+            actorIndex: 0, // ArrowTopLeft,
+            duration: 1,
+            endPoint: [ -3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 186,
+            startPoint: [ -3.5, -3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 1, // ArrowBottomLeft,
+            duration: 1,
+            endPoint: [ -3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 186,
+            startPoint: [ -3.5, 3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 2, // ArrowBottomRight,
+            duration: 1,
+            endPoint: [ 3.5, 3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 186,
+            startPoint: [ 3.5, 3.5 ],
+            type: ActorEventType.Disappear
+        },
+        {
+            actorIndex: 3, // ArrowTopRight,
+            duration: 1,
+            endPoint: [ 3.5, -3.5 ],
+            maxScale: 0.5,
+            moveSpeed: 0,
+            startingFrame: 186,
+            startPoint: [ 3.5, -3.5 ],
+            type: ActorEventType.Disappear
         },
     ],
-    endingFrame: 780,
+    endingFrame: 187,
     startingFrame: 1
 };
 
@@ -124,6 +412,7 @@ export class ActorController {
             [4, -4, RAD_135_DEG_RIGHT]
         ].forEach(coords => {
             const arrow = createArrow(coords[0], coords[1], coords[2]);
+            arrow.mesh.scale.set(0, 0, 0);
             this._scene.add(arrow.mesh);
             this._actors.push(arrow);
         });
@@ -148,7 +437,7 @@ export class ActorController {
      private _handleActorEvents(actor: Actor): void {
         const actorEvent = actor.action;
         switch(actorEvent.type) {
-            case 'Moving': {
+            case ActorEventType.Moving: {
                 this._calculateNextPoint(actor);
                 actor.mesh.position.set(actor.currentPoint[0], actor.mesh.position.y, actor.currentPoint[1]);
                 if (Math.abs(actor.currentPoint[0] - actor.endingPoint[0]) <= 0.03 && Math.abs(actor.currentPoint[1] - actor.endingPoint[1]) <= 0.03) {
@@ -157,14 +446,23 @@ export class ActorController {
                 }
                 break;
             }
-            case 'Grow': {
+            case ActorEventType.Appear: {
+                actor.mesh.position.set(actor.endingPoint[0], actor.mesh.position.y, actor.endingPoint[1]);
+                actor.mesh.scale.set(actorEvent.maxScale, actorEvent.maxScale, actorEvent.maxScale);
+                break;
+            }
+            case ActorEventType.Disappear: {
+                actor.mesh.scale.set(0, 0, 0);
+                break;
+            }
+            case ActorEventType.Grow: {
                 const currentScale = actor.mesh.scale.x;
                 let newScale = currentScale + (1 / actorEvent.duration);
                 newScale = newScale <= 1 ? newScale : 1;
                 actor.mesh.scale.set(newScale, newScale, newScale);
                 break;
             }
-            case 'Shrink': {
+            case ActorEventType.Shrink: {
                 const currentScale = actor.mesh.scale.x;
                 let newScale = currentScale - (1 / actorEvent.duration);
                 newScale = newScale >= 0.0001 ? newScale : 0.0001;
@@ -180,7 +478,7 @@ export class ActorController {
      */
     private _initiateActorEvents(actorEvent: ActorEvent): void {
         switch(actorEvent.type) {
-            case 'Moving': {
+            case ActorEventType.Moving: {
                 this._setDestination(
                     actorEvent.actorIndex,
                     actorEvent.startPoint[0],
@@ -192,7 +490,20 @@ export class ActorController {
                 actor.action = actorEvent;
                 break;
             }
-            case 'Grow': {
+            case ActorEventType.Appear: {
+                this._setDestination(
+                    actorEvent.actorIndex,
+                    actorEvent.startPoint[0],
+                    actorEvent.startPoint[1],
+                    actorEvent.endPoint[0],
+                    actorEvent.endPoint[1],
+                    actorEvent.moveSpeed);
+                const actor = this._actors[actorEvent.actorIndex];
+                actor.mesh.scale.set(actorEvent.maxScale, actorEvent.maxScale, actorEvent.maxScale);
+                actor.action = actorEvent;
+                break;
+            }
+            case ActorEventType.Disappear: {
                 this._setDestination(
                     actorEvent.actorIndex,
                     actorEvent.startPoint[0],
@@ -205,7 +516,20 @@ export class ActorController {
                 actor.action = actorEvent;
                 break;
             }
-            case 'Shrink': {
+            case ActorEventType.Grow: {
+                this._setDestination(
+                    actorEvent.actorIndex,
+                    actorEvent.startPoint[0],
+                    actorEvent.startPoint[1],
+                    actorEvent.endPoint[0],
+                    actorEvent.endPoint[1],
+                    actorEvent.moveSpeed);
+                const actor = this._actors[actorEvent.actorIndex];
+                actor.mesh.scale.set(0, 0, 0);
+                actor.action = actorEvent;
+                break;
+            }
+            case ActorEventType.Shrink: {
                 this._setDestination(
                     actorEvent.actorIndex,
                     actorEvent.startPoint[0],

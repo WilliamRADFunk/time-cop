@@ -9,7 +9,7 @@ import { SOUNDS_CTRL } from '../../controls/controllers/sounds-controller';
 import { Actor } from '../../models/actor';
 import { FadableText } from '../../models/fadable-text';
 import { Sequence } from '../../models/sequence';
-import { ActorEvent } from '../../models/actor-event';
+import { ActorEvent, ActorEventType } from '../../models/actor-event';
 import { TextEvent } from "../../models/text-event";
 import { SEQUENCE01 } from "./sequences/sequence-01";
 import { createShip1 } from './actors/create-ship-1';
@@ -62,7 +62,7 @@ export class Intro {
      * Tracks series of events that make up the intro scene.
      */
     private _sequences: Sequence[] = [
-        SEQUENCE01, // Moving Ship
+        SEQUENCE01,
     ];
 
     /**
@@ -226,7 +226,7 @@ export class Intro {
     private _handleActorEvents(actor: Actor): void {
         const actorEvent = actor.action;
         switch(actorEvent.type) {
-            case 'Moving': {
+            case ActorEventType.Moving: {
                 this._calculateNextPoint(actor);
                 actor.mesh.position.set(actor.currentPoint[0], actor.mesh.position.y, actor.currentPoint[1]);
                 if (Math.abs(actor.currentPoint[0] - actor.endingPoint[0]) <= 0.03 && Math.abs(actor.currentPoint[1] - actor.endingPoint[1]) <= 0.03) {
@@ -235,7 +235,7 @@ export class Intro {
                 }
                 break;
             }
-            case 'Move & Rotate': {
+            case ActorEventType.Move_And_Rotate: {
                 this._calculateNextPoint(actor);
                 actor.mesh.position.set(actor.currentPoint[0], actor.mesh.position.y, actor.currentPoint[1]);
                 this._rotate(actor);
@@ -245,34 +245,22 @@ export class Intro {
                 }
                 break;
             }
-            case 'Grow': {
+            case ActorEventType.Grow: {
                 const currentScale = actor.mesh.scale.x;
                 let newScale = currentScale + (1 / actorEvent.duration);
                 newScale = newScale <= 1 ? newScale : 1;
                 actor.mesh.scale.set(newScale, newScale, newScale);
                 break;
             }
-            case 'Shrink': {
+            case ActorEventType.Shrink: {
                 const currentScale = actor.mesh.scale.x;
                 let newScale = currentScale - (1 / actorEvent.duration);
                 newScale = newScale >= 0.0001 ? newScale : 0.0001;
                 actor.mesh.scale.set(newScale, newScale, newScale);
                 break;
             }
-            case 'Rotate': {
+            case ActorEventType.Rotate: {
                 this._rotate(actor);
-                break;
-            }
-            case 'Warble': {
-                actorEvent.duration--;
-                if (actorEvent.duration % 5 === 0) {
-                    const newPos = actorEvent.warbleArray.shift();
-                    actorEvent.warbleArray.push(newPos);
-                    actor.mesh.position.set(newPos[0], actor.mesh.position.y, newPos[1]);
-                }
-                if (actorEvent.duration <= 0) {
-                    actor.inMotion = false;
-                }
                 break;
             }
         }
@@ -284,7 +272,7 @@ export class Intro {
      */
     private _initiateActorEvents(actorEvent: ActorEvent): void {
         switch(actorEvent.type) {
-            case 'Moving': {
+            case ActorEventType.Moving: {
                 this._setDestination(
                     actorEvent.actorIndex,
                     actorEvent.startPoint[0],
@@ -296,7 +284,7 @@ export class Intro {
                 actor.action = actorEvent;
                 break;
             }
-            case 'Move & Rotate': {
+            case ActorEventType.Move_And_Rotate: {
                 this._setDestination(
                     actorEvent.actorIndex,
                     actorEvent.startPoint[0],
@@ -310,7 +298,7 @@ export class Intro {
                 actor.action = actorEvent;
                 break;
             }
-            case 'Grow': {
+            case ActorEventType.Grow: {
                 this._setDestination(
                     actorEvent.actorIndex,
                     actorEvent.startPoint[0],
@@ -323,7 +311,7 @@ export class Intro {
                 actor.action = actorEvent;
                 break;
             }
-            case 'Shrink': {
+            case ActorEventType.Shrink: {
                 this._setDestination(
                     actorEvent.actorIndex,
                     actorEvent.startPoint[0],
@@ -336,47 +324,11 @@ export class Intro {
                 actor.action = actorEvent;
                 break;
             }
-            case 'Rotate': {
+            case ActorEventType.Rotate: {
                 const actor = this._actors[actorEvent.actorIndex];
                 actor.rotateSpeed = actorEvent.rotateSpeed;
                 actor.inMotion = true;
                 actor.action = actorEvent;
-                break;
-            }
-            case 'Warble': {
-                const actor = this._actors[actorEvent.actorIndex];
-                actor.inMotion = true;
-                actorEvent.warbleArray = this._warblePositions.slice();
-                actor.action = actorEvent;
-                break;
-            }
-            case 'Flaming': {
-                const actor = this._actors[actorEvent.actorIndex];
-                actor.inMotion = true;
-                actor.mesh.visible = true;
-                actor.action = actorEvent;
-                break;
-            }
-            case 'Stars Moving': {
-                this._starsInMotion = true;
-                break;
-            }
-            case 'Stars Stopping': {
-                this._starsInMotion = false;
-                break;
-            }
-            case 'Warped Stars Moving': {
-                this._warpedStarsInMotion = true;
-                this._warpedStars.forEach(warpedStar => {
-                    warpedStar.visible = true;
-                });
-                break;
-            }
-            case 'Warped Stars Stopping': {
-                this._warpedStars.forEach(warpedStar => {
-                    warpedStar.visible = false;
-                });
-                this._warpedStarsInMotion = false;
                 break;
             }
         }

@@ -1,6 +1,6 @@
 import { SOUNDS_CTRL } from '../controllers/sounds-controller';
-import { ButtonColors } from "../../models/button-colors";
-import { HTMLElementPosition } from "../../models/html-element-position";
+import { ButtonColors } from '../../models/button-colors';
+import { HTMLElementPosition } from '../../models/html-element-position';
 
 /**
  * @class
