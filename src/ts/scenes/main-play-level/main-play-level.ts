@@ -21,6 +21,7 @@ import { Bandit, banditStartPositions } from '../../entities/bandit';
 import { Player } from '../../entities/player';
 import { ScoreController } from '../../controls/controllers/score-controller';
 import { ActorController } from './controllers/actor-controller';
+import { BarricadeLevel } from '../../entities/barricade-level';
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
@@ -55,6 +56,11 @@ export class MainPlayLevel {
      * Reference to this scene's actor controller.
      */
     private _actorCtrl: ActorController;
+
+    /**
+     * The collection of pieces that make up the barricade contianing the level number.
+     */
+    private _barricadeLevel: BarricadeLevel;
 
     /**
      * List of bandits in the scene.
@@ -210,6 +216,8 @@ export class MainPlayLevel {
             border);
         
         this._actorCtrl = new ActorController(this._scene);
+
+        this._barricadeLevel = new BarricadeLevel(this._scene, this._level, 1);
     }
 
     private addEntities(): void {
@@ -492,6 +500,7 @@ export class MainPlayLevel {
         SOUNDS_CTRL.stopMainThrusterSmall();
         SOUNDS_CTRL.stopWalkingFastGravel();
         SOUNDS_CTRL.stopWind();
+        this._barricadeLevel.removeFromScene();
     }
 
     /**
