@@ -46,7 +46,7 @@ import { Collidable } from "../collidable";
     /**
      * The radius of the barricade circle.
      */
-	private _radius: number = 0.05;
+	private _radius: number = 0.025;
 
     /**
      * Reference to the scene, used to remove barricade from rendering cycle once destroyed.
@@ -65,7 +65,7 @@ import { Collidable } from "../collidable";
      * @param z     coordinate on z-axis where barricade should instantiate.
      * @param yPos  layer level for barricade to appear.
      */
-    constructor(scene: Scene, x:number, z: number, yPos?: number) {
+    constructor(scene: Scene, x:number, z: number, isLabelBlock: number, yPos?: number) {
         index++;
         this._scene = scene;
         this._centerPoint = [x, z];
@@ -74,8 +74,8 @@ import { Collidable } from "../collidable";
         const dimension = this._radius * 2;
         this._barricadeGeometry = new BoxGeometry(dimension, dimension, dimension);
         this._barricadeMaterial = new MeshPhongMaterial({
-            color: 0xFFFFFF,
-            opacity: 0.75,
+            color: !!isLabelBlock ? 0xFFFFFF : 0x0000FF,
+            opacity: 1,
             specular: 0x505050,
             shininess: 100,
             transparent: true

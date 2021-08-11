@@ -16,7 +16,10 @@ export const enum CollisionType {
     'Post' = 51,
     // 51 + 21 = 72 should not collide
     // 51 + 1 = 52 should not collide
-    'Explosion' = 81
+    'Explosion' = 81,
+    'Barricade' = 200,
+    // 200 + 1 = 201 should not collide
+    // 200 + 21 = 221 should not collide
 }
 
 /**
@@ -47,6 +50,10 @@ export function getCollisionType(name: string): CollisionType {
 
     if (name.indexOf('explosion') === 0) {
         return CollisionType.Explosion;
+    }
+
+    if (name.indexOf('barricade') === 0) {
+        return CollisionType.Barricade;
     }
 }
 
@@ -110,16 +117,11 @@ class Collisionator {
                 // This unique sum means one is an enemy and the other a post.
                 if (sum === 72) continue;
 
-                const isEnemyProjectile = iType === CollisionType.Enemy_Projectile || jType === CollisionType.Enemy_Projectile;
-                const isPlayerProjectile = iType === CollisionType.Player_Projectile || jType === CollisionType.Player_Projectile;
-                const isPlayer = iType === CollisionType.Player || jType === CollisionType.Player;
-                const isEnemy = iType === CollisionType.Enemy || jType === CollisionType.Enemy;
-                const isPost = iType === CollisionType.Post || jType === CollisionType.Post;
+                // This unique sum means one is the player and the other a barricade.
+                if (sum === 201) continue;
 
-                // Player is safe from their own projectiles.
-                if (isPlayerProjectile && isPlayer) continue;
-                // Enemies are safe from their own projectiles.
-                if (isEnemyProjectile && isEnemy) continue;
+                // This unique sum means one is an enemy and the other a barricade.
+                if (sum === 221) continue;
 
                 const posI = entityI.getCurrentPosition();
                 const posJ = entityJ.getCurrentPosition();

@@ -90,7 +90,7 @@ export class MainPlayLevel {
     private _counters = {
         demoWalk: 0,
         demoWalkClear: 120,
-        jobs: 0
+        jobs: 1
     };
 
     /**
@@ -509,7 +509,7 @@ export class MainPlayLevel {
      */
     public endCycle(): { [key: string]: number } {
         this._counters.jobs++;
-        if (this._counters.jobs > 10) this._counters.jobs = 0;
+        if (this._counters.jobs > 10) this._counters.jobs = 1;
         // Game externally paused from control panel. Nothing should progress.
         if (this._state === MainLevelState.paused) {
             return;
