@@ -635,13 +635,21 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
+     * Gets the type of the collidable.
+     * @returns the type of the collidable.
+     */
+    public getType(): CollisionType {
+        return CollisionType.Enemy;
+    }
+
+    /**
      * Called when something collides with bandit, which destroys it.
      * @param self         the thing to remove from collidables...and scene.
-     * @param otherThing   the name of the other thing in collision (mainly for shield).
+     * @param otherThing   the type of the other thing in collision.
      * @returns whether or not impact means calling removeFromScene by collisionator.
      */
-    public impact(self: Collidable, otherThing: string): boolean {
-        if (this._isActive && getCollisionType(otherThing) !== CollisionType.Player) {
+    public impact(self: Collidable, otherThing: CollisionType): boolean {
+        if (this._isActive && otherThing !== CollisionType.Player) {
             this._isActive = false;
             // TODO Dying bandit sequence
             // SOUNDS_CTRL.enemyDies()

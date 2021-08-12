@@ -1,6 +1,7 @@
 import { CircleGeometry, Mesh, MeshBasicMaterial, Scene } from 'three';
 
 import { Collidable } from '../collidable';
+import { CollisionType } from '../collisionator';
 import { ExplosionOptions, ExplosionType } from '../models/explosions';
 
 /**
@@ -157,6 +158,14 @@ export class Explosion implements Collidable {
     }
 
     /**
+     * Gets the type of the collidable.
+     * @returns the type of the collidable.
+     */
+    public getType(): CollisionType {
+        return CollisionType.Explosion;
+    }
+
+    /**
      * Call to collidable object that it has been struck.
      * @param self the thing to remove from collidables...and scene.
      * @returns whether or not impact means removing item from the scene.
@@ -179,5 +188,13 @@ export class Explosion implements Collidable {
      */
     public getMesh(): Mesh {
         return this._explosion;
+    }
+
+    /**
+     * Removes explosion from scene.
+     * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
+     */
+    public removeFromScene(scene: Scene): void {
+        this.destroy();
     }
 }

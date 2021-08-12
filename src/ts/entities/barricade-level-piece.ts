@@ -1,11 +1,12 @@
 import {
-    BoxGeometry,
     Mesh,
     MeshPhongMaterial,
+    PlaneGeometry,
     Scene } from "three";
 
-import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
+import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { Collidable } from "../collidable";
+import { RAD_90_DEG_RIGHT } from "../utils/radians-x-degrees-right";
 
 /**
  * Static index to help name one barricade differenly than another.
@@ -36,7 +37,7 @@ import { Collidable } from "../collidable";
     /**
      * Controls size and shape of the barricade
      */
-    private _barricadeGeometry: BoxGeometry;
+    private _barricadeGeometry: PlaneGeometry;
 
     /**
      * Controls the color of the barricade material
@@ -72,7 +73,7 @@ import { Collidable } from "../collidable";
         this._yPos = yPos || 1;
 
         const dimension = this._radius * 2;
-        this._barricadeGeometry = new BoxGeometry(dimension, dimension, dimension);
+        this._barricadeGeometry = new PlaneGeometry( dimension, dimension, 10, 10 );
         this._barricadeMaterial = new MeshPhongMaterial({
             color: !!isLabelBlock ? 0xFFFFFF : 0x0000FF,
             opacity: 1,
@@ -83,6 +84,7 @@ import { Collidable } from "../collidable";
 
         this._barricade = new Mesh(this._barricadeGeometry, this._barricadeMaterial);
         this._barricade.position.set(this._centerPoint[0], this._yPos, this._centerPoint[1]);
+        this._barricade.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
         this._barricade.name = `barricade-level-${index}`;
         this._scene.add(this._barricade);
     }
@@ -127,13 +129,21 @@ import { Collidable } from "../collidable";
     }
 
     /**
+     * Gets the type of the collidable.
+     * @returns the type of the collidable.
+     */
+    public getType(): CollisionType {
+        return CollisionType.Barricade;
+    }
+
+    /**
      * Call to barricade that it has been struck.
      * @param self              the thing to remove from collidables...and scene.
-     * @param otherCollidable   the name of the other thing in collision.
+     * @param otherCollidable   the type of the other thing in collision.
      * @returns whether or not impact means removing item from the scene.
      */
-    public impact(self: Collidable, otherCollidable?: string): boolean {
-        if (this._isActive && getCollisionType(otherCollidable) !== CollisionType.Post) {
+    public impact(self: Collidable, otherCollidable?: CollisionType): boolean {
+        if (this._isActive) {
             this._isActive = false;
             this._scene.remove(this._barricade);
             CollisionatorSingleton.remove(self);

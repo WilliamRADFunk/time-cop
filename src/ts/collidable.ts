@@ -1,4 +1,5 @@
 import { Scene } from 'three';
+import { CollisionType } from './collisionator';
 
 /**
  * @class
@@ -30,12 +31,18 @@ export interface Collidable {
     getName: () => string;
 
     /**
+     * Gets the type of the collidable object.
+     * @returns the name of the object.
+     */
+    getType: () => CollisionType;
+
+    /**
      * Call to collidable object that it has been struck.
      * @param self              the thing to remove from collidables...and scene.
-     * @param otherCollidable   the name of the other thing in collision (mainly for shield).
+     * @param otherCollidable   the type of the other thing in collision.
      * @returns whether or not impact means removing item from the scene.
      */
-    impact: (self: Collidable, otherCollidable?: string) => boolean;
+    impact: (self: Collidable, otherCollidable?: CollisionType) => boolean;
 
     /**
      * States it is a passive type or not. Two passive types cannot colllide with each other.
@@ -47,5 +54,5 @@ export interface Collidable {
      * Removes object from the three.js scene.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
-    removeFromScene?: (scene: Scene) => void;
+    removeFromScene: (scene: Scene) => void;
 }

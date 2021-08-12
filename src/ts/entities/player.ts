@@ -7,7 +7,7 @@ import {
     Texture } from 'three';
     
 import { Collidable } from "../collidable";
-import { CollisionatorSingleton } from '../collisionator';
+import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { ScoreController } from '../controls/controllers/score-controller';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
@@ -152,7 +152,7 @@ export class Player implements Collidable, Entity {
 
         if (showHitBox) {
             hitBoxMesh = new Mesh(hitBoxGeometry, material);
-            hitBoxMesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
+            hitBoxMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
             hitBoxMesh.rotation.set(-1.5708, 0, 0);
             this._scene.add(hitBoxMesh);
         }
@@ -205,25 +205,25 @@ export class Player implements Collidable, Entity {
     public endCycle(dirKeys: { [key: string]: number }): boolean {
         if (this._isActive) {
             // Calculates how far to move the player when moving and walls them in by the post barrier.
-            if (dirKeys.up && this._currentPoint[1] >= -3.8) {
+            if (Object.keys(dirKeys).some(key => !!dirKeys[key])) {
                 this._isMoving = true;
-                this._currentPoint[1] -= this._speed;
-            } else if (dirKeys.down && this._currentPoint[1] <= 3.8) {
-                this._isMoving = true;
-                this._currentPoint[1] += this._speed;
             } else {
                 this._isMoving = false;
             }
 
-            if (dirKeys.left && this._currentPoint[0] >= -3.8) {
-                this._isMoving = true;
+            if (dirKeys.up && this._currentPoint[1] >= -3.3) {
+                this._currentPoint[1] -= this._speed;
+            } else if (dirKeys.down && this._currentPoint[1] <= 3.3) {
+                this._currentPoint[1] += this._speed;
+            }
+
+            if (dirKeys.left && this._currentPoint[0] >= -3.3) {
                 this._currentPoint[0] -= this._speed;
-            } else if (dirKeys.right && this._currentPoint[0] <= 3.8) {
-                this._isMoving = true;
+            } else if (dirKeys.right && this._currentPoint[0] <= 3.3) {
                 this._currentPoint[0] += this._speed;
             }
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
-            showHitBox && hitBoxMesh.position.set(this._currentPoint[0], 2, this._currentPoint[1]);
+            showHitBox && hitBoxMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
 
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
@@ -346,12 +346,20 @@ export class Player implements Collidable, Entity {
     }
 
     /**
+     * Gets the type of the collidable.
+     * @returns the type of the collidable.
+     */
+    public getType(): CollisionType {
+        return CollisionType.Player;
+    }
+
+    /**
      * Called when something collides with player, which destroys it.
      * @param self         the thing to remove from collidables...and scene.
-     * @param otherThing   the name of the other thing in collision (mainly for shield).
+     * @param otherThing   the type of the other thing in collision.
      * @returns whether or not impact means calling removeFromScene by collisionator.
      */
-    public impact(self: Collidable, otherThing: string): boolean {
+    public impact(self: Collidable, otherThing: CollisionType): boolean {
         if (this._isActive) {
             this._isActive = false;
             // SOUNDS_CTRL.stop
@@ -379,5 +387,8 @@ export class Player implements Collidable, Entity {
         this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
         this._projectiles.length = 0;
         CollisionatorSingleton.remove(this);
+
+        // Only in DEV mode.
+        showHitBox && this._scene.remove(hitBoxMesh);
     }
 }

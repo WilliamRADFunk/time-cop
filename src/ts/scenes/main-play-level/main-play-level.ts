@@ -217,7 +217,7 @@ export class MainPlayLevel {
         
         this._actorCtrl = new ActorController(this._scene);
 
-        this._barricadeLevel = new BarricadeLevel(this._scene, this._level, 1);
+        this._barricadeLevel = new BarricadeLevel(this._scene, this._level, 2);
     }
 
     private addEntities(): void {

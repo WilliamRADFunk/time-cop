@@ -27,9 +27,8 @@ export const PostPositions: [number, number][] = [
     [ -2, 4 ], [ 2, 4 ],
     [ -1.5, 4 ], [ 1.5, 4 ],
     [ -1, 4 ], [ 1, 4 ],
-    [ 0.5, 4 ],
-    [ 0, 4 ],
-    [ -0.5, 4 ],
+    [ 0.6, 4 ],
+    [ -0.6, 4 ],
     [ -1, -4 ], [ 1, -4 ],
     [ -1.5, -4 ], [ 1.5, -4 ],
     [ -2, -4 ], [ 2, -4 ],
@@ -158,13 +157,21 @@ export const PostPositions: [number, number][] = [
     }
 
     /**
+     * Gets the type of the collidable.
+     * @returns the type of the collidable.
+     */
+    public getType(): CollisionType {
+        return CollisionType.Post;
+    }
+
+    /**
      * Call to post that it has been struck.
      * @param self              the thing to remove from collidables...and scene.
-     * @param otherCollidable   the name of the other thing in collision.
+     * @param otherCollidable   the type of the other thing in collision.
      * @returns whether or not impact means removing item from the scene.
      */
-    public impact(self: Collidable, otherCollidable?: string): boolean {
-        if (this._isActive) {// && getCollisionType(otherCollidable) !== CollisionType.Enemy_Projectile) {
+    public impact(self: Collidable, otherCollidable?: CollisionType): boolean {
+        if (this._isActive) {
             this._isActive = false;
             this._scene.remove(this._post);
             CollisionatorSingleton.remove(self);

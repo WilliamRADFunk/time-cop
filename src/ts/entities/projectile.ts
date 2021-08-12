@@ -81,12 +81,7 @@ export class Projectile implements Collidable {
      * Flag to signal if the missile can be considered for collisions.
      * True is collidable. False is not collidable.
      */
-    private _isCollidable: boolean = false;
-
-    /**
-     * Flag to determine enemy allegiance of missile.
-     */
-    private _isEnemyMissile: boolean;
+    private _isCollidable: boolean = true;
 
     /**
      * Keeps track of the x,z point where missile fired from.
@@ -139,6 +134,11 @@ export class Projectile implements Collidable {
     private _totalDistance: number;
 
     /**
+     * The collision type of the projectile (ie. Player_Projectile or Enemy_Projectile).
+     */
+    private _type: CollisionType;
+
+    /**
      * The wait number of iterations before loosing the enemy missile.
      * Prevents new level creation from throwing all missiles at once.
      */
@@ -182,7 +182,7 @@ export class Projectile implements Collidable {
         this._color = color;
         this._speed = speed || this._speed;
         this._isCollidable = !!colllidableAtBirth;
-        this._isEnemyMissile = !playerMissile;
+        this._type = !!playerMissile ? CollisionType.Player_Projectile : CollisionType.Enemy_Projectile;
         this._scene = scene;
         this._originalStartingPoint = [x1, z1];
         this._currentPoint = [x1, z1];
@@ -202,7 +202,7 @@ export class Projectile implements Collidable {
         this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
         this._headMesh.rotation.set(-1.5708, 0, 0);
         this._headMesh.name = `projectile-player-${index}`;
-        if (this._isEnemyMissile) {
+        if (this._type === CollisionType.Enemy_Projectile) {
             this._headMesh.name = `projectile-enemy-${index}`;
             this._waitToFire = waitToFire || Math.floor((Math.random() * 900) + 1);
         }
@@ -329,20 +329,28 @@ export class Projectile implements Collidable {
     }
 
     /**
+     * Gets the type of the collidable.
+     * @returns the type of the collidable.
+     */
+    public getType(): CollisionType {
+        return this._type;
+    }
+
+    /**
      * Called when something collides with projectile blast radius, which does nothing unless it hasn't exploded yet.
      * @param self the thing to remove from collidables...and scene.
      * @param otherCollidable   the name of the other thing in collision (mainly for shield).
      * @returns whether or not impact means removing item from the scene.
      */
-    public impact(self: Collidable, otherCollidable: string): boolean {
+    public impact(self: Collidable, otherCollidable: CollisionType): boolean {
         if (this._isActive) {
             this._isActive = false;
-            if (getCollisionType(self.getName()) === CollisionType.Enemy_Projectile && getCollisionType(otherCollidable) === CollisionType.Post) {
+            if (self.getType() === CollisionType.Enemy_Projectile && otherCollidable === CollisionType.Post) {
                 SOUNDS_CTRL.playFooPang();
             } else {
                 SOUNDS_CTRL.playExplosionSmall();
             }
-            if (this._scoreboard && getCollisionType(otherCollidable) === CollisionType.Enemy_Projectile) {
+            if (this._scoreboard && otherCollidable === CollisionType.Enemy_Projectile) {
                 this._scoreboard.addPoints(this._points);
             }
             this._createExplosion(false);
