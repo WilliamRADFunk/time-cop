@@ -50,8 +50,8 @@ const border: string = 'none';
 const buttonScale: number = 2;
 
 /**
- * Establishes a one-plce fetch for the height of dev menu elements in the Land And Mine scene.
- * @param row row number on the dev menu section for the Land And Mine scene.
+ * Establishes a one-place fetch for the height of dev menu elements in the Main Play Level scene.
+ * @param row row number on the dev menu section for the Main Play Level scene.
  * @param height the height of the window to multiply modifer against.
  * @returns the height to use on all elements on that row.
  */
@@ -100,6 +100,14 @@ export class DevMenu {
      * Reference to _onWindowResize so that it can be removed later.
      */
     private _listenerRef: () => void;
+
+    /**
+    * Specification of what the starter conditions of the main level should be.
+    */
+    private _mainPlayLevelSpec: { [key: string]: number } = {
+        level: 1,
+        lives: 3
+    };
 
     /**
      * List of buttons on page 1.
@@ -278,15 +286,119 @@ export class DevMenu {
 
         onClick = () => {
             this._page1buttons.launchMainPlayLevelSceneButton.disable();
-            callbacks.activateMainPlayLevelScene(1, 3);
+            callbacks.activateMainPlayLevelScene(this._mainPlayLevelSpec.level, this._mainPlayLevelSpec.lives);
         };
 
         this._page1buttons.launchMainPlayLevelSceneButton = new LoadButton(
-            { left: left + (0.175 * width), height, top: 0.785 * height, width },
+            { left: left + (0.175 * width), height, top: 0.787 * height, width },
             BUTTON_COLORS,
             onClick,
             true,
             buttonScale * 0.5);
+            
+        let row0Left = 0.0625;
+        const row0height = sizeHeightForMainPlayLevel(0, height);
+        
+        this._page1textElements.levelTitleText = new FreestyleText(
+            'Level',
+            { left: left + (row0Left * width), height, top: row0height, width },
+            COLORS.default,
+            'none',
+            TextType.STATIC);
+        
+        row0Left += 0.3;
+        
+        this._page1textElements.livesTitleText = new FreestyleText(
+            'Lives',
+            { left: left + (row0Left * width), height, top: row0height, width },
+            COLORS.default,
+            'none',
+            TextType.STATIC);
+
+        onClick = () => {
+            let level = this._mainPlayLevelSpec.level - 1;
+            if (level < 1) {
+                level = 1;
+            }
+            this._mainPlayLevelSpec.level = level;
+            this._page1textElements.levelReadoutText.update(this._mainPlayLevelSpec.level.toString());
+        };
+
+        let row1Left = 0.015;
+        const row1height = sizeHeightForMainPlayLevel(1, height);
+        this._page1buttons.levelMinusButton = new MinusButton(
+            { left: left + (row1Left * width), height, top: row1height, width },
+            BUTTON_COLORS,
+            onClick,
+            true,
+            0.5);
+
+        row1Left += 0.065;
+        this._page1textElements.levelReadoutText = new FreestyleText(
+            this._mainPlayLevelSpec.level.toString(),
+            { left: left + (row1Left * width), height, top: row1height, width },
+            COLORS.default,
+            'none',
+            TextType.STATIC);
+
+        onClick = () => {
+            let level = this._mainPlayLevelSpec.level + 1;
+            if (level > 40) {
+                level = 40;
+            }
+            this._mainPlayLevelSpec.level = level;
+            this._page1textElements.levelReadoutText.update(this._mainPlayLevelSpec.level.toString());
+        };
+
+        row1Left += 0.05;
+        this._page1buttons.levelPlusButton = new PlusButton(
+            { left: left + (row1Left * width), height, top: row1height, width },
+            BUTTON_COLORS,
+            onClick,
+            true,
+            0.5);
+
+        onClick = () => {
+            let lives = this._mainPlayLevelSpec.lives - 1;
+            if (lives < 1) {
+                lives = 1;
+            }
+            this._mainPlayLevelSpec.lives = lives;
+            this._page1textElements.livesReadoutText.update(this._mainPlayLevelSpec.lives.toString());
+        };
+
+        row1Left += 0.18;
+        this._page1buttons.livesMinusButton = new MinusButton(
+            { left: left + (row1Left * width), height, top: row1height, width },
+            BUTTON_COLORS,
+            onClick,
+            true,
+            0.5);
+
+        row1Left += 0.07;
+        this._page1textElements.livesReadoutText = new FreestyleText(
+            this._mainPlayLevelSpec.lives.toString(),
+            { left: left + (row1Left * width), height, top: row1height, width },
+            COLORS.default,
+            'none',
+            TextType.STATIC);
+
+        onClick = () => {
+            let lives = this._mainPlayLevelSpec.lives + 1;
+            if (lives > 5) {
+                lives = 5;
+            }
+            this._mainPlayLevelSpec.lives = lives;
+            this._page1textElements.livesReadoutText.update(this._mainPlayLevelSpec.lives.toString());
+        };
+
+        row1Left += 0.05;
+        this._page1buttons.livesPlusButton = new PlusButton(
+            { left: left + (row1Left * width), height, top: row1height, width },
+            BUTTON_COLORS,
+            onClick,
+            true,
+            0.5);
     //#endregion
     //#region Page1 Next
         this._page1textElements.rightBottomTitleText = new RightBottomTitleText(
@@ -447,7 +559,28 @@ export class DevMenu {
 
         this._buttons.launchGameMenuButton.resize({ left: left + (0.115 * width), height, top: 0.1 * height, width });
         this._buttons.launchIntroSceneButton.resize({ left: left + width - (buttonScale * 0.12 * width) - (0.14 * width), height, top: 0.61 * height, width });
-        this._buttons.launchMainPlayLevelSceneButton.resize({ left: left + (0.175 * width), height, top: 0.785 * height, width });
+        this._buttons.launchMainPlayLevelSceneButton.resize({ left: left + (0.175 * width), height, top: 0.787 * height, width });
+
+        let row0Left = 0.065;
+        const row0height = sizeHeightForMainPlayLevel(0, height);
+        this._page1textElements.levelTitleText.resize({ left: left + (row0Left * width), height, top: row0height, width });
+        row0Left += 0.3;
+        this._page1textElements.livesTitleText.resize({ left: left + (row0Left * width), height, top: row0height, width });
+
+        let row1Left = 0.015;
+        const row1height = sizeHeightForMainPlayLevel(1, height);
+        this._page1buttons.levelMinusButton.resize({ left: left + (row1Left * width), height, top: row1height, width });
+        row1Left += 0.065;
+        this._page1textElements.levelReadoutText.resize({ left: left + (row1Left * width), height, top: row1height, width });
+        row1Left += 0.05;
+        this._page1buttons.levelPlusButton.resize({ left: left + (row1Left * width), height, top: row1height, width });
+        row1Left += 0.18;
+        this._page1buttons.livesMinusButton.resize({ left: left + (row1Left * width), height, top: row1height, width });
+        row1Left += 0.07;
+        this._page1textElements.livesReadoutText.resize({ left: left + (row1Left * width), height, top: row1height, width });
+        row1Left += 0.05;
+        this._page1buttons.livesPlusButton.resize({ left: left + (row1Left * width), height, top: row1height, width });
+
         this._buttons.nextPageButton.resize({ left: left + width - (0.29 * width), height, top: 0.845 * height, width });
         this._buttons.nextPageButton2.resize({ left: left + width - (0.29 * width), height, top: 0.845 * height, width });
         this._buttons.previousPageButton2.resize({ left: left + (0.21 * width), height, top: 0.845 * height, width });
@@ -488,7 +621,7 @@ export class DevMenu {
         document.onclick = () => {};
         Object.keys(this._textElements).forEach(x => this._textElements[x] && this._textElements[x].dispose());
         Object.keys(this._buttons).forEach(x => this._buttons[x] && this._buttons[x].dispose());
-        window.removeEventListener( 'resize', this._listenerRef, false);
+        window.removeEventListener('resize', this._listenerRef, false);
     }
 
     /**

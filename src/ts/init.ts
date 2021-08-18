@@ -132,7 +132,6 @@ const loadGameMenu = () => {
                 // Clears up memory used by menu scene.
                 disposeScene(scenes.menu);
 
-                // TODO: Load ship lost in wormhole scene. For now, launch most recently completed mini-section.
                 loadMainPlayLevelScene(1, 3);
             }, 750);
         } else {
