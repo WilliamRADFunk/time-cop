@@ -7,6 +7,7 @@ import {
 import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { Collidable } from "../collidable";
 import { RAD_90_DEG_RIGHT } from "../utils/radians-x-degrees-right";
+import { LevelBarricadeBaseColorsMap, LevelBarricadeContrastColorsMap } from "../scenes/main-play-level/configs/level-colors";
 
 /**
  * Static index to help name one barricade differenly than another.
@@ -64,9 +65,10 @@ import { RAD_90_DEG_RIGHT } from "../utils/radians-x-degrees-right";
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      * @param x     coordinate on x-axis where barricade should instantiate.
      * @param z     coordinate on z-axis where barricade should instantiate.
+     * @param level current level player is on.
      * @param yPos  layer level for barricade to appear.
      */
-    constructor(scene: Scene, x:number, z: number, isLabelBlock: number, yPos?: number) {
+    constructor(scene: Scene, x:number, z: number, isLabelBlock: number, level: number, yPos?: number) {
         index++;
         this._scene = scene;
         this._centerPoint = [x, z];
@@ -75,7 +77,7 @@ import { RAD_90_DEG_RIGHT } from "../utils/radians-x-degrees-right";
         const dimension = this._radius * 2;
         this._barricadeGeometry = new PlaneGeometry( dimension, dimension, 10, 10 );
         this._barricadeMaterial = new MeshPhongMaterial({
-            color: !!isLabelBlock ? 0xFFFFFF : 0x0000FF,
+            color: !!isLabelBlock ? LevelBarricadeContrastColorsMap[level] : LevelBarricadeBaseColorsMap[level],
             opacity: 1,
             specular: 0x505050,
             shininess: 100,

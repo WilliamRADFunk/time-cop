@@ -450,7 +450,7 @@ export class Bandit implements Collidable, Entity {
                 this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
             }
 
-            if (Math.random() <= (0.0004 * this._level) && this._projectiles.length < Math.ceil(this._level / 2)) {
+            if (Math.random() <= (0.0008 + (0.0001 * this._level)) && this._projectiles.length < Math.ceil(this._level / 2)) {
                 let x1 = this._currentPoint[0];
                 let z1 = this._currentPoint[1];
                 let x2;
@@ -502,7 +502,7 @@ export class Bandit implements Collidable, Entity {
                         x2, z2,
                         dist,
                         new Color('#FF0000'),
-                        true, 0.002 * this._level, this._yPos, 0.0000001, false);
+                        true, 0.0075 + (0.0005 * this._level), this._yPos, 0.0000001, false);
                     this._projectiles.push(miss);
                     CollisionatorSingleton.add(miss);
 

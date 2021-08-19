@@ -318,7 +318,7 @@ export class DevMenu {
         onClick = () => {
             let level = this._mainPlayLevelSpec.level - 1;
             if (level < 1) {
-                level = 1;
+                level = 40;
             }
             this._mainPlayLevelSpec.level = level;
             this._page1textElements.levelReadoutText.update(this._mainPlayLevelSpec.level.toString());
@@ -344,7 +344,7 @@ export class DevMenu {
         onClick = () => {
             let level = this._mainPlayLevelSpec.level + 1;
             if (level > 40) {
-                level = 40;
+                level = 1;
             }
             this._mainPlayLevelSpec.level = level;
             this._page1textElements.levelReadoutText.update(this._mainPlayLevelSpec.level.toString());
@@ -361,7 +361,7 @@ export class DevMenu {
         onClick = () => {
             let lives = this._mainPlayLevelSpec.lives - 1;
             if (lives < 1) {
-                lives = 1;
+                lives = 5;
             }
             this._mainPlayLevelSpec.lives = lives;
             this._page1textElements.livesReadoutText.update(this._mainPlayLevelSpec.lives.toString());
@@ -386,7 +386,7 @@ export class DevMenu {
         onClick = () => {
             let lives = this._mainPlayLevelSpec.lives + 1;
             if (lives > 5) {
-                lives = 5;
+                lives = 1;
             }
             this._mainPlayLevelSpec.lives = lives;
             this._page1textElements.livesReadoutText.update(this._mainPlayLevelSpec.lives.toString());

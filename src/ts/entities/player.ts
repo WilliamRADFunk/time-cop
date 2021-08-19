@@ -384,8 +384,9 @@ export class Player implements Collidable, Entity {
     public removeFromScene(scene: Scene): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
         this._projectiles.forEach(projectile => projectile.destroy());
-        this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
         this._projectiles.length = 0;
+        this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
+        this._smokeExplosions.length = 0;
         CollisionatorSingleton.remove(this);
 
         // Only in DEV mode.
