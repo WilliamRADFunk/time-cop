@@ -15,6 +15,7 @@ import { CollisionatorSingleton, CollisionType, getCollisionType } from '../coll
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { ExplosionType } from '../models/explosions';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
+import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 
 /**
  * Static index to help name one projectile differenly than another.
@@ -213,7 +214,11 @@ export class Projectile implements Collidable {
      * Calculates the next point in the missile's path.
      */
     private _calculateNextPoint(): void {
-        this._distanceTraveled += this._speed;
+        if (SlowMo_Ctrl.getSlowMo()) {
+            this._distanceTraveled += 0.0005;
+        } else {
+            this._distanceTraveled += this._speed
+        }
         // (xt, yt) = ( ( (1 − t) * x0 + t * x1 ), ( (1 − t) * y0 + t * y1) )
         const t = this._distanceTraveled / this._totalDistance;
         this._currentPoint[0] = ((1 - t) * this._originalStartingPoint[0]) + (t * this._endingPoint[0]);

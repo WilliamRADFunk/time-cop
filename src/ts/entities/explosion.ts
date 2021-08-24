@@ -2,6 +2,7 @@ import { CircleGeometry, Mesh, MeshBasicMaterial, Scene } from 'three';
 
 import { Collidable } from '../collidable';
 import { CollisionType } from '../collisionator';
+import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 import { ExplosionOptions, ExplosionType } from '../models/explosions';
 
 /**
@@ -104,12 +105,14 @@ export class Explosion implements Collidable {
      * @returns whether or not the explosion is done, and should be removed from owner (false).
      */
     public endCycle(): boolean {
+        let speed = this._speed;
+
         if (this._isActive) {
             if (this._isExplosionGrowing) {
-                this._currentExplosionScale += this._speed;
+                this._currentExplosionScale += speed;
                 this._explosion.scale.set(this._currentExplosionScale, this._currentExplosionScale, this._currentExplosionScale);
             } else {
-                this._currentExplosionScale -= this._speed;
+                this._currentExplosionScale -= speed;
                 this._explosionMaterial.transparent = true;
                 this._explosionMaterial.opacity = this._currentExplosionScale;
                 this._explosionMaterial.needsUpdate = true;

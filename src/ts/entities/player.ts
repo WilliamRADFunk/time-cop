@@ -10,15 +10,17 @@ import { Collidable } from "../collidable";
 import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { LifeCtrl } from '../controls/controllers/lives-controller';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
+import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
 import { ExplosionType } from '../models/explosions';
 import { StringMapToNumber } from '../models/string-map-to-number';
-import { animateEntity } from '../utils/animate-entity';
+import { animateEntity, showCurrentEntityFrame } from '../utils/animate-entity';
 import { calculateEntityProjectilePathMain, calculateEntityProjectilePathSecondary } from '../utils/calculate-entity-projectile-path';
 import { calculateNewEntityDirection } from '../utils/calculate-new-entity-direction';
 import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
+import { RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
 import { rotateEntity } from '../utils/rotate-entity';
 import { Explosion } from './explosion';
 import { Projectile } from './projectile';
@@ -39,6 +41,11 @@ export class Player implements Collidable, Entity {
      _animationMeshes: [Mesh, Mesh, Mesh] = [ null, null, null ];
 
      /**
+      * The list of blood explosions the player has around them as they die.
+      */
+     private _bloodExplosions: Explosion[] = [];
+
+     /**
       * Current direction crew member should be facing.
       */
     _currDirection: EntityDirection = EntityDirection.Right;
@@ -47,6 +54,16 @@ export class Player implements Collidable, Entity {
      * Keeps track of the x,z point the player is at currently.
      */
     private _currentPoint: number[];
+
+    /**
+     * Tracks position in dying animation sequence to know which animation to switch to next frame.
+     */
+    private _dyingAnimationCounter: number = 0;
+
+    /**
+     * Tracks if player is going through death animation.
+     */
+    private _inDeathSequence: boolean = false;
 
     /**
      * Flag to signal if player has been destroyed or not.
@@ -73,12 +90,6 @@ export class Player implements Collidable, Entity {
      * The instance of lifeHandler used for this level instance.
      */
     private _lifeHandler: LifeCtrl;
-
-    /**
-     * Tiles in order that make up the crew member's path to travel.
-     * Row, Column coordinates for each tile.
-     */
-    _path: [number, number][] = [];
 
     /**
      * Controls size and shape of the player
@@ -213,7 +224,77 @@ export class Player implements Collidable, Entity {
      * @returns whether or not the player is done, and its points calculated.
      */
     public endCycle(dirKeys: StringMapToNumber): boolean {
-        if (this._isActive) {
+        if (this._inDeathSequence) {
+            if (this._dyingAnimationCounter < 600) {
+                this._animationMeshes.forEach(mesh => {
+                    const rot: number[] = mesh.rotation.toArray();
+                    mesh.rotation.set(rot[0], rot[1], rot[2] + 0.07);
+                });
+                this._dyingAnimationCounter++;
+
+                if (this._bloodExplosions.length < 5 && Math.random() > 0.7) {
+                    const isXNeg = Math.random() > 0.5;
+                    const isZNeg = Math.random() > 0.5;
+                    const x = (isXNeg ? -1 : 1) * Math.random();
+                    const z = (isZNeg ? -1 : 1) * Math.random();
+                    this._bloodExplosions.push(new Explosion(
+                        this._scene,
+                        this._currentPoint[0] + x,
+                        this._currentPoint[1] + z,
+                        {
+                            color: ExplosionType.Blood,
+                            radius: 0.12,
+                            speed: 0.04,
+                            y: this._yPos - 0.26
+                        }
+                    ));
+                }
+
+                if (this._dyingAnimationCounter % 10 === 0) {
+                    const isVisible = this._animationMeshes.some(mesh => mesh.visible);
+                    if (isVisible) {
+                        showCurrentEntityFrame(this, true);
+                    } else {
+                        showCurrentEntityFrame(this);
+                    }
+                }
+
+                // Work through each blood explosions around the dying player.
+                let tempBloodExplosion = [];
+                for (let i = 0; i < this._bloodExplosions.length; i++) {
+                    let bloodExplosion = this._bloodExplosions[i];
+                    if (bloodExplosion && !bloodExplosion.endCycle()) {
+                        CollisionatorSingleton.remove(bloodExplosion);
+                        this._bloodExplosions[i] = null;
+                    }
+                    bloodExplosion = this._bloodExplosions[i];
+                    if (bloodExplosion) {
+                        tempBloodExplosion.push(bloodExplosion);
+                    }
+                }
+                this._bloodExplosions = tempBloodExplosion.slice();
+                tempBloodExplosion = null;
+            } else {
+                this._dyingAnimationCounter = 0;
+                this._inDeathSequence = false;
+                this._animationMeshes.forEach(mesh => mesh.position.set(0, this._yPos, 0));
+                this._currentPoint = [0, 0];
+                this._currDirection = EntityDirection.Right;
+                rotateEntity(this);
+                this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
+                this._bloodExplosions.length = 0;
+                if (this._lifeHandler.getLives() <= 0) {
+                    this._isActive = false;
+                } else {
+                    this._isActive = true;
+                    showCurrentEntityFrame(this);
+                    this._lifeHandler.nextLife();
+                    SlowMo_Ctrl.exitSlowMo();
+                }
+            }
+
+            return false;
+        } else if (this._isActive) {
             // Calculates how far to move the player when moving and walls them in by the post barrier.
             if (Object.keys(dirKeys).some(key => !!dirKeys[key])) {
                 this._isMoving = true;
@@ -284,7 +365,7 @@ export class Player implements Collidable, Entity {
      * @param isSecondary signals that the player should fire from the opposite direction they are facing.
      */
     public fire(isSecondary: boolean): void {
-        if (!this._isActive) {
+        if (!this._isActive || this._inDeathSequence) {
             return;
         }
 
@@ -377,11 +458,9 @@ export class Player implements Collidable, Entity {
      */
     public impact(self: Collidable, otherThing: CollisionType): boolean {
         this._lifeHandler.loseLife();
-        if (this._isActive && this._lifeHandler.getLives() <= 0) {
-            this._isActive = false;
-            // SOUNDS_CTRL.stop
-            return true;
-        }
+        this._inDeathSequence = true;
+        SlowMo_Ctrl.enterSlowMo();
+        // SOUNDS_CTRL.stop
         return false;
     }
 
@@ -391,7 +470,7 @@ export class Player implements Collidable, Entity {
      */
     public isPassive(): boolean {
         // Becomes passive when dead.
-        return !this._isActive;
+        return !this._isActive || this._inDeathSequence;
     }
 
     /**
@@ -404,6 +483,8 @@ export class Player implements Collidable, Entity {
         this._projectiles.length = 0;
         this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
         this._smokeExplosions.length = 0;
+        this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
+        this._bloodExplosions.length = 0;
         CollisionatorSingleton.remove(this);
 
         // Only in DEV mode.

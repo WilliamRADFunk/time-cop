@@ -17,6 +17,7 @@ import { rotateEntity } from '../utils/rotate-entity';
 import { Explosion } from './explosion';
 import { ExplosionType } from '../models/explosions';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
+import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -359,7 +360,11 @@ export class Bandit implements Collidable, Entity {
      * Calculates the next point in the bandit's path.
      */
     private _calculateNextPoint(): void {
-        this._distanceTraveled += this._isRunning ? this._speedRunning : this._speed;
+        if (SlowMo_Ctrl.getSlowMo()) {
+            this._distanceTraveled += 0.0005;
+        } else {
+            this._distanceTraveled += this._isRunning ? this._speedRunning : this._speed;
+        }
         // (xt, yt) = ( ( (1 − t) * x0 + t * x1 ), ( (1 − t) * y0 + t * y1) )
         const t = this._distanceTraveled / this._totalDistance;
         this._currentPoint[0] = ((1 - t) * this._originalStartingPoint[0]) + (t * this._endingPoint[0]);
@@ -430,18 +435,29 @@ export class Bandit implements Collidable, Entity {
 
     /**
      * At the end of each loop iteration, move the bandit a little.
+     * @param isPlayerDying signal that player death animation is ongoing and all bandit projectiles should be destroyed.
      * @returns whether or not the bandit is done, and its points calculated.
      */
-    public endCycle(): boolean {
+    public endCycle(isPlayerDying?: boolean): boolean {
         // TODO: Carry on with dying bandit sequence until complete
+
+        // If player has already been hit, destroy all bullets and related graphics until they start again.
+        if (isPlayerDying) {
+            this._projectiles.forEach(projectile => projectile.destroy());
+            this._projectiles.length = 0;
+            this._smokeExplosions.forEach(smoke => smoke.destroy());
+            this._smokeExplosions.length = 0;
+            return this._isActive;
+        }
 
         if (this._waitToFire >= 1) {
             this._waitToFire--;
             if (!this._waitToFire && !this.isHelpBandit) {
                 SOUNDS_CTRL.playFooPang();
             }
-            return true;
+            return this._isActive;;
         }
+
         if (this._isActive) {
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {

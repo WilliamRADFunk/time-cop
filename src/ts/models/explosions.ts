@@ -26,6 +26,7 @@ export interface ExplosionOptions {
 }
 
 export const enum ExplosionType {
+    "Blood" = 0x660000,
     "Electric" = 0x05EDFF,
     "Fire" = 0xF9A602,
     "Smoke" = 0x555555

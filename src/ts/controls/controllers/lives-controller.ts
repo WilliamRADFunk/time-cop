@@ -12,19 +12,19 @@ import { ASSETS_CTRL } from './assets-controller';
  */
 export class LifeCtrl {
     /**
-     * Keeps track of lives (bullet) material.
-     */
-    private _material: MeshBasicMaterial;
-
-    /**
      * Keeps track of player's current number of remaining lives.
      */
     private _currentLives: number = 3;
 
     /**
-     * Reference to the scene, used to remove text in order to change it.
+     * Tracks if player is in the process of dying.
      */
-    private _scene: Scene;
+    private _isDying: boolean = false;
+
+    /**
+     * A better way to iterate through the digit meshes.
+     */
+    private _lives: Mesh[] = [];
 
     /**
      * Controls size and shape of the score
@@ -32,9 +32,14 @@ export class LifeCtrl {
     private _livesGeometry: PlaneGeometry;
 
     /**
-     * A better way to iterate through the digit meshes.
+     * Keeps track of lives (bullet) material.
      */
-    private _lives: Mesh[] = [];
+    private _material: MeshBasicMaterial;
+
+    /**
+     * Reference to the scene, used to remove text in order to change it.
+     */
+    private _scene: Scene;
 
     /**
      * Constructor for the ScoreHandler class
@@ -101,14 +106,30 @@ export class LifeCtrl {
     }
 
     /**
+     * Lets caller know whether a player death animation is active.
+     * @returns the flag signalling the death animation is ongoing for player.
+     */
+    public isDying(): boolean {
+        return this._isDying;
+    }
+
+    /**
      * Removes a new life symbol.
      * @returns TRUE if player still has lives. FALSE is that was the last of the player's lives.
      */
     public loseLife(): boolean {
+        this._isDying = true;
         this._currentLives--;
         this._refreshBulletCount();
         if (this._currentLives > 0) {
             return true;
         }
+    }
+
+    /**
+     * Lets lives controller know the death animation is complete.
+     */
+    public nextLife(): void {
+        this._isDying = false;
     }
 }

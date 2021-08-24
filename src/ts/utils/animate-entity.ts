@@ -1,6 +1,15 @@
 import { Entity } from "../models/Entity";
 
 export function animateEntity(entity: Entity): void {
+    showCurrentEntityFrame(entity);
+    entity._animationCounter++;
+
+    if (entity._animationCounter > 39) {
+        entity._animationCounter = 0;
+    }
+}
+
+export function showCurrentEntityFrame(entity: Entity, hideAll?: boolean): void {
     const meshes = entity._animationMeshes;
     // If any of the meshes are not setup, bail out early.
     if (meshes.some(x => !x)) {
@@ -22,9 +31,10 @@ export function animateEntity(entity: Entity): void {
         meshes[1].visible = true;
         meshes[2].visible = false;
     }
-    entity._animationCounter++;
 
-    if (entity._animationCounter > 39) {
-        entity._animationCounter = 0;
+    if (hideAll) {
+        meshes[0].visible = false;
+        meshes[1].visible = false;
+        meshes[2].visible = false;
     }
 }

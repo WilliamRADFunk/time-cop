@@ -556,7 +556,7 @@ export class MainPlayLevel {
         if (this._state === MainLevelState.active) {
             const playerDeadStatus = this._player.endCycle(this._dirKeys);
             this._bandits = this._bandits.filter(bandit => {
-                if (!bandit.endCycle()) {
+                if (!bandit.endCycle(this._lifeHandler.isDying())) {
                     bandit.destroy();
                     return false;
                 }

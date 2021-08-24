@@ -20,12 +20,6 @@ import { Mesh } from "three";
     _currDirection: EntityDirection;
 
     /**
-     * Tiles in order that make up the crew member's path to travel.
-     * Row, Column coordinates for each tile.
-     */
-    _path: [number, number][];
-
-    /**
      * Flag to signal walking animation should be active.
      */
     _isMoving?: boolean;
