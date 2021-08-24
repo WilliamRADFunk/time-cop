@@ -14,7 +14,7 @@ import { Explosion } from './explosion';
 import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { ExplosionType } from '../models/explosions';
-import { ScoreController } from '../controls/controllers/score-controller';
+import { ScoreCtrl } from '../controls/controllers/score-controller';
 
 /**
  * Static index to help name one projectile differenly than another.
@@ -101,7 +101,7 @@ export class Projectile implements Collidable {
     /**
      * The instance of scoreboard used for this level instance.
      */
-    private _scoreboard: ScoreController;
+    private _scoreboard: ScoreCtrl;
 
     /**
      * The speed at which the missile travels.
@@ -174,7 +174,7 @@ export class Projectile implements Collidable {
         y?: number,
         waitToFire?: number,
         playerMissile?: boolean,
-        scoreboard?: ScoreController) {
+        scoreboard?: ScoreCtrl) {
         index++;
         this._scoreboard = scoreboard;
         this._headY = y || 0.51;

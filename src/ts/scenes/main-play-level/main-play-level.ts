@@ -19,10 +19,11 @@ import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
 import { Post, PostPositions } from '../../entities/post';
 import { Bandit, banditStartPositions } from '../../entities/bandit';
 import { Player } from '../../entities/player';
-import { ScoreController } from '../../controls/controllers/score-controller';
+import { ScoreCtrl } from '../../controls/controllers/score-controller';
 import { ActorController } from './controllers/actor-controller';
 import { BarricadeLevel } from '../../entities/barricade-level';
 import { LifeCtrl } from '../../controls/controllers/lives-controller';
+import { StringMapToNumber } from '../../models/string-map-to-number';
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
@@ -107,7 +108,7 @@ export class MainPlayLevel {
     /**
      * The movement keys the player currently has pressed.
      */
-    private _dirKeys: { [key: string]: number } = {
+    private _dirKeys: StringMapToNumber = {
         down: 0,
         left: 0,
         right: 0,
@@ -152,7 +153,7 @@ export class MainPlayLevel {
     /**
      * The instance of scoreboard used for this level instance.
      */
-    private _scoreboard: ScoreController;
+    private _scoreboard: ScoreCtrl;
 
     /**
      * Reference to this scene's settings controller.
@@ -475,7 +476,7 @@ export class MainPlayLevel {
      * Passes the instance of the scoreboard to the level for use in adding points and regaining lives.
      * @param scoreBoard the instance of scoreboard used for this level instance.
      */
-    public addScoreBoard(scoreBoard: ScoreController): void {
+    public addScoreBoard(scoreBoard: ScoreCtrl): void {
         this._scoreboard = scoreBoard;
     }
 
@@ -516,7 +517,7 @@ export class MainPlayLevel {
      * At the end of each loop iteration, check for end state.
      * @returns whether or not the scene is done.
      */
-    public endCycle(): { [key: string]: number } {
+    public endCycle(): StringMapToNumber {
         this._counters.jobs++;
         if (this._counters.jobs > 10) this._counters.jobs = 1;
         // Game externally paused from control panel. Nothing should progress.
@@ -542,15 +543,15 @@ export class MainPlayLevel {
 
         // Player died. Nothing should progress.
         if (this._state === MainLevelState.dead) {
-            // Return score.
-            // Remove things from scene.
-            return;
+            return {
+                score: this._scoreboard.getScore(),
+                lives: this._lifeHandler.getLives()
+            };
         }
 
         // After all enemies are dead.
         if (this._state === MainLevelState.win) {
             // Do the victory dance
-            // Return level, score, and player lives.
             return {
                 score: this._scoreboard.getScore(),
                 lives: this._lifeHandler.getLives()
@@ -558,7 +559,7 @@ export class MainPlayLevel {
         }
 
         if (this._state === MainLevelState.active) {
-            this._player.endCycle(this._dirKeys);
+            const playerDeadStatus = this._player.endCycle(this._dirKeys);
             this._bandits = this._bandits.filter(bandit => {
                 if (!bandit.endCycle()) {
                     bandit.destroy();
@@ -566,6 +567,12 @@ export class MainPlayLevel {
                 }
                 return true;
             });
+
+            // Player died. Game over.
+            if (playerDeadStatus) {
+                this._state = MainLevelState.dead;
+                return;
+            }
 
             if (!this._bandits.length) {
                 this._state = MainLevelState.win;

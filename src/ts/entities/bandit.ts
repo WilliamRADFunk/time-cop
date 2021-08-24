@@ -16,7 +16,7 @@ import { Projectile } from './projectile';
 import { rotateEntity } from '../utils/rotate-entity';
 import { Explosion } from './explosion';
 import { ExplosionType } from '../models/explosions';
-import { ScoreController } from '../controls/controllers/score-controller';
+import { ScoreCtrl } from '../controls/controllers/score-controller';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -237,7 +237,7 @@ export class Bandit implements Collidable, Entity {
     /**
      * The instance of scoreboard used for this level instance.
      */
-    private _scoreboard: ScoreController;
+    private _scoreboard: ScoreCtrl;
 
     /**
      * The list of smoke explosions the bandit has fired.
@@ -286,7 +286,7 @@ export class Bandit implements Collidable, Entity {
      * @hidden
      */
     constructor(
-        scoreboard: ScoreController,
+        scoreboard: ScoreCtrl,
         level: number,
         scene: Scene,
         banditTexture: Texture,

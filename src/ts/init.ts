@@ -12,9 +12,10 @@ import { ENVIRONMENT } from './environment';
 import { createSceneModule } from './utils/create-scene-module';
 import { disposeScene } from './utils/dispose-scene';
 import { adjustWindowDimensions } from './utils/on-window-resize';
-import { ScoreController } from './controls/controllers/score-controller';
+import { ScoreCtrl } from './controls/controllers/score-controller';
 import { Color } from 'three';
 import { LifeCtrl } from './controls/controllers/lives-controller';
+import { StringMapToNumber } from './models/string-map-to-number';
 
 const scenes: { [ key: string ]: SceneType } = {
     devMenu: {
@@ -185,12 +186,12 @@ const loadIntroScene = () => {
 /**
  * Game's main level scene, where player actually plays the game. Only starts when all assets are finished loading.
  */
-const loadMainPlayLevelScene = (level: number, lives: number) => {
+const loadMainPlayLevelScene = (level: number, lives: number, score?: number) => {
     const sceneMod = createSceneModule(scenes.mainPlayLevel);
     // Create instance of game section.
     scenes.mainPlayLevel.instance = new MainPlayLevel(scenes.mainPlayLevel, level, lives);
     // Create instance of score keeper.
-    const scoreboard = new ScoreController(scenes.mainPlayLevel.scene, new Color(0xFFFFFF), ASSETS_CTRL.gameFont);
+    const scoreboard = new ScoreCtrl(scenes.mainPlayLevel.scene, new Color(0xFFFFFF), ASSETS_CTRL.gameFont, score);
     scenes.mainPlayLevel.instance.addScoreBoard(scoreboard);
     const lifeHandler = new LifeCtrl(scenes.mainPlayLevel.scene, level, lives);
     scenes.mainPlayLevel.instance.addLifeHandler(lifeHandler);
@@ -208,7 +209,7 @@ const loadMainPlayLevelScene = (level: number, lives: number) => {
             disposeScene(scenes.mainPlayLevel);
             return;
         } else {
-            const layout: { [key: number]: number } = scenes.mainPlayLevel.instance.endCycle();
+            const layout: StringMapToNumber = scenes.mainPlayLevel.instance.endCycle();
             if (layout) {
                 scenes.mainPlayLevel.instance.dispose();
                 scenes.mainPlayLevel.active = false;
@@ -219,7 +220,15 @@ const loadMainPlayLevelScene = (level: number, lives: number) => {
                 // Clear up memory used by mainPlayLevel scene.
                 disposeScene(scenes.mainPlayLevel);
                 setTimeout(() => {
-                    loadMenu();
+                    if (level === 40) {
+                        // TODO: Play the You Win scene and collect initials.
+                        loadMenu();
+                    } else if(layout['lives'] <= 0) {
+                        // TODO: Play the You suck you lost scene and collect initials.
+                        loadMenu();
+                    } else {
+                        loadMainPlayLevelScene(level + 1, layout['lives'], layout['score']);
+                    }
                 }, 10);
                 return;
             }

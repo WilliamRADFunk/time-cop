@@ -22,6 +22,7 @@ import { ButtonBase } from "../../controls/buttons/button-base";
 // Constants and Singletons
 import { ProfileBase } from "../../controls/profiles/profile-base";
 import { SettingsPanel } from "../panels/settings-panel";
+import { StringMapToNumber } from "../../models/string-map-to-number";
 
 /**
  * Border for dev purposes. Normally set to null.
@@ -46,7 +47,7 @@ export class SettingsCtrl {
     /**
      * All of the counters, and counter clearing threasholds.
      */
-    private _settingsCounters: { [key: string]: number } = {
+    private _settingsCounters: StringMapToNumber = {
     };
 
     /**

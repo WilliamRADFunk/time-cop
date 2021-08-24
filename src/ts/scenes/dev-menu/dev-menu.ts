@@ -43,6 +43,7 @@ import { FreestyleSquareButton } from "../../controls/buttons/freestyle-square-b
 import { ProfileBase } from "../../controls/profiles/profile-base";
 import { RightTopDialogueText } from "../../controls/text/dialogue/right-top-dialogue-text";
 import { ASSETS_CTRL } from "../../controls/controllers/assets-controller";
+import { StringMapToNumber } from "../../models/string-map-to-number";
 
 // const border: string = '1px solid #FFF';
 const border: string = 'none';
@@ -104,7 +105,7 @@ export class DevMenu {
     /**
     * Specification of what the starter conditions of the main level should be.
     */
-    private _mainPlayLevelSpec: { [key: string]: number } = {
+    private _mainPlayLevelSpec: StringMapToNumber = {
         level: 1,
         lives: 3
     };
@@ -127,32 +128,32 @@ export class DevMenu {
     /**
      * List of counters on page 1.
      */
-    private _page1counters: { [key: string]: number } = {};
+    private _page1counters: StringMapToNumber = {};
 
     /**
      * List of counters on page 2.
      */
-    private _page2counters: { [key: string]: number } = {};
+    private _page2counters: StringMapToNumber = {};
 
     /**
      * List of counters on page 3.
      */
-    private _page3counters: { [key: string]: number } = {};
+    private _page3counters: StringMapToNumber = {};
 
     /**
      * List of countermaxes on page 1.
      */
-    private _page1countermaxes: { [key: string]: number } = {};
+    private _page1countermaxes: StringMapToNumber = {};
 
     /**
      * List of countermaxes on page 2.
      */
-    private _page2countermaxes: { [key: string]: number } = {};
+    private _page2countermaxes: StringMapToNumber = {};
 
     /**
      * List of countermaxes on page 3.
      */
-    private _page3countermaxes: { [key: string]: number } = {};
+    private _page3countermaxes: StringMapToNumber = {};
 
     /**
      * Contains key-value mapping of all meshes used on page 1.

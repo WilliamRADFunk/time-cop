@@ -9,10 +9,11 @@ import {
 import { Collidable } from "../collidable";
 import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { LifeCtrl } from '../controls/controllers/lives-controller';
-import { ScoreController } from '../controls/controllers/score-controller';
+import { ScoreCtrl } from '../controls/controllers/score-controller';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
 import { ExplosionType } from '../models/explosions';
+import { StringMapToNumber } from '../models/string-map-to-number';
 import { animateEntity } from '../utils/animate-entity';
 import { calculateEntityProjectilePathMain, calculateEntityProjectilePathSecondary } from '../utils/calculate-entity-projectile-path';
 import { calculateNewEntityDirection } from '../utils/calculate-new-entity-direction';
@@ -102,7 +103,7 @@ export class Player implements Collidable, Entity {
     /**
      * The instance of scoreboard used for this level instance.
      */
-    private _scoreboard: ScoreController;
+    private _scoreboard: ScoreCtrl;
 
     /**
      * The list of smoke explosions the player has fired.
@@ -133,7 +134,7 @@ export class Player implements Collidable, Entity {
      * @hidden
      */
     constructor(
-        scoreboard: ScoreController,
+        scoreboard: ScoreCtrl,
         lifeHandler: LifeCtrl,
         scene: Scene,
         playerTexture: Texture,
@@ -211,7 +212,7 @@ export class Player implements Collidable, Entity {
      * At the end of each loop iteration, move the player a little.
      * @returns whether or not the player is done, and its points calculated.
      */
-    public endCycle(dirKeys: { [key: string]: number }): boolean {
+    public endCycle(dirKeys: StringMapToNumber): boolean {
         if (this._isActive) {
             // Calculates how far to move the player when moving and walls them in by the post barrier.
             if (Object.keys(dirKeys).some(key => !!dirKeys[key])) {
@@ -272,6 +273,8 @@ export class Player implements Collidable, Entity {
             }
             this._smokeExplosions = tempSmokeExplosion.slice();
             tempSmokeExplosion = null;
+
+            return false;
         }
         return true;
     }

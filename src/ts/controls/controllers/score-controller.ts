@@ -17,7 +17,7 @@ const positionIndex = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ].map(val => val * 0.35);
  * @class
  * Keeps track of all things score related.
  */
-export class ScoreController {
+export class ScoreCtrl {
     /**
      * Keeps track of level's current color
      */
@@ -88,13 +88,14 @@ export class ScoreController {
      * @param scene         graphic rendering scene object. Used each iteration to redraw things contained in scene.
      * @param color         level color, grabbed from the LevelHandler.
      * @param scoreFont     font to use when rendering score.
+     * @param score         preset score that might be passed from one level to the next.
      * @hidden
      */
-    constructor(scene: Scene, color: Color, scoreFont: Font) {
+    constructor(scene: Scene, color: Color, scoreFont: Font, score?: number) {
         this._scene = scene;
         this._scoreFont = scoreFont;
         this._currentColor = color;
-        this._currentScore = 0;
+        this._currentScore = score || 0;
         this._scoreSinceNewLife = 0;
         this._scoreSinceSlowTime = 0;
         this._scoreMaterial = new MeshLambertMaterial( {color: color || 0x084E70} );

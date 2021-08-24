@@ -41,6 +41,7 @@ import { noOp } from "../../../utils/no-op";
 import { ProfileBase } from "../../../controls/profiles/profile-base";
 import { FreestyleSquareButton } from "../../../controls/buttons/freestyle-square-button";
 import { ASSETS_CTRL } from "../../../controls/controllers/assets-controller";
+import { StringMapToNumber } from "../../../models/string-map-to-number";
 
 /**
  * Border for dev purposes. Normally set to null.
@@ -111,7 +112,7 @@ export class HelpCtrl {
     /**
      * All of the counters, and counter clearing threasholds.
      */
-    private _helpCounters: { [key: string]: number } = {
+    private _helpCounters: StringMapToNumber = {
         controlPanel: 0,
         controlPanelClear: 1230
     };
