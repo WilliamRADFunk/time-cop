@@ -22,6 +22,7 @@ import { Player } from '../../entities/player';
 import { ScoreController } from '../../controls/controllers/score-controller';
 import { ActorController } from './controllers/actor-controller';
 import { BarricadeLevel } from '../../entities/barricade-level';
+import { LifeCtrl } from '../../controls/controllers/lives-controller';
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
@@ -124,9 +125,9 @@ export class MainPlayLevel {
     private _level: number;
 
     /**
-     * Current number of lives player has.
+     * The instance of life hanlder used for this level instance.
      */
-    private _lives: number;
+    private _lifeHandler: LifeCtrl;
 
     /**
      * Reference to _onWindowResize so that it can be removed later.
@@ -193,7 +194,6 @@ export class MainPlayLevel {
         this._camera = scene.camera as OrthographicCamera;
         this._scene = scene.scene;
         this._level = level;
-        this._lives = lives;
 
         // Text, Button, and Event Listeners
         this._onInitialize(scene);
@@ -223,6 +223,7 @@ export class MainPlayLevel {
     private addEntities(): void {
         this._player = new Player(
             this._scoreboard,
+            this._lifeHandler,
             this._scene,
             ASSETS_CTRL.textures.sheriff,
             0, 0,
@@ -476,6 +477,14 @@ export class MainPlayLevel {
      */
     public addScoreBoard(scoreBoard: ScoreController): void {
         this._scoreboard = scoreBoard;
+    }
+
+    /**
+     * Passes the instance of the lifeHandler to the level for use in addingand removing lives.
+     * @param scoreBoard the instance of lifeHandler used for this level instance.
+     */
+    public addLifeHandler(lifeHandler: LifeCtrl): void {
+        this._lifeHandler = lifeHandler;
         this.addEntities();
     }
 
@@ -544,7 +553,7 @@ export class MainPlayLevel {
             // Return level, score, and player lives.
             return {
                 score: this._scoreboard.getScore(),
-                lives: this._lives
+                lives: this._lifeHandler.getLives()
             };
         }
 

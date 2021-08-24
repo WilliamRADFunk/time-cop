@@ -8,6 +8,7 @@ import {
     
 import { Collidable } from "../collidable";
 import { CollisionatorSingleton, CollisionType } from '../collisionator';
+import { LifeCtrl } from '../controls/controllers/lives-controller';
 import { ScoreController } from '../controls/controllers/score-controller';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
@@ -68,6 +69,11 @@ export class Player implements Collidable, Entity {
     _isMovingSound?: boolean;
 
     /**
+     * The instance of lifeHandler used for this level instance.
+     */
+    private _lifeHandler: LifeCtrl;
+
+    /**
      * Tiles in order that make up the crew member's path to travel.
      * Row, Column coordinates for each tile.
      */
@@ -116,6 +122,7 @@ export class Player implements Collidable, Entity {
     /**
      * Constructor for the Bandit class
      * @param scoreboard    the instance of scoreboard used for this level instance.
+     * @param lifeHandler   the instance of lifeHandler used for this level instance.
      * @param scene         graphic rendering scene object. Used each iteration to redraw things contained in scene.
      * @param playerTexture sprite sheet texture used to represent this level's player animation frames.
      * @param x1            origin point x of where the player starts.
@@ -127,6 +134,7 @@ export class Player implements Collidable, Entity {
      */
     constructor(
         scoreboard: ScoreController,
+        lifeHandler: LifeCtrl,
         scene: Scene,
         playerTexture: Texture,
         x1:number,
@@ -136,6 +144,7 @@ export class Player implements Collidable, Entity {
         isHelpScreen?: boolean) {
         index++;
         this._scoreboard = scoreboard;
+        this._lifeHandler = lifeHandler;
         this._yPos = yPos || 0.6;
         this._speed = speed || this._speed;
         this._currentPoint = [x1, z1];
@@ -272,6 +281,10 @@ export class Player implements Collidable, Entity {
      * @param isSecondary signals that the player should fire from the opposite direction they are facing.
      */
     public fire(isSecondary: boolean): void {
+        if (!this._isActive) {
+            return;
+        }
+
         let bulletPoints;
         if (isSecondary) {
             bulletPoints = calculateEntityProjectilePathSecondary(this._currDirection, this._currentPoint, this._radius);
@@ -360,7 +373,8 @@ export class Player implements Collidable, Entity {
      * @returns whether or not impact means calling removeFromScene by collisionator.
      */
     public impact(self: Collidable, otherThing: CollisionType): boolean {
-        if (this._isActive) {
+        this._lifeHandler.loseLife();
+        if (this._isActive && this._lifeHandler.getLives() <= 0) {
             this._isActive = false;
             // SOUNDS_CTRL.stop
             return true;

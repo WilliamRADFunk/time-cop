@@ -14,6 +14,7 @@ import { disposeScene } from './utils/dispose-scene';
 import { adjustWindowDimensions } from './utils/on-window-resize';
 import { ScoreController } from './controls/controllers/score-controller';
 import { Color } from 'three';
+import { LifeCtrl } from './controls/controllers/lives-controller';
 
 const scenes: { [ key: string ]: SceneType } = {
     devMenu: {
@@ -191,6 +192,8 @@ const loadMainPlayLevelScene = (level: number, lives: number) => {
     // Create instance of score keeper.
     const scoreboard = new ScoreController(scenes.mainPlayLevel.scene, new Color(0xFFFFFF), ASSETS_CTRL.gameFont);
     scenes.mainPlayLevel.instance.addScoreBoard(scoreboard);
+    const lifeHandler = new LifeCtrl(scenes.mainPlayLevel.scene, level, lives);
+    scenes.mainPlayLevel.instance.addLifeHandler(lifeHandler);
 
     /**
      * The render loop. Everything that should be checked, called, or drawn in each animation frame.
