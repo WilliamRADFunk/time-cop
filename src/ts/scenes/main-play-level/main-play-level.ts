@@ -101,11 +101,6 @@ export class MainPlayLevel {
     private _delayStartTime: number;
 
     /**
-     * Direction player is moving.
-     */
-    private _directionMove: number[] = [0, 0];
-
-    /**
      * The movement keys the player currently has pressed.
      */
     private _dirKeys: StringMapToNumber = {

@@ -25,7 +25,7 @@ import { Projectile } from './projectile';
 
 let index: number = 0;
 let hitBoxMesh: Mesh;
-const showHitBox = true;
+const showHitBox = false;
 
 export class Player implements Collidable, Entity {
     /**
