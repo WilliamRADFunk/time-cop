@@ -1,20 +1,20 @@
-import { CircleGeometry, Mesh, MeshBasicMaterial } from "three";
+import { CircleGeometry, Mesh, MeshBasicMaterial, PlaneGeometry } from "three";
 import { RAD_90_DEG_RIGHT } from "./radians-x-degrees-right";
 
 /**
- * Makes all the team member meshes for the game map.
+ * Makes all the entity meshes for a single entity.
  */
 export function makeEntity(
-    animationMeshArray: [Mesh, Mesh, Mesh],
-    geo: CircleGeometry,
+    meshArray: Mesh[],
+    geo: CircleGeometry | PlaneGeometry,
     material: MeshBasicMaterial,
     index: number,
     pos: [number, number, number],
     name: string
 ): void {
-    animationMeshArray[index] = new Mesh( geo, material );
-    animationMeshArray[index].position.set(pos[0], pos[1], pos[2]);
-    animationMeshArray[index].rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-    animationMeshArray[index].name = name;
-    animationMeshArray[index].visible = index ? false : true;
+    meshArray[index] = new Mesh( geo, material );
+    meshArray[index].position.set(pos[0], pos[1], pos[2]);
+    meshArray[index].rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+    meshArray[index].name = name;
+    meshArray[index].visible = index ? false : true;
 }

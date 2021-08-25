@@ -3,6 +3,7 @@ import {
     Color,
     Mesh,
     MeshBasicMaterial,
+    PlaneGeometry,
     Scene,
     Texture } from 'three';
     
@@ -22,6 +23,7 @@ import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
 import { RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
 import { rotateEntity } from '../utils/rotate-entity';
+import { PLAYER_RADIUS } from '../utils/standard-entity-radii';
 import { Explosion } from './explosion';
 import { Projectile } from './projectile';
 
@@ -54,6 +56,11 @@ export class Player implements Collidable, Entity {
      * Keeps track of the x,z point the player is at currently.
      */
     private _currentPoint: number[];
+
+    /**
+     * The mesh that shows player's character dead.
+     */
+    private _deathMesh: Mesh;
 
     /**
      * Tracks position in dying animation sequence to know which animation to switch to next frame.
@@ -104,7 +111,7 @@ export class Player implements Collidable, Entity {
     /**
      * Radius of the circle geometry on which the texture in imprinted and also the collision radius for hit box detection.
      */
-    private _radius: number = 0.75;
+    private _radius: number = PLAYER_RADIUS;
 
     /**
      * Reference to the scene, used to remove player from rendering cycle once destroyed.
@@ -181,7 +188,7 @@ export class Player implements Collidable, Entity {
         [0, 1, 2].forEach((val: number) => {
             const offCoordsX = val;
             const offCoordsY = 0;
-            const size = [3, 1];
+            const size = [4, 1];
             const material = makeEntityMaterial(playerTexture, offCoordsX, offCoordsY, size);
             makeEntity(
                 this._animationMeshes,
@@ -192,7 +199,61 @@ export class Player implements Collidable, Entity {
                 `player-${index}-${val}`);
         });
 
+        const offCoordsX = 3;
+        const offCoordsY = 0;
+        const size = [4, 1];
+        const dMesh: Mesh[] = [ null ];
+        makeEntity(
+            dMesh,
+            new PlaneGeometry(this._radius * 2, this._radius * 2, 16, 16),
+            makeEntityMaterial(playerTexture, offCoordsX, offCoordsY, size),
+            0,
+            [this._currentPoint[0], this._yPos, this._currentPoint[1]],
+            `dead-player`);
+        this._deathMesh = dMesh[0];
+        this._deathMesh.visible = false;
+
         rotateEntity(this);
+    }
+
+    /**
+     * Incrementally animates each item in the list.
+     * @param explosionsList either the list of smoke explosions or blood splatters.
+     */
+    private _handleChildCycleList(itemType: (ExplosionType | CollisionType), items: (Explosion[] | Projectile[])): void {
+        // Work through each blood explosions around the dying player.
+        let temp = [];
+        for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            if (item && !item.endCycle()) {
+                CollisionatorSingleton.remove(item);
+                items[i] = null;
+            }
+            item = items[i];
+            if (item) {
+                temp.push(item);
+            }
+        }
+
+        switch (itemType) {
+            case ExplosionType.Smoke: {
+                this._smokeExplosions = temp.slice() as Explosion[];
+                break;
+            }
+            case ExplosionType.Blood: {
+                this._bloodExplosions = temp.slice() as Explosion[];
+                break;
+            }
+            case ExplosionType.Blood: {
+                this._projectiles = temp.slice() as Projectile[];
+                break;
+            }
+            default: {
+                return;
+            }
+        }
+
+        temp = null;
     }
 
     /**
@@ -208,6 +269,7 @@ export class Player implements Collidable, Entity {
      */
     public addToScene(): void {
         this._animationMeshes.forEach(mesh => this._scene.add(mesh));
+        this._scene.add(this._deathMesh);
     }
 
     /**
@@ -225,7 +287,7 @@ export class Player implements Collidable, Entity {
      */
     public endCycle(dirKeys: StringMapToNumber): boolean {
         if (this._inDeathSequence) {
-            if (this._dyingAnimationCounter < 600) {
+            if (this._dyingAnimationCounter < 180) {
                 this._animationMeshes.forEach(mesh => {
                     const rot: number[] = mesh.rotation.toArray();
                     mesh.rotation.set(rot[0], rot[1], rot[2] + 0.07);
@@ -260,20 +322,25 @@ export class Player implements Collidable, Entity {
                 }
 
                 // Work through each blood explosions around the dying player.
-                let tempBloodExplosion = [];
-                for (let i = 0; i < this._bloodExplosions.length; i++) {
-                    let bloodExplosion = this._bloodExplosions[i];
-                    if (bloodExplosion && !bloodExplosion.endCycle()) {
-                        CollisionatorSingleton.remove(bloodExplosion);
-                        this._bloodExplosions[i] = null;
-                    }
-                    bloodExplosion = this._bloodExplosions[i];
-                    if (bloodExplosion) {
-                        tempBloodExplosion.push(bloodExplosion);
-                    }
+                this._handleChildCycleList(ExplosionType.Blood, this._bloodExplosions);
+            } else if (this._dyingAnimationCounter === 180) {
+                this._animationMeshes.forEach(mesh => {
+                    mesh.visible = false;
+                });
+                this._deathMesh.position.set(this._currentPoint[0], this._yPos + 2, this._currentPoint[1]);
+                this._deathMesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+                this._deathMesh.visible = true;
+                
+                this._dyingAnimationCounter++;
+            } else if (this._dyingAnimationCounter < 360) {
+                if (this._dyingAnimationCounter % 10 === 0) {
+                    this._deathMesh.visible = !this._deathMesh.visible;
                 }
-                this._bloodExplosions = tempBloodExplosion.slice();
-                tempBloodExplosion = null;
+
+                // Work through each blood explosions around the dying player.
+                this._handleChildCycleList(ExplosionType.Blood, this._bloodExplosions);
+                
+                this._dyingAnimationCounter++;
             } else {
                 this._dyingAnimationCounter = 0;
                 this._inDeathSequence = false;
@@ -287,6 +354,7 @@ export class Player implements Collidable, Entity {
                     this._isActive = false;
                 } else {
                     this._isActive = true;
+                    this._deathMesh.visible = false;
                     showCurrentEntityFrame(this);
                     this._lifeHandler.nextLife();
                     SlowMo_Ctrl.exitSlowMo();
@@ -324,36 +392,10 @@ export class Player implements Collidable, Entity {
             }
 
             // Work through each projectile the player has fired.
-            let tempProjectiles = [];
-            for (let i = 0; i < this._projectiles.length; i++) {
-                let projectile = this._projectiles[i];
-                if (projectile && !projectile.endCycle()) {
-                    CollisionatorSingleton.remove(projectile);
-                    this._projectiles[i] = null;
-                }
-                projectile = this._projectiles[i];
-                if (projectile) {
-                    tempProjectiles.push(projectile);
-                }
-            }
-            this._projectiles = tempProjectiles.slice();
-            tempProjectiles = null;
+            this._handleChildCycleList(CollisionType.Player_Projectile, this._projectiles);
 
             // Work through each smoke explosion the bandit has fired.
-            let tempSmokeExplosion = [];
-            for (let i = 0; i < this._smokeExplosions.length; i++) {
-                let smokeExplosion = this._smokeExplosions[i];
-                if (smokeExplosion && !smokeExplosion.endCycle()) {
-                    CollisionatorSingleton.remove(smokeExplosion);
-                    this._smokeExplosions[i] = null;
-                }
-                smokeExplosion = this._smokeExplosions[i];
-                if (smokeExplosion) {
-                    tempSmokeExplosion.push(smokeExplosion);
-                }
-            }
-            this._smokeExplosions = tempSmokeExplosion.slice();
-            tempSmokeExplosion = null;
+            this._handleChildCycleList(ExplosionType.Smoke, this._smokeExplosions);
 
             return false;
         }

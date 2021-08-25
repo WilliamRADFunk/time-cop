@@ -6,7 +6,7 @@ import {
     Texture } from 'three';
     
 import { Collidable } from "../collidable";
-import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
+import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
 import { animateEntity } from '../utils/animate-entity';
@@ -18,6 +18,7 @@ import { Explosion } from './explosion';
 import { ExplosionType } from '../models/explosions';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
 import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
+import { BANDIT_RADIUS, BANDIT_INSIDE_RADIUS, PLAYER_RADIUS, BANDIT_SCALE_GOAL, BANDIT_RADIUS_DIFF } from '../utils/standard-entity-radii';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -228,7 +229,7 @@ export class Bandit implements Collidable, Entity {
     /**
      * Radius of the circle geometry used to imprint the texture onto and also the collision radius for hit detection.
      */
-    private _radius: number = 0.35;
+    private _radius: number = BANDIT_RADIUS;
 
     /**
      * Reference to the scene, used to remove bandit from rendering cycle once destroyed.
@@ -393,6 +394,19 @@ export class Bandit implements Collidable, Entity {
             this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
             rotateEntity(this);
             return;
+        } else if (this._isRunning && this._radius < BANDIT_INSIDE_RADIUS) {
+            const scaleGoal = BANDIT_SCALE_GOAL;
+            const steps = (this._totalDistance / this._speedRunning);
+            let scaleIncrease = (scaleGoal - 1) / steps;
+            
+            const currScale = this._animationMeshes[0].scale;
+            if (currScale.x + scaleIncrease < scaleGoal) {
+                this._animationMeshes.forEach(mesh => mesh.scale.set(currScale.x + scaleIncrease, currScale.y + scaleIncrease, currScale.z + scaleIncrease));
+                this._radius += BANDIT_RADIUS_DIFF / steps;
+            } else {
+                this._animationMeshes.forEach(mesh => mesh.scale.set(scaleGoal, scaleGoal, scaleGoal));
+                this._radius = BANDIT_INSIDE_RADIUS;
+            }
         }
         this._isRunCapable = false;
     }
