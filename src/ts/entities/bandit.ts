@@ -18,7 +18,11 @@ import { Explosion } from './explosion';
 import { ExplosionType } from '../models/explosions';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
 import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
-import { BANDIT_RADIUS, BANDIT_INSIDE_RADIUS, PLAYER_RADIUS, BANDIT_SCALE_GOAL, BANDIT_RADIUS_DIFF } from '../utils/standard-entity-radii';
+import {
+    BANDIT_RADIUS,
+    BANDIT_INSIDE_RADIUS,
+    BANDIT_SCALE_GOAL,
+    BANDIT_RADIUS_DIFF } from '../utils/standard-entity-radii';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -681,7 +685,7 @@ export class Bandit implements Collidable, Entity {
     public impact(self: Collidable, otherThing: CollisionType): boolean {
         if (this._isActive && otherThing !== CollisionType.Player) {
             this._isActive = false;
-            // TODO Start dying bandit sequence
+            // TODO: Start dying bandit sequence
             // SOUNDS_CTRL.enemyDies()
             this._scoreboard.addPoints(this._points);
             return true;

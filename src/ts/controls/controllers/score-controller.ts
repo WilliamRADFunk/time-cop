@@ -12,7 +12,12 @@ export type ScoreDigits = Mesh[];
  * Iterable list of x positions for each digit of the score.
  * Necessary since constantly recreating TextGeometries with each new score is very costly.
  */
-const positionIndex = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ].map(val => val * 0.35);
+const POSITION_INDEX = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ].map(val => val * 0.35);
+
+const SCORE_FOR_LIFE = 10000;
+
+const SCORE_FOR_TIME_SLOW = 1000;
+
 /**
  * @class
  * Keeps track of all things score related.
@@ -29,12 +34,12 @@ export class ScoreCtrl {
     private _currentScore: number = 0;
 
     /**
-     * Keeps track if player's points increase warrants a regenerated base.
+     * Keeps track if player's points increase warrants an extra life.
      */
     private _regenLife: boolean = false;
 
     /**
-     * Keeps track if player's points increase warrants a regenerated satellite.
+     * Keeps track if player's points increase warrants a slow down of time.
      */
     private _regenTimeSlow: boolean = false;
 
@@ -74,12 +79,12 @@ export class ScoreCtrl {
     private _scores: ScoreDigits[] = [[], [], [], [], [], [], [], [], [], []];
 
     /**
-     * Keeps track of player's score amount gained since last base regeneration.
+     * Keeps track of player's score amount gained since last free life.
      */
     private _scoreSinceNewLife: number = 0;
 
     /**
-     * Keeps track of player's score amount gained since last satellite regeneration.
+     * Keeps track of player's score amount gained since last time slow.
      */
     private _scoreSinceSlowTime: number = 0;
 
@@ -96,8 +101,8 @@ export class ScoreCtrl {
         this._scoreFont = scoreFont;
         this._currentColor = color;
         this._currentScore = score || 0;
-        this._scoreSinceNewLife = 0;
-        this._scoreSinceSlowTime = 0;
+        this._scoreSinceNewLife = score || 0;
+        this._scoreSinceSlowTime = score || 0;
         this._scoreMaterial = new MeshLambertMaterial( {color: color || 0x084E70} );
         this._createText();
     }
@@ -107,8 +112,8 @@ export class ScoreCtrl {
      */
     private _changeScore(): void {
         const curScore = this._currentScore.toString();
-        for (let i = 0; i < positionIndex.length; i++) {
-            for (let j = 0; j < positionIndex.length; j++) {
+        for (let i = 0; i < POSITION_INDEX.length; i++) {
+            for (let j = 0; j < POSITION_INDEX.length; j++) {
                 const mesh: Mesh = this._scores[i][j];
                 mesh.visible = false;
             }
@@ -147,8 +152,8 @@ export class ScoreCtrl {
         this._score.rotation.x = -1.5708;
         this._scene.add(this._score);
         
-        for (let i = 0; i < positionIndex.length; i++) {
-            for (let j = 0; j < positionIndex.length; j++) {
+        for (let i = 0; i < POSITION_INDEX.length; i++) {
+            for (let j = 0; j < POSITION_INDEX.length; j++) {
                 this._scoreGeometries[i][j] = new TextGeometry(`${j}`,
                     {
                         font: this._scoreFont,
@@ -161,7 +166,7 @@ export class ScoreCtrl {
                         bevelSegments: 3
                     });
                 this._scores[i][j] = new Mesh( this._scoreGeometries[i][j], this._scoreMaterial );
-                this._scores[i][j].position.x = positionIndex[i] + 0.35;
+                this._scores[i][j].position.x = POSITION_INDEX[i] + 0.35;
                 this._scores[i][j].position.y = 0.75;
                 this._scores[i][j].position.z = -5.38;
                 this._scores[i][j].rotation.x = -1.5708;
@@ -177,8 +182,8 @@ export class ScoreCtrl {
      */
     private _removePreviousDigits() {
         this._scene.remove(this._score);
-        for (let i = 0; i < positionIndex.length; i++) {
-            for (let j = 0; j < positionIndex.length; j++) {
+        for (let i = 0; i < POSITION_INDEX.length; i++) {
+            for (let j = 0; j < POSITION_INDEX.length; j++) {
                 this._scene.remove(this._scores[i][j]);
             }
         }
@@ -192,13 +197,12 @@ export class ScoreCtrl {
         this._currentScore += points;
         this._scoreSinceNewLife += points;
         this._scoreSinceSlowTime += points;
-        if (this._scoreSinceNewLife >= 50000) {
-            this._scoreSinceNewLife -= 50000;
+        if (this._scoreSinceNewLife >= SCORE_FOR_LIFE) {
+            this._scoreSinceNewLife -= SCORE_FOR_LIFE;
             this._regenLife = true;
-            this._scoreSinceSlowTime = 0;
         }
-        if (!this._regenLife && this._scoreSinceSlowTime >= 25000) {
-            this._scoreSinceSlowTime -= 25000;
+        if (this._scoreSinceSlowTime >= SCORE_FOR_TIME_SLOW) {
+            this._scoreSinceSlowTime -= SCORE_FOR_TIME_SLOW;
             this._regenTimeSlow = true;
         }
         if (this._score && this._score.visible) {
@@ -214,8 +218,8 @@ export class ScoreCtrl {
         if (this._score) {
             if (hide) {
                 this._score.visible = false;
-                for (let i = 0; i < positionIndex.length; i++) {
-                    for (let j = 0; j < positionIndex.length; j++) {
+                for (let i = 0; i < POSITION_INDEX.length; i++) {
+                    for (let j = 0; j < POSITION_INDEX.length; j++) {
                         const mesh: Mesh = this._scores[i][j];
                         mesh.visible = false;
                     }
@@ -238,8 +242,8 @@ export class ScoreCtrl {
      * Returns regeneration bonuses if there are any and resets the flags.
      * @returns bonus object containing last known regeneration rewards.
      */
-    public getBonuses(): { base: boolean; sat: boolean; } {
-        const bonus = { base: this._regenLife, sat: this._regenTimeSlow };
+    public getBonuses(): { freeLife: boolean; timeSlow: boolean; } {
+        const bonus = { freeLife: this._regenLife, timeSlow: this._regenTimeSlow };
         this._regenLife = false;
         this._regenTimeSlow = false;
         return bonus;

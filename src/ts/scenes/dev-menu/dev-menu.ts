@@ -287,7 +287,9 @@ export class DevMenu {
 
         onClick = () => {
             this._page1buttons.launchMainPlayLevelSceneButton.disable();
-            callbacks.activateMainPlayLevelScene(this._mainPlayLevelSpec.level, this._mainPlayLevelSpec.lives);
+            // TODO: Build dev menu control to set difficulty.
+            // TODO: Build dev control to set initial score.
+            callbacks.activateMainPlayLevelScene(this._mainPlayLevelSpec.level, this._mainPlayLevelSpec.lives, 3);
         };
 
         this._page1buttons.launchMainPlayLevelSceneButton = new LoadButton(

@@ -29,7 +29,7 @@ export function createSceneModule(scene: SceneType, excludeAmbientLight?: boolea
     // Choose WebGL renderer if browser supports, otherwise fall back to canvas renderer.
     scene.renderer = ((window as any)['WebGLRenderingContext'])
         ? new WebGLRenderer({ powerPreference: "high-performance" })
-        : new WebGLRenderer({ powerPreference: "high-performance" }); // TODO: Create error page for people usiing outdated browsers that don't support WebGL rendering.
+        : new WebGLRenderer({ powerPreference: "high-performance" }); // TODO: Create error page for people using outdated browsers that don't support WebGL rendering.
     // Make it black and size it to window.
     (scene.renderer as any).setClearColor(0x000000, 0);
     scene.renderer.setSize( WIDTH, HEIGHT );

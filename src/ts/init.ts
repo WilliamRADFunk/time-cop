@@ -16,6 +16,7 @@ import { ScoreCtrl } from './controls/controllers/score-controller';
 import { Color } from 'three';
 import { LifeCtrl } from './controls/controllers/lives-controller';
 import { StringMapToNumber } from './models/string-map-to-number';
+import { SlowMo_Ctrl } from './controls/controllers/slow-mo-controller';
 
 const scenes: { [ key: string ]: SceneType } = {
     devMenu: {
@@ -76,12 +77,12 @@ const loadDevMenu = () => {
             loadGameMenu();
         }, 50);
     };
-    const activateMainPlayLevelScene = (level: number, lives: number) => {
+    const activateMainPlayLevelScene = (level: number, lives: number, difficulty: number) => {
         scenes.devMenu.active = false;
         window.removeEventListener( 'resize', sceneMod.onWindowResizeRef, false);
         sceneMod.container.removeChild( (scenes.devMenu.renderer as any).domElement );
         setTimeout(() => {
-            loadMainPlayLevelScene(level, lives);
+            loadMainPlayLevelScene(level, lives, difficulty);
         }, 50);
     };
     
@@ -126,7 +127,8 @@ const loadGameMenu = () => {
      * The render loop. Everything that should be checked, called, or drawn in each animation frame.
      */
     const render = () => {
-        if (scenes.menu.instance.endCycle()) {
+        const difficultyChosen = scenes.menu.instance.endCycle();
+        if (difficultyChosen) {
             setTimeout(() => {
                 scenes.menu.instance.dispose();
                 window.removeEventListener( 'resize', sceneMod.onWindowResizeRef, false);
@@ -134,7 +136,7 @@ const loadGameMenu = () => {
                 // Clears up memory used by menu scene.
                 disposeScene(scenes.menu);
 
-                loadMainPlayLevelScene(1, 3);
+                loadMainPlayLevelScene(1, 5 - difficultyChosen, difficultyChosen);
             }, 750);
         } else {
             scenes.menu.renderer.render( scenes.menu.scene, scenes.menu.camera );
@@ -186,7 +188,7 @@ const loadIntroScene = () => {
 /**
  * Game's main level scene, where player actually plays the game. Only starts when all assets are finished loading.
  */
-const loadMainPlayLevelScene = (level: number, lives: number, score?: number) => {
+const loadMainPlayLevelScene = (level: number, lives: number, difficulty: number, score?: number) => {
     const sceneMod = createSceneModule(scenes.mainPlayLevel);
     // Create instance of game section.
     scenes.mainPlayLevel.instance = new MainPlayLevel(scenes.mainPlayLevel, level, lives);
@@ -196,6 +198,7 @@ const loadMainPlayLevelScene = (level: number, lives: number, score?: number) =>
     const lifeHandler = new LifeCtrl(scenes.mainPlayLevel.scene, level, lives);
     scenes.mainPlayLevel.instance.addLifeHandler(lifeHandler);
 
+    SlowMo_Ctrl.setDifficulty(difficulty);
     /**
      * The render loop. Everything that should be checked, called, or drawn in each animation frame.
      */
@@ -220,6 +223,7 @@ const loadMainPlayLevelScene = (level: number, lives: number, score?: number) =>
                 // Clear up memory used by mainPlayLevel scene.
                 disposeScene(scenes.mainPlayLevel);
                 setTimeout(() => {
+                    SlowMo_Ctrl.exitSlowMo();
                     if (level === 40) {
                         // TODO: Play the You Win scene and collect initials.
                         loadMenu();
@@ -227,7 +231,7 @@ const loadMainPlayLevelScene = (level: number, lives: number, score?: number) =>
                         // TODO: Play the You suck you lost scene and collect initials.
                         loadMenu();
                     } else {
-                        loadMainPlayLevelScene(level + 1, layout['lives'], layout['score']);
+                        loadMainPlayLevelScene(level + 1, layout['lives'], difficulty, layout['score']);
                     }
                 }, 10);
                 return;

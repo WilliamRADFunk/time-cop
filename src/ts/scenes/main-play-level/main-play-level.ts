@@ -24,6 +24,7 @@ import { ActorController } from './controllers/actor-controller';
 import { BarricadeLevel } from '../../entities/barricade-level';
 import { LifeCtrl } from '../../controls/controllers/lives-controller';
 import { StringMapToNumber } from '../../models/string-map-to-number';
+import { SlowMo_Ctrl } from '../../controls/controllers/slow-mo-controller';
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
@@ -581,6 +582,14 @@ export class MainPlayLevel {
             }
 
             this._actorCtrl.endCycle();
+
+            const scoreRewards = this._scoreboard.getBonuses();
+            if (scoreRewards?.freeLife) {
+                this._lifeHandler.addLife();
+            }
+            if (scoreRewards?.timeSlow) {
+                SlowMo_Ctrl.enterSlowMo(true);
+            }
         }
 
         CollisionatorSingleton.checkForCollisions(this._scene);

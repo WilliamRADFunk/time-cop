@@ -783,11 +783,11 @@ export class Menu {
 
     /**
      * Moves the point light from left to right a little every frame.
-     * @returns whether or not the scene has finished. TRUE means the scene is done | FALSE if it isn't.
+     * @returns whether or not the scene has finished. > 0 means the scene is doneand the number is the chosen difficulty | 0 if it isn't.
      */
-    public endCycle(): boolean {
+    public endCycle(): number {
         if (!this._isActive) {
-            return true;
+            return this._difficultyLevel;
         }
 
         if (this._mode === 1) {
@@ -810,6 +810,8 @@ export class Menu {
             this._shimmer.position.x += 0.2;
         }
         this._loadHandler.endCycle();
+
+        return 0;
     }
 
     /**

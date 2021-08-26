@@ -23,7 +23,7 @@ import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
 import { RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
 import { rotateEntity } from '../utils/rotate-entity';
-import { PLAYER_RADIUS } from '../utils/standard-entity-radii';
+import { PLAYER_COLLISION_RADIUS, PLAYER_GRAPHIC_RADIUS } from '../utils/standard-entity-radii';
 import { Explosion } from './explosion';
 import { Projectile } from './projectile';
 
@@ -111,7 +111,7 @@ export class Player implements Collidable, Entity {
     /**
      * Radius of the circle geometry on which the texture in imprinted and also the collision radius for hit box detection.
      */
-    private _radius: number = PLAYER_RADIUS;
+    private _radius: number = PLAYER_GRAPHIC_RADIUS;
 
     /**
      * Reference to the scene, used to remove player from rendering cycle once destroyed.
@@ -465,7 +465,7 @@ export class Player implements Collidable, Entity {
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
     public getCollisionRadius(): number {
-        return this._radius / 2.5;
+        return PLAYER_COLLISION_RADIUS;
     }
 
     /**
