@@ -17,8 +17,9 @@ export class SlowMoCtrl {
 
             // TODO: Display time countdown until normal speed.
 
-            if (this._slowMoCounter) {
+            if (this._slowMoCounter <= 0) {
                 this.exitSlowMo();
+                this._slowMoCounter = 0;
             }
         }
     }

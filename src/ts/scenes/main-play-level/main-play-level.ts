@@ -5,7 +5,6 @@ import {
 
 import { CollisionatorSingleton } from '../../collisionator';
 import { SOUNDS_CTRL } from '../../controls/controllers/sounds-controller';
-import { Actor } from '../../models/actor';
 import { SceneType } from '../../models/scene-type';
 import { getIntersections } from '../../utils/get-intersections';
 import { ButtonBase } from '../../controls/buttons/button-base';
@@ -583,11 +582,13 @@ export class MainPlayLevel {
 
             this._actorCtrl.endCycle();
 
-            const scoreRewards = this._scoreboard.getBonuses();
-            if (scoreRewards?.freeLife) {
+            SlowMo_Ctrl.endCycle();
+
+            const scoreRewards = this._scoreboard.getBonuses() || Object.create(null);
+            if (scoreRewards.freeLife) {
                 this._lifeHandler.addLife();
             }
-            if (scoreRewards?.timeSlow) {
+            if (scoreRewards.timeSlow) {
                 SlowMo_Ctrl.enterSlowMo(true);
             }
         }
