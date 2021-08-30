@@ -244,7 +244,7 @@ export class Player implements Collidable, Entity {
                 this._bloodExplosions = temp.slice() as Explosion[];
                 break;
             }
-            case ExplosionType.Blood: {
+            case CollisionType.Player_Projectile: {
                 this._projectiles = temp.slice() as Projectile[];
                 break;
             }
@@ -279,6 +279,7 @@ export class Player implements Collidable, Entity {
     public destroy() {
         CollisionatorSingleton.remove(this);
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        this._scene.remove(this._deathMesh);
     }
 
     /**
@@ -521,6 +522,7 @@ export class Player implements Collidable, Entity {
      */
     public removeFromScene(scene: Scene): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        this._scene.remove(this._deathMesh);
         this._projectiles.forEach(projectile => projectile.destroy());
         this._projectiles.length = 0;
         this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());

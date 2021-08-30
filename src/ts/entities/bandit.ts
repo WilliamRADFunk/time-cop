@@ -2,6 +2,7 @@ import {
     CircleGeometry,
     Color,
     Mesh,
+    PlaneGeometry,
     Scene,
     Texture } from 'three';
     
@@ -9,7 +10,7 @@ import { Collidable } from "../collidable";
 import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
-import { animateEntity } from '../utils/animate-entity';
+import { animateEntity, showCurrentEntityFrame } from '../utils/animate-entity';
 import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
 import { Projectile } from './projectile';
@@ -23,6 +24,7 @@ import {
     BANDIT_INSIDE_RADIUS,
     BANDIT_SCALE_GOAL,
     BANDIT_RADIUS_DIFF } from '../utils/standard-entity-radii';
+import { RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -144,6 +146,11 @@ export class Bandit implements Collidable, Entity {
      _animationMeshes: [Mesh, Mesh, Mesh] = [ null, null, null ];
 
      /**
+      * The list of blood explosions the bandit has around them as they die.
+      */
+     private _bloodExplosions: Explosion[] = [];
+
+     /**
       * Current direction crew member should be facing.
       */
     _currDirection: EntityDirection = EntityDirection.Right;
@@ -164,9 +171,19 @@ export class Bandit implements Collidable, Entity {
     private _currentWalkIndex: number;
 
     /**
+     * The mesh that shows bandit's character dead.
+     */
+    private _deathMesh: Mesh;
+
+    /**
      * Tracks the distance traveled thus far to update the calculateNextPoint calculation.
      */
     private _distanceTraveled: number;
+
+    /**
+     * Tracks position in dying animation sequence to know which animation to switch to next frame.
+     */
+    private _dyingAnimationCounter: number = 0;
 
     /**
      * Keeps track of the x,z point of bandit's destination point.
@@ -178,6 +195,11 @@ export class Bandit implements Collidable, Entity {
      * True = not destroyed. False = destroyed.
      */
     private _isActive: boolean = true;
+
+    /**
+     * Tracks if bandit is going through death animation.
+     */
+    private _inDeathSequence: boolean = false;
 
     /**
      * Optional constructor param that determines if bandit is on help screen. If so, don't play sounds.
@@ -329,7 +351,7 @@ export class Bandit implements Collidable, Entity {
         [0, 1, 2].forEach((val: number) => {
             const offCoordsX = val;
             const offCoordsY = variationChoice;
-            const size = [3, 2];
+            const size = [4, 2];
             const material = makeEntityMaterial(banditTexture, offCoordsX, offCoordsY, size);
             makeEntity(
                 this._animationMeshes,
@@ -341,24 +363,20 @@ export class Bandit implements Collidable, Entity {
         });
         rotateEntity(this);
         this._waitToFire = (fireNow) ? 0 : Math.floor((Math.random() * 2000) + 1);
-    }
 
-    /**
-     * (Re)activates the bandit, usually at beginning of new level.
-     */
-    public activate(): void {
-        // If bandit was never destroyed (game over), let him "wait" on his own loop.
-        if (!this._isActive) {
-            this._waitToFire = Math.floor((Math.random() * 2000) + 1);
-        }
-        this._isActive = true;
-    }
-
-    /**
-     * Adds bandit object to the three.js scene.
-     */
-    public addToScene(): void {
-        this._animationMeshes.forEach(mesh => this._scene.add(mesh));
+        const offCoordsX = 3;
+        const offCoordsY = 0;
+        const size = [4, 2];
+        const dMesh: Mesh[] = [ null ];
+        makeEntity(
+            dMesh,
+            new PlaneGeometry(this._radius * 2.2, this._radius * 2.2, 16, 16),
+            makeEntityMaterial(banditTexture, offCoordsX, offCoordsY, size),
+            0,
+            [this._currentPoint[0], this._yPos, this._currentPoint[1]],
+            `dead-bandit`);
+        this._deathMesh = dMesh[0];
+        this._deathMesh.visible = false;
     }
 
     /**
@@ -406,13 +424,74 @@ export class Bandit implements Collidable, Entity {
             const currScale = this._animationMeshes[0].scale;
             if (currScale.x + scaleIncrease < scaleGoal) {
                 this._animationMeshes.forEach(mesh => mesh.scale.set(currScale.x + scaleIncrease, currScale.y + scaleIncrease, currScale.z + scaleIncrease));
+                this._deathMesh.scale.set(currScale.x + scaleIncrease, currScale.y + scaleIncrease, currScale.z + scaleIncrease)
                 this._radius += BANDIT_RADIUS_DIFF / steps;
             } else {
                 this._animationMeshes.forEach(mesh => mesh.scale.set(scaleGoal, scaleGoal, scaleGoal));
+                this._deathMesh.scale.set(scaleGoal + 0.1, scaleGoal + 0.1, scaleGoal + 0.1);
                 this._radius = BANDIT_INSIDE_RADIUS;
             }
         }
         this._isRunCapable = false;
+    }
+
+    /**
+     * Incrementally animates each item in the list.
+     * @param explosionsList either the list of smoke explosions or blood splatters.
+     */
+    private _handleChildCycleList(itemType: (ExplosionType | CollisionType), items: (Explosion[] | Projectile[])): void {
+        // Work through each blood explosions around the dying player.
+        let temp = [];
+        for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            if (item && !item.endCycle()) {
+                CollisionatorSingleton.remove(item);
+                items[i] = null;
+            }
+            item = items[i];
+            if (item) {
+                temp.push(item);
+            }
+        }
+
+        switch (itemType) {
+            case ExplosionType.Smoke: {
+                this._smokeExplosions = temp.slice() as Explosion[];
+                break;
+            }
+            case ExplosionType.Blood: {
+                this._bloodExplosions = temp.slice() as Explosion[];
+                break;
+            }
+            case CollisionType.Enemy_Projectile: {
+                this._projectiles = temp.slice() as Projectile[];
+                break;
+            }
+            default: {
+                return;
+            }
+        }
+
+        temp = null;
+    }
+
+    /**
+     * Adds bandit object to the three.js scene.
+     */
+    public addToScene(): void {
+        this._animationMeshes.forEach(mesh => this._scene.add(mesh));
+        this._scene.add(this._deathMesh);
+    }
+
+    /**
+     * (Re)activates the bandit, usually at beginning of new level.
+     */
+    public activate(): void {
+        // If bandit was never destroyed (game over), let him "wait" on his own loop.
+        if (!this._isActive) {
+            this._waitToFire = Math.floor((Math.random() * 2000) + 1);
+        }
+        this._isActive = true;
     }
 
     /**
@@ -449,6 +528,7 @@ export class Bandit implements Collidable, Entity {
     public destroy(): void {
         CollisionatorSingleton.remove(this);
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        this._scene.remove(this._deathMesh);
     }
 
     /**
@@ -457,8 +537,6 @@ export class Bandit implements Collidable, Entity {
      * @returns whether or not the bandit is done, and its points calculated.
      */
     public endCycle(isPlayerDying?: boolean): boolean {
-        // TODO: Carry on with dying bandit sequence until complete
-
         // If player has already been hit, destroy all bullets and related graphics until they start again.
         if (isPlayerDying) {
             this._projectiles.forEach(projectile => projectile.destroy());
@@ -473,10 +551,62 @@ export class Bandit implements Collidable, Entity {
             if (!this._waitToFire && !this.isHelpBandit) {
                 SOUNDS_CTRL.playFooPang();
             }
-            return this._isActive;;
+            return this._isActive;
         }
 
-        if (this._isActive) {
+        if (this._inDeathSequence) {
+            if (!this._dyingAnimationCounter) {
+                console.log('= 0');
+
+                this._animationMeshes.forEach(mesh => {
+                    mesh.visible = false;
+                });
+                this._deathMesh.position.set(this._currentPoint[0], this._yPos + 2, this._currentPoint[1]);
+                this._deathMesh.visible = true;
+                this._dyingAnimationCounter++;
+            } else if (this._dyingAnimationCounter < 360) {
+                console.log('< 360');
+
+                if (this._bloodExplosions.length < 5 && Math.random() > 0.7) {
+                    const isXNeg = Math.random() > 0.5;
+                    const isZNeg = Math.random() > 0.5;
+                    const bloodMaxDistance = this._isRunning ? 0.8 : 0.5;
+                    const x = (isXNeg ? -bloodMaxDistance : bloodMaxDistance) * Math.random();
+                    const z = (isZNeg ? -bloodMaxDistance : bloodMaxDistance) * Math.random();
+                    this._bloodExplosions.push(new Explosion(
+                        this._scene,
+                        this._currentPoint[0] + x,
+                        this._currentPoint[1] + z,
+                        {
+                            color: ExplosionType.Blood,
+                            radius: this._isRunning ? 0.1 : 0.05,
+                            speed: 0.04,
+                            y: this._yPos - 0.26
+                        }
+                    ));
+                }
+                if (this._dyingAnimationCounter % 10 === 0) {
+                    this._deathMesh.visible = !this._deathMesh.visible;
+                }
+
+                // Work through each blood explosions around the dying player.
+                this._handleChildCycleList(ExplosionType.Blood, this._bloodExplosions);
+                
+                this._dyingAnimationCounter++;
+            } else {
+                console.log('End');
+                this._dyingAnimationCounter = 0;
+                this._inDeathSequence = false;
+                this._animationMeshes.forEach(mesh => mesh.position.set(0, this._yPos, 0));
+                this._currentPoint = [0, 0];
+                this._currDirection = EntityDirection.Right;
+                rotateEntity(this);
+                this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
+                this._bloodExplosions.length = 0;
+                this._deathMesh.visible = false;
+                this._isActive = false;
+            }
+        } else if (this._isActive) {
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
                 animateEntity(this);
@@ -553,30 +683,14 @@ export class Bandit implements Collidable, Entity {
             }
 
             // Work through each projectile the bandit has fired.
-            let tempProjectiles = [];
-            for (let i = 0; i < this._projectiles.length; i++) {
-                let projectile = this._projectiles[i];
-                if (projectile && !projectile.endCycle()) {
-                    CollisionatorSingleton.remove(projectile);
-                    this._projectiles[i] = null;
-                }
-                projectile = this._projectiles[i];
-                if (projectile) {
-                    tempProjectiles.push(projectile);
-                }
-            }
-            this._projectiles = tempProjectiles.slice();
-            tempProjectiles = null;
+            this._handleChildCycleList(CollisionType.Enemy_Projectile, this._projectiles);
 
             // Work through each smoke explosion the bandit has fired.
-            let tempSmokeExplosion = [];
+            this._handleChildCycleList(ExplosionType.Smoke, this._smokeExplosions);
+
+            // Move the smoke explosions with the bandit.
             for (let i = 0; i < this._smokeExplosions.length; i++) {
-                let smokeExplosion = this._smokeExplosions[i];
-                if (smokeExplosion && !smokeExplosion.endCycle()) {
-                    CollisionatorSingleton.remove(smokeExplosion);
-                    this._smokeExplosions[i] = null;
-                }
-                smokeExplosion = this._smokeExplosions[i];
+                const smokeExplosion = this._smokeExplosions[i];
                 if (smokeExplosion) {
                     let x1 = this._currentPoint[0];
                     let z1 = this._currentPoint[1];
@@ -603,11 +717,8 @@ export class Bandit implements Collidable, Entity {
                         }
                     }
                     smokeExplosion.getMesh().position.set(x1, this._yPos - 0.26, z1);
-                    tempSmokeExplosion.push(smokeExplosion);
                 }
             }
-            this._smokeExplosions = tempSmokeExplosion.slice();
-            tempSmokeExplosion = null;
         }
         return this._isActive;
     }
@@ -683,12 +794,12 @@ export class Bandit implements Collidable, Entity {
      * @returns whether or not impact means calling removeFromScene by collisionator.
      */
     public impact(self: Collidable, otherThing: CollisionType): boolean {
-        if (this._isActive && otherThing !== CollisionType.Player) {
-            this._isActive = false;
-            // TODO: Start dying bandit sequence
+        if (this._isActive && otherThing !== CollisionType.Player && !this._inDeathSequence) {
+            this._inDeathSequence = true;
             // SOUNDS_CTRL.enemyDies()
             this._scoreboard.addPoints(this._points);
-            return true;
+            this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
+            this._smokeExplosions.length = 0;
         }
         return false;
     }
@@ -698,7 +809,7 @@ export class Bandit implements Collidable, Entity {
      * @returns True is passive | False is not passive
      */
     public isPassive(): boolean {
-        return false;
+        return false || this._inDeathSequence;
     }
 
     /**
@@ -707,6 +818,7 @@ export class Bandit implements Collidable, Entity {
      */
     public removeFromScene(scene: Scene): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
+        this._scene.remove(this._deathMesh);
         this._projectiles.forEach(projectile => projectile.destroy());
         this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
         this._projectiles.length = 0;
