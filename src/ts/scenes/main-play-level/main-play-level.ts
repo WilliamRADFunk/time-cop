@@ -505,7 +505,15 @@ export class MainPlayLevel {
         SOUNDS_CTRL.stopMainThrusterSmall();
         SOUNDS_CTRL.stopWalkingFastGravel();
         SOUNDS_CTRL.stopWind();
-        this._barricadeLevel.removeFromScene();
+    
+        this._player && this._player.destroy();
+        this._player = null;
+        this._bandits.forEach(bandit => bandit.destroy());
+        this._bandits.length = 0;
+        this._posts.forEach(post => post.destroy());
+        this._posts.length = 0;
+        this._barricadeLevel && this._barricadeLevel.destroy();
+        this._barricadeLevel = null;
     }
 
     /**
@@ -538,6 +546,14 @@ export class MainPlayLevel {
 
         // Player died. Nothing should progress.
         if (this._state === MainLevelState.dead) {
+            this._player && this._player.destroy();
+            this._player = null;
+            this._bandits.forEach(bandit => bandit.destroy());
+            this._bandits.length = 0;
+            this._posts.forEach(post => post.destroy());
+            this._posts.length = 0;
+            this._barricadeLevel && this._barricadeLevel.destroy();
+            this._barricadeLevel = null;
             return {
                 score: this._scoreboard.getScore(),
                 lives: this._lifeHandler.getLives()
@@ -546,6 +562,14 @@ export class MainPlayLevel {
 
         // After all enemies are dead.
         if (this._state === MainLevelState.win) {
+            this._player && this._player.destroy();
+            this._player = null;
+            this._bandits.forEach(bandit => bandit.destroy());
+            this._bandits.length = 0;
+            this._posts.forEach(post => post.destroy());
+            this._posts.length = 0;
+            this._barricadeLevel && this._barricadeLevel.destroy();
+            this._barricadeLevel = null;
             // Do the victory dance
             return {
                 score: this._scoreboard.getScore(),

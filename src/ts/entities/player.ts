@@ -277,9 +277,7 @@ export class Player implements Collidable, Entity {
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
     public destroy() {
-        CollisionatorSingleton.remove(this);
-        this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
-        this._scene.remove(this._deathMesh);
+        this.removeFromScene();
     }
 
     /**
@@ -520,7 +518,7 @@ export class Player implements Collidable, Entity {
      * Removes player object from the 'visible' scene by sending it back to its starting location.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
-    public removeFromScene(scene: Scene): void {
+    public removeFromScene(): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
         this._scene.remove(this._deathMesh);
         this._projectiles.forEach(projectile => projectile.destroy());

@@ -123,6 +123,14 @@ export const PostPositions: [number, number][] = [
     public addToScene(): void {
         this._scene.add(this._post);
     }
+
+    /**
+     * Call to eliminate regardless of current state.
+     * Mainly used for non-game instantiations of this (ie. help screen animations).
+     */
+    public destroy(): void {
+        this.removeFromScene();
+    }
     
     /**
      * Gets the viability of the post.

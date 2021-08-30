@@ -596,10 +596,17 @@ const LevelBaricadeBottomPositions: [number, number][][] = [
     }
 
     /**
+     * Call to eliminate regardless of current state.
+     * Mainly used for non-game instantiations of this (ie. help screen animations).
+     */
+    public destroy(): void {
+        this.removeFromScene();
+    }
+
+    /**
      * Removes object from the three.js scene.
-     * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
     public removeFromScene(): void {
-        this._barricades.filter(x => x.getActive()).forEach(bar => bar.removeFromScene());
+        this._barricades.filter(x => x.getActive()).forEach(bar => bar.destroy());
     }
 }

@@ -24,7 +24,6 @@ import {
     BANDIT_INSIDE_RADIUS,
     BANDIT_SCALE_GOAL,
     BANDIT_RADIUS_DIFF } from '../utils/standard-entity-radii';
-import { RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
 
 export const banditMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
@@ -526,9 +525,7 @@ export class Bandit implements Collidable, Entity {
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
     public destroy(): void {
-        CollisionatorSingleton.remove(this);
-        this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
-        this._scene.remove(this._deathMesh);
+        this.removeFromScene();
     }
 
     /**
@@ -556,8 +553,6 @@ export class Bandit implements Collidable, Entity {
 
         if (this._inDeathSequence) {
             if (!this._dyingAnimationCounter) {
-                console.log('= 0');
-
                 this._animationMeshes.forEach(mesh => {
                     mesh.visible = false;
                 });
@@ -565,8 +560,6 @@ export class Bandit implements Collidable, Entity {
                 this._deathMesh.visible = true;
                 this._dyingAnimationCounter++;
             } else if (this._dyingAnimationCounter < 360) {
-                console.log('< 360');
-
                 if (this._bloodExplosions.length < 5 && Math.random() > 0.7) {
                     const isXNeg = Math.random() > 0.5;
                     const isZNeg = Math.random() > 0.5;
@@ -585,6 +578,7 @@ export class Bandit implements Collidable, Entity {
                         }
                     ));
                 }
+
                 if (this._dyingAnimationCounter % 10 === 0) {
                     this._deathMesh.visible = !this._deathMesh.visible;
                 }
@@ -798,6 +792,8 @@ export class Bandit implements Collidable, Entity {
             this._inDeathSequence = true;
             // SOUNDS_CTRL.enemyDies()
             this._scoreboard.addPoints(this._points);
+            this._projectiles.forEach(projectile => projectile.destroy());
+            this._projectiles.length = 0;
             this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
             this._smokeExplosions.length = 0;
         }
@@ -816,12 +812,15 @@ export class Bandit implements Collidable, Entity {
      * Removes bandit object from the 'visible' scene by sending it back to its starting location.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
-    public removeFromScene(scene: Scene): void {
+    public removeFromScene(): void {
         this._animationMeshes.forEach(mesh => this._scene.remove(mesh));
         this._scene.remove(this._deathMesh);
         this._projectiles.forEach(projectile => projectile.destroy());
-        this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
         this._projectiles.length = 0;
+        this._smokeExplosions.forEach(smokeExplosion => smokeExplosion.destroy());
+        this._smokeExplosions.length = 0;
+        this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
+        this._bloodExplosions.length = 0;
         CollisionatorSingleton.remove(this);
     }
 }
