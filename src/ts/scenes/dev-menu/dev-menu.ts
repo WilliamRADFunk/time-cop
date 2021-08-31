@@ -44,6 +44,8 @@ import { ProfileBase } from "../../controls/profiles/profile-base";
 import { RightTopDialogueText } from "../../controls/text/dialogue/right-top-dialogue-text";
 import { ASSETS_CTRL } from "../../controls/controllers/assets-controller";
 import { StringMapToNumber } from "../../models/string-map-to-number";
+import { InputBarNoLabel } from "../../controls/inputs/text-bar-no-label";
+import { InputBarType } from "../../controls/inputs/input-bar-base";
 
 // const border: string = '1px solid #FFF';
 const border: string = 'none';
@@ -401,6 +403,27 @@ export class DevMenu {
             BUTTON_COLORS,
             onClick,
             true,
+            0.5);
+
+        let row2Left = 0.17;
+        const row2height = sizeHeightForMainPlayLevel(2, height);
+
+        this._page1textElements.startingScoreText = new FreestyleText(
+            'Starting Score',
+            { left: left + (row2Left * width), height, top: row2height, width },
+            COLORS.default,
+            'none',
+            TextType.STATIC);
+
+        let row3Left = 0.085;
+        const row3height = sizeHeightForMainPlayLevel(3, height);
+
+        new InputBarNoLabel(
+            { left: left + (row3Left * width), height, top: row3height, width: width * 10 },
+            { background: '#00000000', border: COLORS.neutral, text: COLORS.default },
+            () => {},
+            true,
+            InputBarType.Number,
             0.5);
     //#endregion
     //#region Page1 Next

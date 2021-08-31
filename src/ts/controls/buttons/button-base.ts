@@ -18,7 +18,7 @@ export class ButtonBase {
     private _colorTheme: ButtonColors;
 
     /**
-     * Flag to track if element is currently supposed to be diabled.
+     * Flag to track if element is currently supposed to be disabled.
      */
     private _isEnabled: boolean = true;
 
