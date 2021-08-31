@@ -520,7 +520,7 @@ export class MainPlayLevel {
      * At the end of each loop iteration, check for end state.
      * @returns whether or not the scene is done.
      */
-    public endCycle(): StringMapToNumber {
+    public endCycle(): boolean {
         this._counters.jobs++;
         if (this._counters.jobs > 10) this._counters.jobs = 1;
         // Game externally paused from control panel. Nothing should progress.
@@ -554,10 +554,7 @@ export class MainPlayLevel {
             this._posts.length = 0;
             this._barricadeLevel && this._barricadeLevel.destroy();
             this._barricadeLevel = null;
-            return {
-                score: this._scoreboard.getScore(),
-                lives: this._lifeHandler.getLives()
-            };
+            return true;
         }
 
         // After all enemies are dead.
@@ -571,10 +568,7 @@ export class MainPlayLevel {
             this._barricadeLevel && this._barricadeLevel.destroy();
             this._barricadeLevel = null;
             // Do the victory dance
-            return {
-                score: this._scoreboard.getScore(),
-                lives: this._lifeHandler.getLives()
-            };
+            return true;
         }
 
         if (this._state === MainLevelState.active) {
@@ -610,9 +604,11 @@ export class MainPlayLevel {
 
             const scoreRewards = this._scoreboard.getBonuses() || Object.create(null);
             if (scoreRewards.freeLife) {
+                // TODO: Bonus life animation and/or sound effect.
                 this._lifeHandler.addLife();
             }
             if (scoreRewards.timeSlow) {
+                // TODO: Bonus time freeze animation countdown.
                 SlowMo_Ctrl.enterSlowMo(true);
             }
         }

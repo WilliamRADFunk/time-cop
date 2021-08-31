@@ -240,11 +240,10 @@ const loadMainPlayLevelScene = (
             disposeScene(scenes.mainPlayLevel);
             return;
         } else {
-            const layout: StringMapToNumber = scenes.mainPlayLevel.instance.endCycle();
-            if (layout) {
+            const isOver: boolean = scenes.mainPlayLevel.instance.endCycle();
+            if (isOver) {
                 scenes.mainPlayLevel.instance.dispose();
                 scenes.mainPlayLevel.active = false;
-                window.alert(JSON.stringify(layout));
                 // Remove renderer from the html container, and remove event listeners.
                 window.removeEventListener( 'resize', sceneMod.onWindowResizeRef, false);
                 sceneMod.container.removeChild( (scenes.mainPlayLevel.renderer as any).domElement );
@@ -255,13 +254,13 @@ const loadMainPlayLevelScene = (
                     if (level === 40) {
                         // TODO: Play the You Win scene and collect initials.
                         loadMenu();
-                    } else if(layout['lives'] <= 0) {
+                    } else if(lifeHandler.getLives() <= 0) {
                         // TODO: Play the You suck you lost scene and collect initials.
                         loadMenu();
                     } else {
                         loadMainPlayLevelScene(
                             level + 1,
-                            layout['lives'],
+                            lifeHandler.getLives(),
                             difficulty,
                             {
                                 score: scoreboard.getScore(),
