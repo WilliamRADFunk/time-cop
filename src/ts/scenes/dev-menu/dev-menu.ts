@@ -45,7 +45,8 @@ import { RightTopDialogueText } from "../../controls/text/dialogue/right-top-dia
 import { ASSETS_CTRL } from "../../controls/controllers/assets-controller";
 import { StringMapToNumber } from "../../models/string-map-to-number";
 import { InputBarNoLabel } from "../../controls/inputs/text-bar-no-label";
-import { InputBarType } from "../../controls/inputs/input-bar-base";
+import { InputBarBase, InputBarType } from "../../controls/inputs/input-bar-base";
+import { SCORE_FOR_LIFE, SCORE_FOR_TIME_SLOW } from "../../controls/controllers/score-controller";
 
 // const border: string = '1px solid #FFF';
 const border: string = 'none';
@@ -109,7 +110,8 @@ export class DevMenu {
     */
     private _mainPlayLevelSpec: StringMapToNumber = {
         level: 1,
-        lives: 3
+        lives: 3,
+        score: 0
     };
 
     /**
@@ -156,6 +158,21 @@ export class DevMenu {
      * List of countermaxes on page 3.
      */
     private _page3countermaxes: StringMapToNumber = {};
+
+    /**
+     * Groups of input elements for page 1.
+     */
+    private _page1inputElements: { [key: string]: InputBarBase } = {};
+
+    /**
+     * Groups of input elements for page 2.
+     */
+    private _page2inputElements: { [key: string]: InputBarBase } = {};
+
+    /**
+     * Groups of input elements for page 3.
+     */
+    private _page3inputElements: { [key: string]: InputBarBase } = {};
 
     /**
      * Contains key-value mapping of all meshes used on page 1.
@@ -290,8 +307,15 @@ export class DevMenu {
         onClick = () => {
             this._page1buttons.launchMainPlayLevelSceneButton.disable();
             // TODO: Build dev menu control to set difficulty.
-            // TODO: Build dev control to set initial score.
-            callbacks.activateMainPlayLevelScene(this._mainPlayLevelSpec.level, this._mainPlayLevelSpec.lives, 3);
+            callbacks.activateMainPlayLevelScene(
+                this._mainPlayLevelSpec.level,
+                this._mainPlayLevelSpec.lives,
+                3,
+                {
+                    score: this._mainPlayLevelSpec.score,
+                    lastLifeScore: this._mainPlayLevelSpec.score % SCORE_FOR_LIFE,
+                    lastTimeSlowScore: this._mainPlayLevelSpec.score % SCORE_FOR_TIME_SLOW
+                });
         };
 
         this._page1buttons.launchMainPlayLevelSceneButton = new LoadButton(
@@ -405,11 +429,11 @@ export class DevMenu {
             true,
             0.5);
 
-        let row2Left = 0.17;
+        let row2Left = 0.145;
         const row2height = sizeHeightForMainPlayLevel(2, height);
 
         this._page1textElements.startingScoreText = new FreestyleText(
-            'Starting Score',
+            'Starting Score (>= 0)',
             { left: left + (row2Left * width), height, top: row2height, width },
             COLORS.default,
             'none',
@@ -418,13 +442,27 @@ export class DevMenu {
         let row3Left = 0.085;
         const row3height = sizeHeightForMainPlayLevel(3, height);
 
-        new InputBarNoLabel(
+        const onChange = (e: { prev: string, next: string }) => {
+            console.log('onChange', e);
+            if (Number(e.next || 0) < 0) {
+                this._mainPlayLevelSpec.score = Number(e.prev || 0);
+            } else {
+                this._mainPlayLevelSpec.score = Number(e.next || 0);
+            }
+        
+            this._page1inputElements.startingScore.element.setAttribute('value', this._mainPlayLevelSpec.score.toString());
+        };
+
+        this._page1inputElements.startingScore = new InputBarNoLabel(
             { left: left + (row3Left * width), height, top: row3height, width: width * 10 },
             { background: '#00000000', border: COLORS.neutral, text: COLORS.default },
-            () => {},
+            onChange,
             true,
             InputBarType.Number,
             0.5);
+        
+        this._page1inputElements.startingScore.element.setAttribute('value', this._mainPlayLevelSpec.score.toString());
+        this._page1inputElements.startingScore.element.setAttribute('min', '0');
     //#endregion
     //#region Page1 Next
         this._page1textElements.rightBottomTitleText = new RightBottomTitleText(
@@ -607,6 +645,14 @@ export class DevMenu {
         row1Left += 0.05;
         this._page1buttons.livesPlusButton.resize({ left: left + (row1Left * width), height, top: row1height, width });
 
+        let row2Left = 0.17;
+        const row2height = sizeHeightForMainPlayLevel(2, height);
+        this._page1textElements.startingScoreText.resize({ left: left + (row2Left * width), height, top: row2height, width });
+
+        let row3Left = 0.085;
+        const row3height = sizeHeightForMainPlayLevel(3, height);
+        this._page1inputElements.startingScore.resize({ left: left + (row3Left * width), height, top: row3height, width: width * 10 });
+
         this._buttons.nextPageButton.resize({ left: left + width - (0.29 * width), height, top: 0.845 * height, width });
         this._buttons.nextPageButton2.resize({ left: left + width - (0.29 * width), height, top: 0.845 * height, width });
         this._buttons.previousPageButton2.resize({ left: left + (0.21 * width), height, top: 0.845 * height, width });
@@ -647,6 +693,7 @@ export class DevMenu {
         document.onclick = () => {};
         Object.keys(this._textElements).forEach(x => this._textElements[x] && this._textElements[x].dispose());
         Object.keys(this._buttons).forEach(x => this._buttons[x] && this._buttons[x].dispose());
+        Object.keys(this._page1inputElements).forEach(x => this._page1inputElements[x] && this._page1inputElements[x].dispose());
         window.removeEventListener('resize', this._listenerRef, false);
     }
 

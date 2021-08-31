@@ -39,7 +39,7 @@ export class InputBarBase {
     /**
      * HTMLElement that is the input bar itself.
      */
-    public readonly element: HTMLElement;
+    public readonly element: HTMLInputElement;
 
     /**
      * Id attribute on the element.
@@ -54,7 +54,7 @@ export class InputBarBase {
      * @param visible   whether or not to start the input bar in a visible state.
      * @param type      type of input bar (ie. text, number, etc.).
      */
-    constructor(id: string, colors: InputBarColors, onClick: (e?: any) => void, visible: boolean, type: InputBarType) {
+    constructor(id: string, colors: InputBarColors, onChange: (e?: { prev: string, next: string }) => void, visible: boolean, type: InputBarType) {
         this.element = document.createElement('input');
         this.element.setAttribute('type', type);
         this.element.id = this.id = id;
@@ -69,9 +69,9 @@ export class InputBarBase {
         this.element.style.visibility = visible ? 'visible' : 'hidden';
 
         this._colorTheme = colors;
-        this._callback = onClick;
+        this._callback = onChange;
 
-        this.element.onchange = this.onChange.bind(this);
+        this.element.addEventListener('input', this.onChange.bind(this));
     }
 
     /**
@@ -114,15 +114,16 @@ export class InputBarBase {
 
     /**
      * When enabled, this calls the callback with the new value.
+     * @param e the DOM input element event object.
      */
-    public onChange(e: any): { prev: string, next: string } {
+    public onChange(e: Event): void {
         if (this._isEnabled) {
             const prev = this._value;
-            this._value = e.value;
-            return {
+            this._value = this.element.value;
+            this._callback({
                 prev,
-                next: e.value
-            };
+                next: this._value
+            });
         }
     }
 

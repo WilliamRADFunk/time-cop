@@ -14,9 +14,9 @@ export type ScoreDigits = Mesh[];
  */
 const POSITION_INDEX = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ].map(val => val * 0.35);
 
-const SCORE_FOR_LIFE = 10000;
+export const SCORE_FOR_LIFE = 10000;
 
-const SCORE_FOR_TIME_SLOW = 1000;
+export const SCORE_FOR_TIME_SLOW = 1000;
 
 /**
  * @class
@@ -96,13 +96,21 @@ export class ScoreCtrl {
      * @param score         preset score that might be passed from one level to the next.
      * @hidden
      */
-    constructor(scene: Scene, color: Color, scoreFont: Font, score?: number) {
+    constructor(
+        scene: Scene,
+        color: Color,
+        scoreFont: Font,
+        scoreDetails: {
+        score: number,
+        lastLifeScore: number,
+        lastTimeSlowScore: number
+    }) {
         this._scene = scene;
         this._scoreFont = scoreFont;
         this._currentColor = color;
-        this._currentScore = score || 0;
-        this._scoreSinceNewLife = score || 0;
-        this._scoreSinceSlowTime = score || 0;
+        this._currentScore = scoreDetails.score || 0;
+        this._scoreSinceNewLife = scoreDetails.lastLifeScore || 0;
+        this._scoreSinceSlowTime = scoreDetails.lastTimeSlowScore || 0;
         this._scoreMaterial = new MeshLambertMaterial( {color: color || 0x084E70} );
         this._createText();
     }
@@ -197,14 +205,17 @@ export class ScoreCtrl {
         this._currentScore += points;
         this._scoreSinceNewLife += points;
         this._scoreSinceSlowTime += points;
+
         if (this._scoreSinceNewLife >= SCORE_FOR_LIFE) {
             this._scoreSinceNewLife -= SCORE_FOR_LIFE;
             this._regenLife = true;
         }
+
         if (this._scoreSinceSlowTime >= SCORE_FOR_TIME_SLOW) {
             this._scoreSinceSlowTime -= SCORE_FOR_TIME_SLOW;
             this._regenTimeSlow = true;
         }
+
         if (this._score && this._score.visible) {
             this._changeScore();
         }
@@ -231,14 +242,6 @@ export class ScoreCtrl {
     }
 
     /**
-     * Passes current score value back to caller.
-     * @returns the current score at time of function call.
-     */
-    public getScore(): number {
-        return this._currentScore;
-    }
-
-    /**
      * Returns regeneration bonuses if there are any and resets the flags.
      * @returns bonus object containing last known regeneration rewards.
      */
@@ -247,6 +250,30 @@ export class ScoreCtrl {
         this._regenLife = false;
         this._regenTimeSlow = false;
         return bonus;
+    }
+
+    /**
+     * Passes current score value back to caller.
+     * @returns the current score at time of function call.
+     */
+    public getScore(): number {
+        return this._currentScore;
+    }
+
+    /**
+     * Passes current score since bonus life value back to caller.
+     * @returns the current score since bonus life at time of function call.
+     */
+    public getScoreSinceLife(): number {
+        return this._scoreSinceNewLife;
+    }
+
+    /**
+     * Passes current score since time slow value back to caller.
+     * @returns the current score since time slow at time of function call.
+     */
+    public getScoreSinceTimeSlow(): number {
+        return this._scoreSinceSlowTime;
     }
 
     /**

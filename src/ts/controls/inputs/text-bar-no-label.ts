@@ -20,7 +20,7 @@ export class InputBarNoLabel extends InputBarBase {
      * @param type      type of input bar (ie. text, number, etc.).
      * @param scale     scale to apply to input bar dimensions.
      */
-    constructor(position: HTMLElementPosition, colors: InputBarColors, onChange: () => void, visible: boolean, type: InputBarType, scale?: number) {
+    constructor(position: HTMLElementPosition, colors: InputBarColors, onChange: (e?: { prev: string, next: string }) => void, visible: boolean, type: InputBarType, scale?: number) {
         super('input-bar-no-label', colors, onChange, visible, type);
 
         this._scale = scale || 1;

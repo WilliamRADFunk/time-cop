@@ -77,12 +77,24 @@ const loadDevMenu = () => {
             loadGameMenu();
         }, 50);
     };
-    const activateMainPlayLevelScene = (level: number, lives: number, difficulty: number) => {
+    const activateMainPlayLevelScene = (
+        level: number,
+        lives: number,
+        difficulty: number,
+        scoreDetails: {
+            score: number,
+            lastLifeScore: number,
+            lastTimeSlowScore: number
+        }) => {
         scenes.devMenu.active = false;
         window.removeEventListener( 'resize', sceneMod.onWindowResizeRef, false);
         sceneMod.container.removeChild( (scenes.devMenu.renderer as any).domElement );
         setTimeout(() => {
-            loadMainPlayLevelScene(level, lives, difficulty);
+            loadMainPlayLevelScene(
+                level,
+                lives,
+                difficulty,
+                scoreDetails);
         }, 50);
     };
     
@@ -136,7 +148,15 @@ const loadGameMenu = () => {
                 // Clears up memory used by menu scene.
                 disposeScene(scenes.menu);
 
-                loadMainPlayLevelScene(1, 5 - difficultyChosen, difficultyChosen);
+                loadMainPlayLevelScene(
+                    1,
+                    5 - difficultyChosen,
+                    difficultyChosen,
+                    {
+                        score: 0,
+                        lastLifeScore: 0,
+                        lastTimeSlowScore: 0
+                    });
             }, 750);
         } else {
             scenes.menu.renderer.render( scenes.menu.scene, scenes.menu.camera );
@@ -188,12 +208,20 @@ const loadIntroScene = () => {
 /**
  * Game's main level scene, where player actually plays the game. Only starts when all assets are finished loading.
  */
-const loadMainPlayLevelScene = (level: number, lives: number, difficulty: number, score?: number) => {
+const loadMainPlayLevelScene = (
+    level: number,
+    lives: number,
+    difficulty: number,
+    scoreDetails: {
+        score: number,
+        lastLifeScore: number,
+        lastTimeSlowScore: number
+    }) => {
     const sceneMod = createSceneModule(scenes.mainPlayLevel);
     // Create instance of game section.
     scenes.mainPlayLevel.instance = new MainPlayLevel(scenes.mainPlayLevel, level, lives);
     // Create instance of score keeper.
-    const scoreboard = new ScoreCtrl(scenes.mainPlayLevel.scene, new Color(0xFFFFFF), ASSETS_CTRL.gameFont, score);
+    const scoreboard = new ScoreCtrl(scenes.mainPlayLevel.scene, new Color(0xFFFFFF), ASSETS_CTRL.gameFont, scoreDetails);
     scenes.mainPlayLevel.instance.addScoreBoard(scoreboard);
     const lifeHandler = new LifeCtrl(scenes.mainPlayLevel.scene, level, lives);
     scenes.mainPlayLevel.instance.addLifeHandler(lifeHandler);
@@ -231,7 +259,15 @@ const loadMainPlayLevelScene = (level: number, lives: number, difficulty: number
                         // TODO: Play the You suck you lost scene and collect initials.
                         loadMenu();
                     } else {
-                        loadMainPlayLevelScene(level + 1, layout['lives'], difficulty, layout['score']);
+                        loadMainPlayLevelScene(
+                            level + 1,
+                            layout['lives'],
+                            difficulty,
+                            {
+                                score: scoreboard.getScore(),
+                                lastLifeScore: scoreboard.getScoreSinceLife(),
+                                lastTimeSlowScore: scoreboard.getScoreSinceTimeSlow()
+                            });
                     }
                 }, 10);
                 return;
