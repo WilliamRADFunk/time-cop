@@ -15,10 +15,6 @@ import { LeftTopTitleText } from "../../controls/text/title/left-top-title-text"
 import { COLORS } from "../../styles/colors";
 import { TextType } from "../../controls/text/text-type";
 import { ButtonBase } from "../../controls/buttons/button-base";
-import { RightTopTitleText } from "../../controls/text/title/right-top-title-text";
-import { LeftTopMiddleTitleText } from "../../controls/text/title/left-top-middle-title-text";
-import { RightTopMiddleTitleText } from "../../controls/text/title/right-top-middle-title-text";
-import { LeftBottomMiddleTitleText } from "../../controls/text/title/left-bottom-middle-title-text";
 import { RightBottomMiddleTitleText } from "../../controls/text/title/right-bottom-middle-title-text";
 import { LeftBottomTitleText } from "../../controls/text/title/left-bottom-title-text";
 import { NextButton } from "../../controls/buttons/next-button";
@@ -33,16 +29,13 @@ import { LeftBottomMiddleProfile } from "../../controls/profiles/left-bottom-mid
 import { RightBottomMiddleProfile } from "../../controls/profiles/right-bottom-middle-profile";
 import { LeftBottomProfile } from "../../controls/profiles/left-bottom-profile";
 import { RightBottomProfile } from "../../controls/profiles/right-bottom-profile";
-import { LeftTopDialogueText } from "../../controls/text/dialogue/left-top-dialogue-text";
 import { ToggleBase } from "../../controls/buttons/toggle-base";
-import { SmallToggleButton } from "../../controls/buttons/small-toggle-button";
 import { FreestyleText } from "../../controls/text/freestyle-text";
 import { MinusButton } from "../../controls/buttons/minus-button";
 import { PlusButton } from "../../controls/buttons/plus-button";
-import { FreestyleSquareButton } from "../../controls/buttons/freestyle-square-button";
 import { ProfileBase } from "../../controls/profiles/profile-base";
-import { RightTopDialogueText } from "../../controls/text/dialogue/right-top-dialogue-text";
 import { ASSETS_CTRL } from "../../controls/controllers/assets-controller";
+import { NumberMapToString } from "../../models/number-map-to-string";
 import { StringMapToNumber } from "../../models/string-map-to-number";
 import { InputBarNoLabel } from "../../controls/inputs/text-bar-no-label";
 import { InputBarBase, InputBarType } from "../../controls/inputs/input-bar-base";
@@ -52,6 +45,13 @@ import { SCORE_FOR_LIFE, SCORE_FOR_TIME_SLOW } from "../../controls/controllers/
 const border: string = 'none';
 
 const buttonScale: number = 2;
+
+const DifficultyMap: NumberMapToString = {
+    0: 'Easy',
+    1: 'Normal',
+    2: 'Hard',
+    3: 'Hardcore'
+};
 
 /**
  * Establishes a one-place fetch for the height of dev menu elements in the Main Play Level scene.
@@ -109,6 +109,7 @@ export class DevMenu {
     * Specification of what the starter conditions of the main level should be.
     */
     private _mainPlayLevelSpec: StringMapToNumber = {
+        difficulty: 2,
         level: 1,
         lives: 3,
         score: 0
@@ -306,11 +307,10 @@ export class DevMenu {
 
         onClick = () => {
             this._page1buttons.launchMainPlayLevelSceneButton.disable();
-            // TODO: Build dev menu control to set difficulty.
             callbacks.activateMainPlayLevelScene(
                 this._mainPlayLevelSpec.level,
                 this._mainPlayLevelSpec.lives,
-                3,
+                this._mainPlayLevelSpec.difficulty,
                 {
                     score: this._mainPlayLevelSpec.score,
                     lastLifeScore: this._mainPlayLevelSpec.score % SCORE_FOR_LIFE,
@@ -463,6 +463,45 @@ export class DevMenu {
         
         this._page1inputElements.startingScore.element.setAttribute('value', this._mainPlayLevelSpec.score.toString());
         this._page1inputElements.startingScore.element.setAttribute('min', '0');
+
+        let row4Left = 0.145;
+        const row4height = sizeHeightForMainPlayLevel(4, height);
+
+        this._page1textElements.difficultyLabelText = new FreestyleText(
+            'Difficulty: ',
+            { left: left + (row4Left * width), height, top: row4height, width },
+            COLORS.default,
+            'none',
+            TextType.STATIC);
+        
+        row4Left += 0.1;
+
+        this._page1textElements.difficultyChoiceText = new FreestyleText(
+            DifficultyMap[this._mainPlayLevelSpec.difficulty],
+            { left: left + (row4Left * width), height, top: row4height, width },
+            COLORS.default,
+            'none',
+            TextType.STATIC);
+
+        onClick = () => {
+            let difficulty = this._mainPlayLevelSpec.difficulty + 1;
+            if (difficulty > 3) {
+                difficulty = 0;
+            }
+            this._mainPlayLevelSpec.difficulty = difficulty;
+            this._page1textElements.difficultyChoiceText.update(DifficultyMap[this._mainPlayLevelSpec.difficulty]);
+
+            this._mainPlayLevelSpec.lives = 5 - difficulty;
+            this._page1textElements.livesReadoutText.update(this._mainPlayLevelSpec.lives.toString());
+        };
+
+        row4Left += 0.1;
+        this._page1buttons.difficultyNextButton = new NextButton(
+            { left: left + (row4Left * width), height, top: row4height, width },
+            BUTTON_COLORS,
+            onClick,
+            true,
+            0.5);
     //#endregion
     //#region Page1 Next
         this._page1textElements.rightBottomTitleText = new RightBottomTitleText(
@@ -652,6 +691,16 @@ export class DevMenu {
         let row3Left = 0.085;
         const row3height = sizeHeightForMainPlayLevel(3, height);
         this._page1inputElements.startingScore.resize({ left: left + (row3Left * width), height, top: row3height, width: width * 10 });
+
+        let row4Left = 0.145;
+        const row4height = sizeHeightForMainPlayLevel(4, height);
+        this._page1textElements.difficultyLabelText.resize({ left: left + (row4Left * width), height, top: row4height, width });
+        
+        row4Left += 0.1;
+        this._page1textElements.difficultyChoiceText.resize({ left: left + (row4Left * width), height, top: row4height, width });
+
+        row4Left += 0.1;
+        this._page1buttons.difficultyNextButton.resize({ left: left + (row4Left * width), height, top: row4height, width });
 
         this._buttons.nextPageButton.resize({ left: left + width - (0.29 * width), height, top: 0.845 * height, width });
         this._buttons.nextPageButton2.resize({ left: left + width - (0.29 * width), height, top: 0.845 * height, width });

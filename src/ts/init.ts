@@ -15,7 +15,6 @@ import { adjustWindowDimensions } from './utils/on-window-resize';
 import { ScoreCtrl } from './controls/controllers/score-controller';
 import { Color } from 'three';
 import { LifeCtrl } from './controls/controllers/lives-controller';
-import { StringMapToNumber } from './models/string-map-to-number';
 import { SlowMo_Ctrl } from './controls/controllers/slow-mo-controller';
 
 const scenes: { [ key: string ]: SceneType } = {
@@ -140,7 +139,7 @@ const loadGameMenu = () => {
      */
     const render = () => {
         const difficultyChosen = scenes.menu.instance.endCycle();
-        if (difficultyChosen) {
+        if (isNaN(Number(difficultyChosen))) {
             setTimeout(() => {
                 scenes.menu.instance.dispose();
                 window.removeEventListener( 'resize', sceneMod.onWindowResizeRef, false);
@@ -226,7 +225,7 @@ const loadMainPlayLevelScene = (
     const lifeHandler = new LifeCtrl(scenes.mainPlayLevel.scene, level, lives);
     scenes.mainPlayLevel.instance.addLifeHandler(lifeHandler);
 
-    SlowMo_Ctrl.setDifficulty(difficulty);
+    SlowMo_Ctrl.setDifficulty(difficulty || 0);
     /**
      * The render loop. Everything that should be checked, called, or drawn in each animation frame.
      */

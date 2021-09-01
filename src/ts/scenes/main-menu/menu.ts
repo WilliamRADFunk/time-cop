@@ -783,7 +783,7 @@ export class Menu {
 
     /**
      * Moves the point light from left to right a little every frame.
-     * @returns whether or not the scene has finished. > 0 means the scene is doneand the number is the chosen difficulty | 0 if it isn't.
+     * @returns whether or not the scene has finished. > 0 means the scene is done and the number is the chosen difficulty | 0 if it isn't.
      */
     public endCycle(): number {
         if (!this._isActive) {
