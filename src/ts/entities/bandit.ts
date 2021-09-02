@@ -588,7 +588,6 @@ export class Bandit implements Collidable, Entity {
                 
                 this._dyingAnimationCounter++;
             } else {
-                console.log('End');
                 this._dyingAnimationCounter = 0;
                 this._inDeathSequence = false;
                 this._animationMeshes.forEach(mesh => mesh.position.set(0, this._yPos, 0));

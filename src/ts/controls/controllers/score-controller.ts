@@ -14,6 +14,8 @@ export type ScoreDigits = Mesh[];
  */
 const POSITION_INDEX = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ].map(val => val * 0.35);
 
+const SCORE_VERTICAL_POSITION = -5.5;
+
 export const SCORE_FOR_LIFE = 10000;
 
 export const SCORE_FOR_TIME_SLOW = 1000;
@@ -156,7 +158,7 @@ export class ScoreCtrl {
         this._score = new Mesh( this._scoreGeometry, this._scoreMaterial );
         this._score.position.x = -1.05;
         this._score.position.y = 0.75;
-        this._score.position.z = -5.4;
+        this._score.position.z = SCORE_VERTICAL_POSITION;
         this._score.rotation.x = -1.5708;
         this._scene.add(this._score);
         
@@ -176,7 +178,7 @@ export class ScoreCtrl {
                 this._scores[i][j] = new Mesh( this._scoreGeometries[i][j], this._scoreMaterial );
                 this._scores[i][j].position.x = POSITION_INDEX[i] + 0.35;
                 this._scores[i][j].position.y = 0.75;
-                this._scores[i][j].position.z = -5.38;
+                this._scores[i][j].position.z = SCORE_VERTICAL_POSITION;
                 this._scores[i][j].rotation.x = -1.5708;
                 this._scores[i][j].visible = false;
                 this._scene.add(this._scores[i][j]);

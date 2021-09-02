@@ -218,14 +218,15 @@ const loadMainPlayLevelScene = (
     }) => {
     const sceneMod = createSceneModule(scenes.mainPlayLevel);
     // Create instance of game section.
-    scenes.mainPlayLevel.instance = new MainPlayLevel(scenes.mainPlayLevel, level, lives);
+    scenes.mainPlayLevel.instance = new MainPlayLevel(scenes.mainPlayLevel, level, difficulty, ASSETS_CTRL.gameFont);
     // Create instance of score keeper.
-    const scoreboard = new ScoreCtrl(scenes.mainPlayLevel.scene, new Color(0xFFFFFF), ASSETS_CTRL.gameFont, scoreDetails);
+    const scoreboard = new ScoreCtrl(scenes.mainPlayLevel.scene, new Color(0xFFCC00), ASSETS_CTRL.gameFont, scoreDetails);
     scenes.mainPlayLevel.instance.addScoreBoard(scoreboard);
     const lifeHandler = new LifeCtrl(scenes.mainPlayLevel.scene, level, lives);
     scenes.mainPlayLevel.instance.addLifeHandler(lifeHandler);
 
     SlowMo_Ctrl.setDifficulty(difficulty || 0);
+    SlowMo_Ctrl.setText(ASSETS_CTRL.gameFont, new Color(0xFFCC00), scenes.mainPlayLevel.scene);
     /**
      * The render loop. Everything that should be checked, called, or drawn in each animation frame.
      */

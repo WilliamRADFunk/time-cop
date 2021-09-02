@@ -40,18 +40,12 @@ import { StringMapToNumber } from "../../models/string-map-to-number";
 import { InputBarNoLabel } from "../../controls/inputs/text-bar-no-label";
 import { InputBarBase, InputBarType } from "../../controls/inputs/input-bar-base";
 import { SCORE_FOR_LIFE, SCORE_FOR_TIME_SLOW } from "../../controls/controllers/score-controller";
+import { DifficultyMap } from "../../models/difficulty-map";
 
 // const border: string = '1px solid #FFF';
 const border: string = 'none';
 
 const buttonScale: number = 2;
-
-const DifficultyMap: NumberMapToString = {
-    0: 'Easy',
-    1: 'Normal',
-    2: 'Hard',
-    3: 'Hardcore'
-};
 
 /**
  * Establishes a one-place fetch for the height of dev menu elements in the Main Play Level scene.
@@ -443,7 +437,6 @@ export class DevMenu {
         const row3height = sizeHeightForMainPlayLevel(3, height);
 
         const onChange = (e: { prev: string, next: string }) => {
-            console.log('onChange', e);
             if (Number(e.next || 0) < 0) {
                 this._mainPlayLevelSpec.score = Number(e.prev || 0);
             } else {

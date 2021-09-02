@@ -1,7 +1,11 @@
 import {
+    Font,
+    Mesh,
+    MeshLambertMaterial,
     Object3D,
     OrthographicCamera,
-    Scene } from 'three';
+    Scene,
+    TextGeometry } from 'three';
 
 import { CollisionatorSingleton } from '../../collisionator';
 import { SOUNDS_CTRL } from '../../controls/controllers/sounds-controller';
@@ -24,6 +28,7 @@ import { BarricadeLevel } from '../../entities/barricade-level';
 import { LifeCtrl } from '../../controls/controllers/lives-controller';
 import { StringMapToNumber } from '../../models/string-map-to-number';
 import { SlowMo_Ctrl } from '../../controls/controllers/slow-mo-controller';
+import { DifficultyMap } from '../../models/difficulty-map';
 
 /**
  * Border value used for dev mode to see outline around text content (for positioning and sizing).
@@ -99,6 +104,26 @@ export class MainPlayLevel {
      * Set when user clicks mouse to have something to compare against for debounce purposes.
      */
     private _delayStartTime: number;
+
+    /**
+     * The loaded font, used for the difficulty label.
+     */
+    private _font: Font;
+
+    /**
+     * Controls size and shape of the difficulty label.
+     */
+    private _difficultyGeometry: TextGeometry;
+
+    /**
+     * Controls the color of the difficulty label material.
+     */
+    private _difficultyMaterial: MeshLambertMaterial;
+
+    /**
+     * Controls the overall rendering of the difficulty label.
+     */
+    private _difficulty: Mesh;
 
     /**
      * The movement keys the player currently has pressed.
@@ -177,19 +202,21 @@ export class MainPlayLevel {
 
     /**
      * Constructor for the Land and Mine (Scene) class
-     * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
-     * @param level current level being played.
-     * @param lives remaining lives left to player.
-     * @param score current score player has accumulated.
+     * @param scene         graphic rendering scene object. Used each iteration to redraw things contained in scene.
+     * @param level         current level being played.
+     * @param difficulty    player chosen difficulty level.
+     * @param difficulty    font to use for the difficulty label.
      */
     constructor(
         scene: SceneType,
         level: number,
-        lives: number) {
+        difficulty: number,
+        font: Font) {
 
         this._camera = scene.camera as OrthographicCamera;
         this._scene = scene.scene;
         this._level = level;
+        this._font = font;
 
         // Text, Button, and Event Listeners
         this._onInitialize(scene);
@@ -214,9 +241,12 @@ export class MainPlayLevel {
         this._actorCtrl = new ActorController(this._scene);
 
         this._barricadeLevel = new BarricadeLevel(this._scene, this._level, 2);
+
+        this._difficultyMaterial = new MeshLambertMaterial( {color: 0xFFCC00} );
+        this._createDifficultyText(difficulty);
     }
 
-    private addEntities(): void {
+    private _addEntities(): void {
         this._player = new Player(
             this._scoreboard,
             this._lifeHandler,
@@ -247,6 +277,37 @@ export class MainPlayLevel {
             CollisionatorSingleton.add(bandit);
             this._bandits.push(bandit);
         }
+    }
+    
+    /**
+     * Creates the text in one place to obey the DRY rule.
+     * @param difficulty player chosen difficulty level.
+     */
+    private _createDifficultyText(difficulty: number): void {
+        // Only remove difficulty label if it was added before.
+        if (this._difficulty) {
+            this._scene.remove(this._difficulty);
+            this._difficulty = null;
+        }
+        // Added before or not, make a new one and add it.
+        // Sadly TextGeometries must be removed and added whenever the text content changes.
+        this._difficultyGeometry = new TextGeometry(`MODE: ${DifficultyMap[difficulty]}`,
+            {
+                font: this._font,
+                size: 0.3,
+                height: 0.2,
+                curveSegments: 12,
+                bevelEnabled: false,
+                bevelThickness: 1,
+                bevelSize: 0.5,
+                bevelSegments: 3
+            });
+        this._difficulty = new Mesh( this._difficultyGeometry, this._difficultyMaterial );
+        this._difficulty.position.x = 2.65;
+        this._difficulty.position.y = 0.75;
+        this._difficulty.position.z = -5.5;
+        this._difficulty.rotation.x = -1.5708;
+        this._scene.add(this._difficulty);
     }
 
     /**
@@ -481,7 +542,7 @@ export class MainPlayLevel {
      */
     public addLifeHandler(lifeHandler: LifeCtrl): void {
         this._lifeHandler = lifeHandler;
-        this.addEntities();
+        this._addEntities();
     }
 
     /**
@@ -514,6 +575,12 @@ export class MainPlayLevel {
         this._posts.length = 0;
         this._barricadeLevel && this._barricadeLevel.destroy();
         this._barricadeLevel = null;
+        
+        // Only remove difficulty label if it was added before.
+        if (this._difficulty) {
+            this._scene.remove(this._difficulty);
+            this._difficulty = null;
+        }
     }
 
     /**
