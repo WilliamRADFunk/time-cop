@@ -214,7 +214,7 @@ export class Projectile implements Collidable {
      * Calculates the next point in the missile's path.
      */
     private _calculateNextPoint(): void {
-        if (SlowMo_Ctrl.getSlowMo()) {
+        if (SlowMo_Ctrl.getSlowMo() && this._type !== CollisionType.Player_Projectile) {
             this._distanceTraveled += 0.0005;
         } else {
             this._distanceTraveled += this._speed

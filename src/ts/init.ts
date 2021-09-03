@@ -226,7 +226,7 @@ const loadMainPlayLevelScene = (
     scenes.mainPlayLevel.instance.addLifeHandler(lifeHandler);
 
     SlowMo_Ctrl.setDifficulty(difficulty || 0);
-    SlowMo_Ctrl.setText(ASSETS_CTRL.gameFont, new Color(0xFFCC00), scenes.mainPlayLevel.scene);
+    SlowMo_Ctrl.setup(ASSETS_CTRL.gameFont, new Color(0xFFCC00), scenes.mainPlayLevel.scene);
     /**
      * The render loop. Everything that should be checked, called, or drawn in each animation frame.
      */

@@ -667,7 +667,7 @@ export class MainPlayLevel {
 
             this._actorCtrl.endCycle();
 
-            SlowMo_Ctrl.endCycle();
+            SlowMo_Ctrl.endCycle(this._player.getCurrentPosition());
 
             const scoreRewards = this._scoreboard.getBonuses() || Object.create(null);
             if (scoreRewards.freeLife) {
@@ -675,7 +675,6 @@ export class MainPlayLevel {
                 this._lifeHandler.addLife();
             }
             if (scoreRewards.timeSlow) {
-                // TODO: Bonus time freeze animation countdown.
                 SlowMo_Ctrl.enterSlowMo(true);
             }
         }

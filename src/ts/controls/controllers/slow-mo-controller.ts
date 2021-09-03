@@ -3,9 +3,13 @@ import {
     Font,
     Mesh,
     MeshLambertMaterial,
+    MeshStandardMaterial,
     Scene,
+    SphereGeometry,
+    SphericalReflectionMapping,
     TextGeometry
 } from "three";
+import { ASSETS_CTRL } from "./assets-controller";
 
 export class SlowMoCtrl {
     /**
@@ -62,6 +66,21 @@ export class SlowMoCtrl {
      * Controls the overall rendering of the slow motion count text.
      */
     private _slowMoCountText: Mesh;
+    
+    /**
+     * Controls size and shape of the time bubble.
+     */
+     private _timeBubbleGeometry: SphereGeometry;
+
+     /**
+      * Controls the color of the time bubble material
+      */
+     private _timeBubbleMaterial: MeshStandardMaterial;
+
+     /**
+      * Controls the overall rendering of the time bubble.
+      */
+     private _timeBubble: Mesh;
 
     constructor() {}
     
@@ -128,9 +147,11 @@ export class SlowMoCtrl {
         this._slowMoCounter = (5 - this._difficulty) * 60;
     }
 
-    public endCycle(): void {
+    public endCycle(playerPosition: number[]): void {
         if (this._slowMoCounter) {
             this._slowMoCounter--;
+
+            this._timeBubble.position.set(playerPosition[0], -10, playerPosition[1]);
 
             if (this._slowMoCounter <= 0) {
                 this.exitSlowMo();
@@ -140,6 +161,8 @@ export class SlowMoCtrl {
                 
                 this._slowMoCountLabel && this._scene.remove(this._slowMoCountLabel);
                 this._slowMoCountLabel = null;
+
+                this._timeBubble.visible = false;
                 return;
             }
 
@@ -157,6 +180,7 @@ export class SlowMoCtrl {
         if (isBonusTime) {
             this._setCounter();
             this._createSlowMoCountTextText(Math.ceil(this._slowMoCounter / 60));
+            this._timeBubble.visible = true;
         }
     }
 
@@ -172,7 +196,7 @@ export class SlowMoCtrl {
         this._difficulty = difficulty;
     }
 
-    public setText(font: Font, color: Color, scene: Scene): void {
+    public setup(font: Font, color: Color, scene: Scene): void {
         this._font = font;
         this._color = color;
         
@@ -191,6 +215,26 @@ export class SlowMoCtrl {
         }
 
         this._scene = scene;
+
+        // Creates the semi-transparent time buble over the player when in slow motion.
+        if (!this._timeBubble) {
+            this._timeBubbleGeometry = new SphereGeometry(1, 32, 32);
+            const envMap = ASSETS_CTRL.textures.bubble;
+            envMap.mapping = SphericalReflectionMapping;
+            this._timeBubbleMaterial = new MeshStandardMaterial({
+                color: 0x05EDFF,
+                envMap: envMap,
+                opacity: 0.35,
+                roughness: 0,
+                transparent: true
+            });
+            this._timeBubble = new Mesh(this._timeBubbleGeometry, this._timeBubbleMaterial);
+            this._timeBubble.position.set(0, -10, 0);
+            this._timeBubble.name = 'time-bubble';
+            this._scene.add(this._timeBubble);
+
+            this._timeBubble.visible = false;
+        }
     }
 }
 

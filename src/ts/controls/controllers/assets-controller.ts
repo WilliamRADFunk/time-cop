@@ -298,6 +298,7 @@ const TEXTURES: { [key: string]: [string, Texture] } = {
     astronaut1: ['assets/images/astronaut-01.png', null],
     astronaut2: ['assets/images/astronaut-02.png', null],
     astronaut3: ['assets/images/astronaut-03.png', null],
+    bubble: ['assets/images/shiny.png', null],
     bulletLife: ['assets/images/bullet-life.png', null],
     bandit: ['assets/images/sprite-map-bandit.png', null],
     banditCowboy: ['assets/images/bandit-cowboy.png', null],

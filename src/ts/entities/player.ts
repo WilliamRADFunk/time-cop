@@ -500,6 +500,10 @@ export class Player implements Collidable, Entity {
     public impact(self: Collidable, otherThing: CollisionType): boolean {
         this._lifeHandler.loseLife();
         this._inDeathSequence = true;
+        this._projectiles.forEach(projectile => projectile.destroy());
+        this._projectiles.length = 0;
+        this._smokeExplosions.forEach(smoke => smoke.destroy());
+        this._smokeExplosions.length = 0;
         SlowMo_Ctrl.enterSlowMo();
         // SOUNDS_CTRL.stop
         return false;
