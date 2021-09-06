@@ -383,7 +383,7 @@ export class Bandit implements Collidable, Entity {
      */
     private _calculateNextPoint(): void {
         if (SlowMo_Ctrl.getSlowMo()) {
-            this._distanceTraveled += 0.0005;
+            this._distanceTraveled += this._isRunning ? (this._speedRunning / 8) : (this._speed / 8);
         } else {
             this._distanceTraveled += this._isRunning ? this._speedRunning : this._speed;
         }

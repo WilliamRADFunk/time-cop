@@ -31,6 +31,8 @@ let index: number = 0;
 let hitBoxMesh: Mesh;
 const showHitBox = false;
 
+const GUT_COOLDOWN_TIME = 60;
+
 export class Player implements Collidable, Entity {
     /**
      * Tracks position in walking animation sequence to know which animation to switch to next frame.
@@ -46,6 +48,16 @@ export class Player implements Collidable, Entity {
       * The list of blood explosions the player has around them as they die.
       */
      private _bloodExplosions: Explosion[] = [];
+
+    /**
+     * Number of frames remaining before the player's main gun can fire again.
+     */
+    private _cooldownMainGun: number = 0;
+
+    /**
+     * Number of frames remaining before the player's secondary gun can fire again.
+     */
+    private _cooldownSecondaryGun: number = 0;
 
      /**
       * Current direction crew member should be facing.
@@ -282,9 +294,22 @@ export class Player implements Collidable, Entity {
 
     /**
      * At the end of each loop iteration, move the player a little.
+     * @param dirKeys cuurently held keyboard keys for movement pressed by player.
      * @returns whether or not the player is done, and its points calculated.
      */
     public endCycle(dirKeys: StringMapToNumber): boolean {
+        if (this._cooldownSecondaryGun > 0) {
+            this._cooldownSecondaryGun--;
+        } else {
+            this._cooldownSecondaryGun = GUT_COOLDOWN_TIME;
+        }
+
+        if (this._cooldownMainGun > 0) {
+            this._cooldownMainGun--;
+        } else {
+            this._cooldownMainGun = GUT_COOLDOWN_TIME;
+        }
+
         if (this._inDeathSequence) {
             if (this._dyingAnimationCounter < 180) {
                 this._animationMeshes.forEach(mesh => {
@@ -407,6 +432,14 @@ export class Player implements Collidable, Entity {
      */
     public fire(isSecondary: boolean): void {
         if (!this._isActive || this._inDeathSequence) {
+            return;
+        }
+
+        if (isSecondary && !this._cooldownSecondaryGun) {
+            return;
+        }
+
+        if (!isSecondary && !this._cooldownMainGun) {
             return;
         }
 

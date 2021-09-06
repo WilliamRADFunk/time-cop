@@ -215,7 +215,7 @@ export class Projectile implements Collidable {
      */
     private _calculateNextPoint(): void {
         if (SlowMo_Ctrl.getSlowMo() && this._type !== CollisionType.Player_Projectile) {
-            this._distanceTraveled += 0.0005;
+            this._distanceTraveled += this._speed / 8;
         } else {
             this._distanceTraveled += this._speed
         }
