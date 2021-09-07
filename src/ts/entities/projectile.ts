@@ -223,8 +223,10 @@ export class Projectile implements Collidable {
                 (posB[0] - posP[0]) * (posB[0] - posP[0]) +
                 (posB[1] - posP[1]) * (posB[1] - posP[1])
             );
+            // Inside the time bubble, move at normal speed.
             if (radP + radB > dist) {
                 this._distanceTraveled += this._speed;
+            // Outside the time bubble, move at 1/8th speed.
             } else {
                 this._distanceTraveled += this._speed / 8;
             }

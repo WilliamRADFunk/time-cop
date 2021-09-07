@@ -383,7 +383,21 @@ export class Bandit implements Collidable, Entity {
      */
     private _calculateNextPoint(): void {
         if (SlowMo_Ctrl.getSlowMo()) {
-            this._distanceTraveled += this._isRunning ? (this._speedRunning / 8) : (this._speed / 8);
+            const posBubble = SlowMo_Ctrl.getBubbleCenter();
+            const posBandit = this.getCurrentPosition();
+            const radBubble = 1;
+            const radBandit = this._isRunning ? BANDIT_INSIDE_RADIUS : BANDIT_RADIUS;
+            const dist = Math.sqrt(
+                (posBubble[0] - posBandit[0]) * (posBubble[0] - posBandit[0]) +
+                (posBubble[1] - posBandit[1]) * (posBubble[1] - posBandit[1])
+            );
+            // Inside the time bubble, move at normal speed.
+            if (radBandit + radBubble > dist) {
+                this._distanceTraveled += this._isRunning ? this._speedRunning : this._speed;
+            // Outside the time bubble, move at 1/8th speed.
+            } else {
+                this._distanceTraveled += this._isRunning ? (this._speedRunning / 8) : (this._speed / 8);
+            }
         } else {
             this._distanceTraveled += this._isRunning ? this._speedRunning : this._speed;
         }

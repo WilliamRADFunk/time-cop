@@ -221,27 +221,30 @@ export class SlowMoCtrl {
             this._slowMoCountLabel = null;
         }
 
+        if (this._timeBubble && this._scene) {
+            this._scene.remove(this._timeBubble);
+            this._timeBubble = null;
+        }
+
         this._scene = scene;
 
         // Creates the semi-transparent time buble over the player when in slow motion.
-        if (!this._timeBubble) {
-            this._timeBubbleGeometry = new SphereGeometry(1, 32, 32);
-            const envMap = ASSETS_CTRL.textures.bubble;
-            envMap.mapping = SphericalReflectionMapping;
-            this._timeBubbleMaterial = new MeshStandardMaterial({
-                color: 0x05EDFF,
-                envMap: envMap,
-                opacity: 0.35,
-                roughness: 0,
-                transparent: true
-            });
-            this._timeBubble = new Mesh(this._timeBubbleGeometry, this._timeBubbleMaterial);
-            this._timeBubble.position.set(0, -10, 0);
-            this._timeBubble.name = 'time-bubble';
-            this._scene.add(this._timeBubble);
+        this._timeBubbleGeometry = new SphereGeometry(1, 32, 32);
+        const envMap = ASSETS_CTRL.textures.bubble;
+        envMap.mapping = SphericalReflectionMapping;
+        this._timeBubbleMaterial = new MeshStandardMaterial({
+            color: 0x05EDFF,
+            envMap: envMap,
+            opacity: 0.35,
+            roughness: 0,
+            transparent: true
+        });
+        this._timeBubble = new Mesh(this._timeBubbleGeometry, this._timeBubbleMaterial);
+        this._timeBubble.position.set(0, -10, 0);
+        this._timeBubble.name = 'time-bubble';
+        this._scene.add(this._timeBubble);
 
-            this._timeBubble.visible = false;
-        }
+        this._timeBubble.visible = false;
     }
 }
 
