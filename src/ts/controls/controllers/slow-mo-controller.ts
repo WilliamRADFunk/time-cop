@@ -144,7 +144,7 @@ export class SlowMoCtrl {
     }
 
     private _setCounter(): void {
-        this._slowMoCounter = (5 - this._difficulty) * 60;
+        this._slowMoCounter = (5 - this._difficulty) * 180;
     }
 
     public endCycle(playerPosition: number[]): void {
@@ -186,6 +186,13 @@ export class SlowMoCtrl {
 
     public exitSlowMo(): void {
         this._isSlowMo = false;
+        this._slowMoCounter = 0;
+        this._timeBubble.visible = false;
+    }
+
+    public getBubbleCenter(): number[] {
+        const pos = (this._timeBubble && this._timeBubble.position) || { x: 0, y: 0, z: 0 };
+        return [pos.x, pos.z];
     }
 
     public getSlowMo(): boolean {

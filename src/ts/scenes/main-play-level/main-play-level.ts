@@ -634,6 +634,7 @@ export class MainPlayLevel {
             this._posts.length = 0;
             this._barricadeLevel && this._barricadeLevel.destroy();
             this._barricadeLevel = null;
+            SlowMo_Ctrl.exitSlowMo();
             // Do the victory dance
             return true;
         }
@@ -651,6 +652,7 @@ export class MainPlayLevel {
             // Player died. Game over.
             if (playerDeadStatus) {
                 this._state = MainLevelState.dead;
+                SlowMo_Ctrl.exitSlowMo();
                 return;
             }
 
