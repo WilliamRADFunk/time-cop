@@ -674,9 +674,11 @@ export class MainPlayLevel {
             const scoreRewards = this._scoreboard.getBonuses() || Object.create(null);
             if (scoreRewards.freeLife) {
                 // TODO: Bonus life animation and/or sound effect.
+                SOUNDS_CTRL.playRegen();
                 this._lifeHandler.addLife();
             }
             if (scoreRewards.timeSlow) {
+                SOUNDS_CTRL.playShieldUp();
                 SlowMo_Ctrl.enterSlowMo(true);
             }
         }

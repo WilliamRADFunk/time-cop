@@ -28,7 +28,7 @@ let index: number = 0;
  */
 export class Projectile implements Collidable {
     /**
-     * Holds tail color.
+     * Holds color.
      */
     private _color: Color;
 
@@ -110,27 +110,7 @@ export class Projectile implements Collidable {
     private _speed: number = 0.03;
 
     /**
-     * Controls size and shape of the missile's fiery trail.
-     */
-    private _tailGeometry: Geometry;
-
-    /**
-     * Controls the color of the missile's fiery trail material.
-     */
-    private _tailMaterial: LineBasicMaterial;
-
-    /**
-     * Controls the overall rendering of the missile's fiery trail.
-     */
-    private _tailMesh: Line;
-
-    /**
-     * Allows for a variable y value in tail of missile
-     */
-    private _tailY: number;
-
-    /**
-     * The total distance from satellite to player's click point.
+     * The total distance from projectile origin to projectile's final point.
      */
     private _totalDistance: number;
 
@@ -153,7 +133,7 @@ export class Projectile implements Collidable {
      * @param x2                 final point x of where the missile starts.
      * @param z2                 final point z of where the missile starts.
      * @param dist               total distance the missile must travel.
-     * @param color              color of the missile's fiery tail (matches satellite body color from which it came).
+     * @param color              color of the missile.
      * @param colllidableAtBirth Enemy missiles need to be destructable before hitting target, where player's don't.
      * @param speed              optional speed modifier for missiles.
      * @param y                  optional y value for missile (for help screen demo).
@@ -179,7 +159,6 @@ export class Projectile implements Collidable {
         index++;
         this._scoreboard = scoreboard;
         this._headY = y || 0.51;
-        this._tailY = (y && (y + 0.04)) || 0.55;
         this._color = color;
         this._speed = speed || this._speed;
         this._isCollidable = !!colllidableAtBirth;
@@ -195,7 +174,7 @@ export class Projectile implements Collidable {
         // Glowing head of the missile.
         this._headGeometry = new CircleGeometry(0.06, 32);
         this._headMaterial = new MeshBasicMaterial({
-            color: 0xFF3F34,
+            color: this._color,
             opacity: 1,
             transparent: true
         });
@@ -271,7 +250,7 @@ export class Projectile implements Collidable {
 
     /**
      * At the end of each loop iteration, move the projectile a little.
-     * @returns whether or not the projectile is done, and should be removed from satellite's list.
+     * @returns whether or not the projectile is done, and should be removed from list.
      */
     public endCycle(): boolean {
         if (this._waitToFire >= 1) {
@@ -287,25 +266,7 @@ export class Projectile implements Collidable {
             }
         } else {
             this._calculateNextPoint();
-            if (!this._tailGeometry &&
-                this._currentPoint[0] > -5.95 &&
-                this._currentPoint[0] < 5.95 &&
-                this._currentPoint[1] > -5.95 && this._currentPoint[1] < 5.95) {
-                // Creates the missile's fiery trail.
-                this._tailGeometry = new Geometry();
-                this._tailGeometry.vertices.push(
-                    new Vector3(this._currentPoint[0], this._tailY, this._currentPoint[1]),
-                    new Vector3(this._currentPoint[0], this._tailY, this._currentPoint[1]));
-                this._tailMaterial = new LineBasicMaterial({color: this._color});
-                this._tailMesh = new Line(this._tailGeometry, this._tailMaterial);
-                this._scene.add(this._tailMesh);
-            }
-            if (this._tailGeometry) {
-                this._tailGeometry.vertices[1].x = this._currentPoint[0];
-                this._tailGeometry.vertices[1].z = this._currentPoint[1];
-                this._tailGeometry.verticesNeedUpdate = true;
-                this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
-            }
+            this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
             if (this._distanceTraveled >= this._totalDistance) {
                 this._createExplosion(false);
                 // SOUNDS_CTRL.playFooPang();
@@ -393,7 +354,6 @@ export class Projectile implements Collidable {
     public removeFromScene(scene: Scene): void {
         this._isCollidable = false;
         this._isActive = false;
-        this._scene.remove(this._tailMesh);
         this._scene.remove(this._headMesh);
     }
 }

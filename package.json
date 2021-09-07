@@ -38,7 +38,7 @@
     "@babel/preset-env": "^7.10.4",
     "@babel/register": "^7.10.5",
     "@types/randomcolor": "^0.5.0",
-    "@types/three": "^0.131.0",
+    "@types/three": "0.131.0",
     "babel": "^6.23.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.1",
@@ -75,6 +75,6 @@
     "gulp-uglify-es": "^2.0.0",
     "randomcolor": "^0.5.3",
     "stats.js": "^0.17.0",
-    "three": "^0.117.0"
+    "three": "0.117.0"
   }
 }

@@ -287,7 +287,7 @@ class SoundsCtrl {
     }
 
     /**
-     * Plays the regenerated satellite or base sound.
+     * Plays the regenerated/extra life sound.
      */
     public playRegen(): void {
         if (this._isMute || this._isPaused) { return; }

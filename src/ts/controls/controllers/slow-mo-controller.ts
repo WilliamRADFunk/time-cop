@@ -10,6 +10,7 @@ import {
     TextGeometry
 } from "three";
 import { ASSETS_CTRL } from "./assets-controller";
+import { SOUNDS_CTRL } from "./sounds-controller";
 
 export class SlowMoCtrl {
     /**
@@ -155,14 +156,7 @@ export class SlowMoCtrl {
 
             if (this._slowMoCounter <= 0) {
                 this.exitSlowMo();
-                this._slowMoCounter = 0;
-                this._slowMoCountText && this._scene.remove(this._slowMoCountText);
-                this._slowMoCountText = null;
-                
-                this._slowMoCountLabel && this._scene.remove(this._slowMoCountLabel);
-                this._slowMoCountLabel = null;
-
-                this._timeBubble.visible = false;
+                SOUNDS_CTRL.playShieldDown();
                 return;
             }
 
@@ -186,7 +180,14 @@ export class SlowMoCtrl {
 
     public exitSlowMo(): void {
         this._isSlowMo = false;
+
         this._slowMoCounter = 0;
+        this._slowMoCountText && this._scene.remove(this._slowMoCountText);
+        this._slowMoCountText = null;
+        
+        this._slowMoCountLabel && this._scene.remove(this._slowMoCountLabel);
+        this._slowMoCountLabel = null;
+
         this._timeBubble.visible = false;
     }
 
