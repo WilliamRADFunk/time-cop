@@ -307,7 +307,7 @@ class SoundsCtrl {
      */
     public playShieldDown(): void {
         if (this._isMute || this._isPaused) { return; }
-        this._sounds.saucerDown.sound.play();
+        this._sounds.shieldDown.sound.play();
     }
 
     /**
@@ -315,7 +315,7 @@ class SoundsCtrl {
      */
     public playShieldUp(): void {
         if (this._isMute || this._isPaused) { return; }
-        this._sounds.saucerUp.sound.play();
+        this._sounds.shieldUp.sound.play();
     }
 
     /**
