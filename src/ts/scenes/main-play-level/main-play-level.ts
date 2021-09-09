@@ -181,11 +181,6 @@ export class MainPlayLevel {
     private _settingsCtrl: SettingsCtrl;
 
     /**
-     * Flag to communicate the start click calculations were already done once.
-     */
-    private _started: boolean = false;
-
-    /**
      * Tracks current game state mode.
      */
     private _state: MainLevelState = MainLevelState.newGame;
@@ -219,7 +214,7 @@ export class MainPlayLevel {
         this._font = font;
 
         // Text, Button, and Event Listeners
-        this._onInitialize(scene);
+        this._onInitialize();
         this._listenerRef = this._onWindowResize.bind(this);
         window.addEventListener('resize', this._listenerRef, false);
 
@@ -331,35 +326,18 @@ export class MainPlayLevel {
     /**
      * Creates all of the html elements for the first time on scene creation.
      */
-    private _onInitialize(sceneType: SceneType): void {
+    private _onInitialize(): void {
         // DOM Events
         const container = document.getElementById('mainview');
-        document.oncontextmenu = event => {
-            event.preventDefault();
-            if (this._state === MainLevelState.active) {
-                this._player.fire(true);
-            }
-            return false;
-        };
         document.onclick = event => {
             event.preventDefault();
-            if (!this._delayStartTime) return;
-    
-            const timeDiff = this._started ? 10000 : new Date().getTime() - this._delayStartTime;
-            if (this._state === MainLevelState.active && timeDiff >= debounceTime) {
-                if (!this._started) {
-                    this._delayStartTime = new Date().getTime();
-                }
-                this._started = true;
-                this._player.fire(false);
-            }
-            // Three JS object intersections.
-            getIntersections(event, container, sceneType).forEach(el => {
-
-            });
+            console.log('left click');
+            return this._player.fire(false);
         };
-        document.onmousemove = event => {
-
+        document.oncontextmenu = event => {
+            event.preventDefault();
+            console.log('right click');
+            return this._player.fire(true);
         };
         document.onkeydown = event => {
             if (this._state === MainLevelState.active) {

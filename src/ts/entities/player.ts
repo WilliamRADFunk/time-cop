@@ -28,10 +28,8 @@ import { Explosion } from './explosion';
 import { Projectile } from './projectile';
 
 let index: number = 0;
-let hitBoxMesh: Mesh;
-const showHitBox = false;
 
-const GUT_COOLDOWN_TIME = 60;
+const GUN_COOLDOWN_TIME = 30;
 
 export class Player implements Collidable, Entity {
     /**
@@ -52,12 +50,12 @@ export class Player implements Collidable, Entity {
     /**
      * Number of frames remaining before the player's main gun can fire again.
      */
-    private _cooldownMainGun: number = 0;
+    private _cooldownMainGun: number = GUN_COOLDOWN_TIME;
 
     /**
      * Number of frames remaining before the player's secondary gun can fire again.
      */
-    private _cooldownSecondaryGun: number = 0;
+    private _cooldownSecondaryGun: number = GUN_COOLDOWN_TIME;
 
      /**
       * Current direction crew member should be facing.
@@ -136,6 +134,11 @@ export class Player implements Collidable, Entity {
     private _scoreboard: ScoreCtrl;
 
     /**
+     * Mesh for player's shadow, which also reflects the player's hitbox area.
+     */
+    private _shadowMesh: Mesh;
+
+    /**
      * The list of smoke explosions the player has fired.
      */
     private _smokeExplosions: Explosion[] = [];
@@ -183,19 +186,17 @@ export class Player implements Collidable, Entity {
 
         this._scene = scene;
 		this._playerGeometry = new CircleGeometry(this._radius, 16, 16);
-		const hitBoxGeometry = new CircleGeometry(this._radius / 2.5, 64, 64);
+		const shadowGeometry = new CircleGeometry(this._radius / 2.5, 64, 64);
         const material: MeshBasicMaterial = new MeshBasicMaterial({
-            color: 0xFFFFFF,
+            color: 0x333333,
             opacity: 1,
             transparent: true
         });
 
-        if (showHitBox) {
-            hitBoxMesh = new Mesh(hitBoxGeometry, material);
-            hitBoxMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
-            hitBoxMesh.rotation.set(-1.5708, 0, 0);
-            this._scene.add(hitBoxMesh);
-        }
+        this._shadowMesh = new Mesh(shadowGeometry, material);
+        this._shadowMesh.position.set(this._currentPoint[0], this._yPos + 2, this._currentPoint[1]);
+        this._shadowMesh.rotation.set(-1.5708, 0, 0);
+        this._scene.add(this._shadowMesh);
 
         [0, 1, 2].forEach((val: number) => {
             const offCoordsX = val;
@@ -300,18 +301,15 @@ export class Player implements Collidable, Entity {
     public endCycle(dirKeys: StringMapToNumber): boolean {
         if (this._cooldownSecondaryGun > 0) {
             this._cooldownSecondaryGun--;
-        } else {
-            this._cooldownSecondaryGun = GUT_COOLDOWN_TIME;
         }
 
         if (this._cooldownMainGun > 0) {
             this._cooldownMainGun--;
-        } else {
-            this._cooldownMainGun = GUT_COOLDOWN_TIME;
         }
 
         if (this._inDeathSequence) {
             if (this._dyingAnimationCounter < 180) {
+                this._shadowMesh.visible = false;
                 this._animationMeshes.forEach(mesh => {
                     const rot: number[] = mesh.rotation.toArray();
                     mesh.rotation.set(rot[0], rot[1], rot[2] + 0.07);
@@ -371,6 +369,7 @@ export class Player implements Collidable, Entity {
                 this._animationMeshes.forEach(mesh => mesh.position.set(0, this._yPos, 0));
                 this._currentPoint = [0, 0];
                 this._currDirection = EntityDirection.Right;
+                this._shadowMesh.visible = true;
                 rotateEntity(this);
                 this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
                 this._bloodExplosions.length = 0;
@@ -406,7 +405,7 @@ export class Player implements Collidable, Entity {
                 this._currentPoint[0] += this._speed;
             }
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
-            showHitBox && hitBoxMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
+            this._shadowMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
 
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
@@ -435,12 +434,16 @@ export class Player implements Collidable, Entity {
             return;
         }
 
-        if (isSecondary && !this._cooldownSecondaryGun) {
-            return;
-        }
-
-        if (!isSecondary && !this._cooldownMainGun) {
-            return;
+        if (isSecondary && this._cooldownSecondaryGun) {
+            if (this._cooldownSecondaryGun) {
+                return;
+            }
+            this._cooldownSecondaryGun = GUN_COOLDOWN_TIME;
+        } else {
+            if (this._cooldownMainGun) {
+                return;
+            }
+            this._cooldownMainGun = GUN_COOLDOWN_TIME;
         }
 
         let bulletPoints;
@@ -565,8 +568,6 @@ export class Player implements Collidable, Entity {
         this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
         this._bloodExplosions.length = 0;
         CollisionatorSingleton.remove(this);
-
-        // Only in DEV mode.
-        showHitBox && this._scene.remove(hitBoxMesh);
+        this._scene.remove(this._shadowMesh);
     }
 }
