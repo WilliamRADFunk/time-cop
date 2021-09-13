@@ -110,6 +110,26 @@ export class Projectile implements Collidable {
     private _speed: number = 0.03;
 
     /**
+     * Controls size and shape of the missile's fiery trail.
+     */
+    private tailGeometry: Geometry;
+
+    /**
+     * Controls the color of the missile's fiery trail material.
+     */
+    private tailMaterial: LineBasicMaterial;
+
+    /**
+     * Controls the overall rendering of the missile's fiery trail.
+     */
+    private _tailMesh: Line;
+
+    /**
+     * Allows for a variable y value in tail of missile
+     */
+    private _tailY: number;
+
+    /**
      * The total distance from projectile origin to projectile's final point.
      */
     private _totalDistance: number;
@@ -159,6 +179,7 @@ export class Projectile implements Collidable {
         index++;
         this._scoreboard = scoreboard;
         this._headY = y || 0.51;
+        this._tailY = (y && (y + 0.04)) || 0.55;
         this._color = color;
         this._speed = speed || this._speed;
         this._isCollidable = !!colllidableAtBirth;
@@ -266,7 +287,32 @@ export class Projectile implements Collidable {
             }
         } else {
             this._calculateNextPoint();
+            if (!this.tailGeometry &&
+                this._currentPoint[0] > -5.95 &&
+                this._currentPoint[0] < 5.95 &&
+                this._currentPoint[1] > -5.95 && this._currentPoint[1] < 5.95) {
+                // Creates the missile's fiery trail.
+                this.tailGeometry = new Geometry();
+                this.tailGeometry.vertices.push(
+                    new Vector3(this._currentPoint[0], this._tailY, this._currentPoint[1]),
+                    new Vector3(this._currentPoint[0], this._tailY, this._currentPoint[1]));
+                this.tailMaterial = new LineBasicMaterial({color: this._color});
+                this._tailMesh = new Line(this.tailGeometry, this.tailMaterial);
+                this._scene.add(this._tailMesh);
+            }
+
+            if (this.tailGeometry) {
+                this.tailGeometry.vertices[1].x = this._currentPoint[0];
+                this.tailGeometry.vertices[1].z = this._currentPoint[1];
+
+                this.tailGeometry.vertices[0].x = this._currentPoint[0].toFixed(4) === this._originalStartingPoint[0].toFixed(4) ? this._currentPoint[0] : -((this._currentPoint[0] - this._originalStartingPoint[0]) / Math.abs(this._currentPoint[0] - this._originalStartingPoint[0])) * 0.2 + this._currentPoint[0];
+                this.tailGeometry.vertices[0].z = this._currentPoint[1].toFixed(4) === this._originalStartingPoint[1].toFixed(4) ? this._currentPoint[1] : -((this._currentPoint[1] - this._originalStartingPoint[1]) / Math.abs(this._currentPoint[1] - this._originalStartingPoint[1])) * 0.2 + this._currentPoint[1];
+
+                this.tailGeometry.verticesNeedUpdate = true;
+            }
+
             this._headMesh.position.set(this._currentPoint[0], this._headY, this._currentPoint[1]);
+
             if (this._distanceTraveled >= this._totalDistance) {
                 this._createExplosion(false);
                 // SOUNDS_CTRL.playFooPang();
@@ -355,5 +401,6 @@ export class Projectile implements Collidable {
         this._isCollidable = false;
         this._isActive = false;
         this._scene.remove(this._headMesh);
+        this._scene.remove(this._tailMesh);
     }
 }
