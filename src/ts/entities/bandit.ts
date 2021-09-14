@@ -327,7 +327,6 @@ export class Bandit implements Collidable, Entity {
         index++;
         this._scoreboard = scoreboard;
         this._level = level;
-        this._points *= level;
         this._yPos = yPos || 0.6;
         this._speed += (speedMod / 1000);
         this._speedRunning = this._speed * 2;
