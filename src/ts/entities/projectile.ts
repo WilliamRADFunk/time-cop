@@ -54,6 +54,11 @@ export class Projectile implements Collidable {
     private _explosion: Explosion;
 
     /**
+     * Tracks the frame number up to a max and resets.
+     */
+    private _frameCounter: number = 0;
+
+    /**
      * Flag to signal if the missile has been destroyed.
      * True is not destroyed. False is destroyed.
      */
@@ -78,7 +83,7 @@ export class Projectile implements Collidable {
     /**
      * Controls the overall rendering of the glowing head and tail.
      */
-    private _projectileObject: Object3D;
+    private _projectileObjects: Object3D[] = [];
 
     /**
      * Reference to the scene, used to remove projectile from rendering cycle once destroyed.
@@ -99,6 +104,11 @@ export class Projectile implements Collidable {
      * The total distance from projectile origin to projectile's final point.
      */
     private _totalDistance: number;
+
+    /**
+     * Tracks what frame the projectile trail should be using.
+     */
+    private _trailCounter: number = 0;
 
     /**
      * The collision type of the projectile (ie. Player_Projectile or Enemy_Projectile).
@@ -159,18 +169,31 @@ export class Projectile implements Collidable {
         // Calculates the first (second vertices) point.
         this._calculateNextPoint();
         // Glowing head of the missile.
-        const headGeometry = new CircleGeometry(0.06, 32);
-        const headMaterial = new MeshBasicMaterial({
+        let headGeometry = new CircleGeometry(0.06, 32);
+        let headMaterial = new MeshBasicMaterial({
             color: this._color,
             opacity: 1,
             transparent: true
         });
-        const head = new Mesh(headGeometry, headMaterial);
+        let head = new Mesh(headGeometry, headMaterial);
         head.position.set(0, headY, 0);
         head.rotation.set(-1.5708, 0, 0);
         
-        this._projectileObject = new Object3D();
-        this._projectileObject.add(head);
+        this._projectileObjects[0] = new Object3D();
+        this._projectileObjects[0].add(head);
+        
+        headGeometry = new CircleGeometry(0.06, 32);
+        headMaterial = new MeshBasicMaterial({
+            color: this._color,
+            opacity: 1,
+            transparent: true
+        });
+        head = new Mesh(headGeometry, headMaterial);
+        head.position.set(0, headY, 0);
+        head.rotation.set(-1.5708, 0, 0);
+        
+        this._projectileObjects[1] = new Object3D();
+        this._projectileObjects[1].add(head);
 
         // Creates the missile's fiery trail.
         const startX = Number(this._currentPoint[0].toFixed(3));
@@ -179,6 +202,7 @@ export class Projectile implements Collidable {
         const endZ = Number(this._endingPoint[1].toFixed(3));
         const xDir = -((endX - startX) / Math.abs(endX - startX));
         const zDir = -((endZ - startZ) / Math.abs(endZ - startZ));
+//#region The primary frame for missile trail.
         // Straight line
         let tailGeometry = new Geometry();
         tailGeometry.vertices.push(
@@ -192,7 +216,7 @@ export class Projectile implements Collidable {
                 0));
         let tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         let line = new Line(tailGeometry, tailMaterial);
-        this._projectileObject.add(line);
+        this._projectileObjects[0].add(line);
 
         // Angled lines for projectiles traveling horizontally.
         if (isNaN(zDir)) {
@@ -209,7 +233,7 @@ export class Projectile implements Collidable {
                     0));
             tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
             line = new Line(tailGeometry, tailMaterial);
-            this._projectileObject.add(line);
+            this._projectileObjects[0].add(line);
             
             // Second 60 degree line.
             tailGeometry = new Geometry();
@@ -224,7 +248,7 @@ export class Projectile implements Collidable {
                     0));
             tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
             line = new Line(tailGeometry, tailMaterial);
-            this._projectileObject.add(line);
+            this._projectileObjects[0].add(line);
 
         // Angled lines for projectiles traveling vertically.
         } else if (isNaN(xDir)) {
@@ -241,7 +265,7 @@ export class Projectile implements Collidable {
                     0));
             tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
             line = new Line(tailGeometry, tailMaterial);
-            this._projectileObject.add(line);
+            this._projectileObjects[0].add(line);
             
             // Second 60 degree line.
             tailGeometry = new Geometry();
@@ -256,7 +280,7 @@ export class Projectile implements Collidable {
                     0));
             tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
             line = new Line(tailGeometry, tailMaterial);
-            this._projectileObject.add(line);
+            this._projectileObjects[0].add(line);
             
         // Angled lines for projectiles traveling diagonally.
         } else {
@@ -273,7 +297,7 @@ export class Projectile implements Collidable {
                     0));
             tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
             line = new Line(tailGeometry, tailMaterial);
-            this._projectileObject.add(line);
+            this._projectileObjects[0].add(line);
             
             // Second 60 degree line.
             tailGeometry = new Geometry();
@@ -288,23 +312,136 @@ export class Projectile implements Collidable {
                     0));
             tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
             line = new Line(tailGeometry, tailMaterial);
-            this._projectileObject.add(line);
+            this._projectileObjects[0].add(line);
         }
+//#endregion
+//#region The alternate frame for missile trail.
+        // Straight line
+        tailGeometry = new Geometry();
+        tailGeometry.vertices.push(
+            new Vector3(
+                startX === endX ? 0 : xDir * 0.22,
+                tailY,
+                startZ === endZ ? 0 : zDir * 0.22),
+            new Vector3(
+                0,
+                tailY,
+                0));
+        tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+        line = new Line(tailGeometry, tailMaterial);
+        this._projectileObjects[1].add(line);
 
-        this._scene.add(this._projectileObject);
+        // Angled lines for projectiles traveling horizontally.
+        if (isNaN(zDir)) {
+            // First 60 degree line.
+            tailGeometry = new Geometry();
+            tailGeometry.vertices.push(
+                new Vector3(
+                    xDir * (Math.tan(1.48353) * 0.015),
+                    tailY,
+                    0.1),
+                new Vector3(
+                    0,
+                    tailY,
+                    0));
+            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+            line = new Line(tailGeometry, tailMaterial);
+            this._projectileObjects[1].add(line);
+            
+            // Second 60 degree line.
+            tailGeometry = new Geometry();
+            tailGeometry.vertices.push(
+                new Vector3(
+                    xDir * (Math.tan(1.48353) * 0.015),
+                    tailY,
+                    -0.1),
+                new Vector3(
+                    0,
+                    tailY,
+                    0));
+            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+            line = new Line(tailGeometry, tailMaterial);
+            this._projectileObjects[1].add(line);
+
+        // Angled lines for projectiles traveling vertically.
+        } else if (isNaN(xDir)) {
+            // First 60 degree line.
+            tailGeometry = new Geometry();
+            tailGeometry.vertices.push(
+                new Vector3(
+                    0.1,
+                    tailY,
+                    zDir * (Math.tan(1.48353) * 0.015)),
+                new Vector3(
+                    0,
+                    tailY,
+                    0));
+            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+            line = new Line(tailGeometry, tailMaterial);
+            this._projectileObjects[1].add(line);
+            
+            // Second 60 degree line.
+            tailGeometry = new Geometry();
+            tailGeometry.vertices.push(
+                new Vector3(
+                    -0.1,
+                    tailY,
+                    zDir * (Math.tan(1.48353) * 0.015)),
+                new Vector3(
+                    0,
+                    tailY,
+                    0));
+            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+            line = new Line(tailGeometry, tailMaterial);
+            this._projectileObjects[1].add(line);
+            
+        // Angled lines for projectiles traveling diagonally.
+        } else {
+            // First 60 degree line.
+            tailGeometry = new Geometry();
+            tailGeometry.vertices.push(
+                new Vector3(
+                    xDir * (Math.tan(0.523599) * 0.2),
+                    tailY,
+                    zDir * 0.2),
+                new Vector3(
+                    0,
+                    tailY,
+                    0));
+            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+            line = new Line(tailGeometry, tailMaterial);
+            this._projectileObjects[1].add(line);
+            
+            // Second 60 degree line.
+            tailGeometry = new Geometry();
+            tailGeometry.vertices.push(
+                new Vector3(
+                    xDir * 0.2,
+                    tailY,
+                    zDir * (Math.tan(0.523599) * 0.2)),
+                new Vector3(
+                    0,
+                    tailY,
+                    0));
+            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+            line = new Line(tailGeometry, tailMaterial);
+            this._projectileObjects[1].add(line);
+        }
+        this._projectileObjects[1].visible = false;
+//#endregion
 
         if (this._type === CollisionType.Enemy_Projectile) {
-            this._projectileObject.name = `projectile-enemy-${index}`;
+            this._projectileObjects[0].name = `projectile-enemy-${index}`;
             this._waitToFire = waitToFire || Math.floor((Math.random() * 900) + 1);
         }
-        scene.add(this._projectileObject);
+        this._projectileObjects.forEach(obj => this._scene.add(obj));
     }
 
     /**
      * Calculates the next point in the missile's path.
      */
     private _calculateNextPoint(): void {
-        if (SlowMo_Ctrl.getSlowMo() && this._projectileObject) {
+        if (SlowMo_Ctrl.getSlowMo() && this._projectileObjects[0]) {
             const posB = SlowMo_Ctrl.getBubbleCenter();
             const posP = this.getCurrentPosition();
             const radB = 1;
@@ -336,12 +473,12 @@ export class Projectile implements Collidable {
     private _createExplosion(isInert: boolean): void {
         this._explosion = new Explosion(
             this._scene,
-            this._projectileObject.position.x,
-            this._projectileObject.position.z,
+            this._projectileObjects[0].position.x,
+            this._projectileObjects[0].position.z,
             {
                 color: isInert ? ExplosionType.Electric : ExplosionType.Fire,
                 radius: 0.12,
-                y: this._projectileObject.position.y + 0.26
+                y: this._projectileObjects[0].position.y + 0.26
             });
         if (!isInert) CollisionatorSingleton.add(this._explosion);
     }
@@ -361,7 +498,7 @@ export class Projectile implements Collidable {
 
     /**
      * At the end of each loop iteration, move the projectile a little.
-     * @returns whether or not the projectile is done, and should be removed from list.
+     * @returns whether or not the projectile is done, and should be removed from list. FALSE --> no longer needed. TRUE --> Keep cycling.
      */
     public endCycle(): boolean {
         if (this._waitToFire >= 1) {
@@ -376,10 +513,26 @@ export class Projectile implements Collidable {
                 return false;
             }
         } else {
+            // Track the current frame in sequences of 20.
+            this._frameCounter ++;
+            if (this._frameCounter  >= 60) {
+                this._frameCounter  = 0;
+            }
             this._calculateNextPoint();
-            this._projectileObject.position.set(this._currentPoint[0], 0, this._currentPoint[1]);
+            this._projectileObjects.forEach(obj => obj.position.set(this._currentPoint[0], 0, this._currentPoint[1]));
 
+            // Every ten frames switch to a different projectile trail.
+            if (this._frameCounter % 30 === 0) {
+                this._trailCounter = !this._trailCounter ? 1 : 0;
+                this._projectileObjects.forEach(obj => obj.visible = false);
+                this._projectileObjects[this._trailCounter].visible = true;
+            }
+
+            // Projectile has reached its max destination, detonate.
             if (this._distanceTraveled >= this._totalDistance) {
+                this._projectileObjects.forEach(obj => obj.visible = false);
+                this._frameCounter = 0;
+                this._trailCounter = 0;
                 this._createExplosion(false);
                 // SOUNDS_CTRL.playFooPang();
                 this.removeFromScene(this._scene);
@@ -401,7 +554,7 @@ export class Projectile implements Collidable {
      * @returns number to represent pixel distance from object center to edge of bounding box.
      */
     public getCollisionRadius(): number {
-        return this._projectileObject.scale.x * 0.06;
+        return this._projectileObjects[0].scale.x * 0.06;
     }
 
     /**
@@ -409,7 +562,7 @@ export class Projectile implements Collidable {
      * @returns the array is of length 2 with x coordinate being first, and then z coordinate.
      */
     public getCurrentPosition(): number[] {
-        return [this._projectileObject.position.x, this._projectileObject.position.z];
+        return [this._projectileObjects[0].position.x, this._projectileObjects[0].position.z];
     }
 
     /**
@@ -417,7 +570,7 @@ export class Projectile implements Collidable {
      * @returns the name of the missile.
      */
     public getName(): string {
-        return this._projectileObject.name;
+        return this._projectileObjects[0].name;
     }
 
     /**
@@ -466,6 +619,6 @@ export class Projectile implements Collidable {
     public removeFromScene(scene: Scene): void {
         this._isCollidable = false;
         this._isActive = false;
-        this._scene.remove(this._projectileObject);
+        this._projectileObjects.forEach(obj => this._scene.remove(obj));
     }
 }
