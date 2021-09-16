@@ -202,231 +202,103 @@ export class Projectile implements Collidable {
         const endZ = Number(this._endingPoint[1].toFixed(3));
         const xDir = -((endX - startX) / Math.abs(endX - startX));
         const zDir = -((endZ - startZ) / Math.abs(endZ - startZ));
+        const isDiag = !isNaN(xDir) && !isNaN(zDir);
+        const diagRot = (xDir > 0 && zDir < 0) ? 2.35619 : 5.49779;
+        const straightRot = isNaN(zDir) ? xDir * 1.5708 : zDir === 1 ? 0 : 3.14159;
 //#region The primary frame for missile trail.
         // Straight line
         let tailGeometry = new Geometry();
         tailGeometry.vertices.push(
             new Vector3(
-                startX === endX ? 0 : xDir * 0.2,
+                0,
                 tailY,
-                startZ === endZ ? 0 : zDir * 0.2),
+                0.3),
             new Vector3(
                 0,
                 tailY,
-                0));
+                0.1));
         let tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         let line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[0].add(line);
 
-        // Angled lines for projectiles traveling horizontally.
-        if (isNaN(zDir)) {
-            // First 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * (Math.sin(1.0472) * 0.15),
-                    tailY,
-                    0.15),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[0].add(line);
-            
-            // Second 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * (Math.sin(1.0472) * 0.15),
-                    tailY,
-                    -0.15),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[0].add(line);
-
         // Angled lines for projectiles traveling vertically.
-        } else if (isNaN(xDir)) {
-            // First 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    0.15,
-                    tailY,
-                    zDir * (Math.sin(1.0472) * 0.15)),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[0].add(line);
-            
-            // Second 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    -0.15,
-                    tailY,
-                    zDir * (Math.sin(1.0472) * 0.15)),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[0].add(line);
-            
-        // Angled lines for projectiles traveling diagonally.
-        } else {
-            // First 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * (Math.sin(0.261799) * 0.1),
-                    tailY,
-                    zDir * 0.25),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[0].add(line);
-            
-            // Second 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * 0.25,
-                    tailY,
-                    zDir * (Math.sin(0.261799) * 0.1)),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[0].add(line);
-        }
+        // First angled line.
+        tailGeometry = new Geometry();
+        tailGeometry.vertices.push(
+            new Vector3(
+                0.15,
+                tailY,
+                (Math.sin(1.0472) * 0.25)),
+            new Vector3(
+                0,
+                tailY,
+                0.1));
+        tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+        line = new Line(tailGeometry, tailMaterial);
+        this._projectileObjects[0].add(line);
+        
+        // Second angled line.
+        tailGeometry = new Geometry();
+        tailGeometry.vertices.push(
+            new Vector3(
+                -0.15,
+                tailY,
+                (Math.sin(1.0472) * 0.25)),
+            new Vector3(
+                0,
+                tailY,
+                0.1));
+        tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+        line = new Line(tailGeometry, tailMaterial);
+        this._projectileObjects[0].add(line);
+        this._projectileObjects[0].rotation.set(0, isDiag ? diagRot : straightRot, 0);
 //#endregion
 //#region The alternate frame for missile trail.
         // Straight line
         tailGeometry = new Geometry();
         tailGeometry.vertices.push(
             new Vector3(
-                startX === endX ? 0 : xDir * 0.22,
+                0,
                 tailY,
-                startZ === endZ ? 0 : zDir * 0.22),
+                0.32),
             new Vector3(
                 0,
                 tailY,
-                0));
+                0.1));
         tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[1].add(line);
 
-        // Angled lines for projectiles traveling horizontally.
-        if (isNaN(zDir)) {
-            // First 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * (Math.tan(1.48353) * 0.015),
-                    tailY,
-                    0.1),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[1].add(line);
-            
-            // Second 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * (Math.tan(1.48353) * 0.015),
-                    tailY,
-                    -0.1),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[1].add(line);
-
-        // Angled lines for projectiles traveling vertically.
-        } else if (isNaN(xDir)) {
-            // First 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    0.1,
-                    tailY,
-                    zDir * (Math.tan(1.48353) * 0.015)),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[1].add(line);
-            
-            // Second 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    -0.1,
-                    tailY,
-                    zDir * (Math.tan(1.48353) * 0.015)),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[1].add(line);
-            
-        // Angled lines for projectiles traveling diagonally.
-        } else {
-            // First 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * (Math.tan(0.523599) * 0.2),
-                    tailY,
-                    zDir * 0.2),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[1].add(line);
-            
-            // Second 60 degree line.
-            tailGeometry = new Geometry();
-            tailGeometry.vertices.push(
-                new Vector3(
-                    xDir * 0.2,
-                    tailY,
-                    zDir * (Math.tan(0.523599) * 0.2)),
-                new Vector3(
-                    0,
-                    tailY,
-                    0));
-            tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
-            line = new Line(tailGeometry, tailMaterial);
-            this._projectileObjects[1].add(line);
-        }
+        // First angled line.
+        tailGeometry = new Geometry();
+        tailGeometry.vertices.push(
+            new Vector3(
+                0.1,
+                tailY,
+                (Math.tan(1.48353) * 0.025)),
+            new Vector3(
+                0,
+                tailY,
+                0.1));
+        tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+        line = new Line(tailGeometry, tailMaterial);
+        this._projectileObjects[1].add(line);
+        
+        // Second angled line.
+        tailGeometry = new Geometry();
+        tailGeometry.vertices.push(
+            new Vector3(
+                -0.1,
+                tailY,
+                (Math.tan(1.48353) * 0.025)),
+            new Vector3(
+                0,
+                tailY,
+                0.1));
+        tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
+        line = new Line(tailGeometry, tailMaterial);
+        this._projectileObjects[1].add(line);
+        this._projectileObjects[1].rotation.set(0, isDiag ? diagRot : straightRot, 0);
         this._projectileObjects[1].visible = false;
 //#endregion
 
