@@ -7,6 +7,7 @@ import {
     Mesh,
     MeshBasicMaterial,
     Object3D,
+    PlaneGeometry,
     Scene,
     Vector3 } from 'three';
 
@@ -169,7 +170,7 @@ export class Projectile implements Collidable {
         // Calculates the first (second vertices) point.
         this._calculateNextPoint();
         // Glowing head of the missile.
-        let headGeometry = new CircleGeometry(0.06, 32);
+        let headGeometry = new CircleGeometry(0.06, 64);
         let headMaterial = new MeshBasicMaterial({
             color: this._color,
             opacity: 1,
@@ -178,11 +179,37 @@ export class Projectile implements Collidable {
         let head = new Mesh(headGeometry, headMaterial);
         head.position.set(0, headY, 0);
         head.rotation.set(-1.5708, 0, 0);
+
+        let shaftGeometry = new PlaneGeometry(0.12, 0.12, 32, 32);
+        let shaftMaterial = new MeshBasicMaterial({
+            color: this._color,
+            opacity: 1,
+            transparent: true
+        });
+        let shaft = new Mesh(shaftGeometry, shaftMaterial);
+        shaft.position.set(0, headY, 0.06);
+        shaft.rotation.set(-1.5708, 0, 0);
+
+        let rivetGeometry = new PlaneGeometry(0.15, 0.01, 32, 32);
+        let rivetMaterial = new MeshBasicMaterial({
+            color: new Color(0x000000),
+            opacity: 1,
+            transparent: true
+        });
+        let rivet1 = new Mesh(rivetGeometry, rivetMaterial);
+        rivet1.position.set(0, headY - 2, 0.01);
+        rivet1.rotation.set(-1.5708, 0, 0);
+        let rivet2 = new Mesh(rivetGeometry, rivetMaterial);
+        rivet2.position.set(0, headY - 2, 0.04);
+        rivet2.rotation.set(-1.5708, 0, 0);
         
         this._projectileObjects[0] = new Object3D();
         this._projectileObjects[0].add(head);
+        this._projectileObjects[0].add(shaft);
+        this._projectileObjects[0].add(rivet1);
+        this._projectileObjects[0].add(rivet2);
         
-        headGeometry = new CircleGeometry(0.06, 32);
+        headGeometry = new CircleGeometry(0.06, 64);
         headMaterial = new MeshBasicMaterial({
             color: this._color,
             opacity: 1,
@@ -191,9 +218,35 @@ export class Projectile implements Collidable {
         head = new Mesh(headGeometry, headMaterial);
         head.position.set(0, headY, 0);
         head.rotation.set(-1.5708, 0, 0);
+
+        shaftGeometry = new PlaneGeometry(0.12, 0.12, 32, 32);
+        shaftMaterial = new MeshBasicMaterial({
+            color: this._color,
+            opacity: 1,
+            transparent: true
+        });
+        shaft = new Mesh(shaftGeometry, shaftMaterial);
+        shaft.position.set(0, headY, 0.06);
+        shaft.rotation.set(-1.5708, 0, 0);
+
+        rivetGeometry = new PlaneGeometry(0.15, 0.01, 32, 32);
+        rivetMaterial = new MeshBasicMaterial({
+            color: new Color(0x000000),
+            opacity: 1,
+            transparent: true
+        });
+        rivet1 = new Mesh(rivetGeometry, rivetMaterial);
+        rivet1.position.set(0, headY - 2, 0.01);
+        rivet1.rotation.set(-1.5708, 0, 0);
+        rivet2 = new Mesh(rivetGeometry, rivetMaterial);
+        rivet2.position.set(0, headY - 2, 0.04);
+        rivet2.rotation.set(-1.5708, 0, 0);
         
         this._projectileObjects[1] = new Object3D();
         this._projectileObjects[1].add(head);
+        this._projectileObjects[1].add(shaft);
+        this._projectileObjects[1].add(rivet1);
+        this._projectileObjects[1].add(rivet2);
 
         // Creates the missile's fiery trail.
         const startX = Number(this._currentPoint[0].toFixed(3));
@@ -203,7 +256,13 @@ export class Projectile implements Collidable {
         const xDir = -((endX - startX) / Math.abs(endX - startX));
         const zDir = -((endZ - startZ) / Math.abs(endZ - startZ));
         const isDiag = !isNaN(xDir) && !isNaN(zDir);
-        const diagRot = (xDir > 0 && zDir < 0) ? 2.35619 : 5.49779;
+        const diagRot = (xDir > 0 && zDir < 0)
+            ? 2.35619
+            : (xDir < 0 && zDir > 0)
+                ? 5.49779
+                : (xDir < 0 && zDir < 0)
+                    ? -2.35619
+                    : -5.49779;
         const straightRot = isNaN(zDir) ? xDir * 1.5708 : zDir === 1 ? 0 : 3.14159;
 //#region The primary frame for missile trail.
         // Straight line
