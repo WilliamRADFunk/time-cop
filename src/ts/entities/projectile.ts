@@ -465,7 +465,7 @@ export class Projectile implements Collidable {
                 this._frameCounter = 0;
                 this._trailCounter = 0;
                 this._createRicochet(false);
-                // SOUNDS_CTRL.playFooPang();
+                SOUNDS_CTRL.playBulletDullRicochet();
                 this.removeFromScene(this._scene);
             }
         }
@@ -521,13 +521,11 @@ export class Projectile implements Collidable {
     public impact(self: Collidable, otherCollidable: CollisionType): boolean {
         if (this._isActive) {
             this._isActive = false;
-            if (self.getType() === CollisionType.Enemy_Projectile && otherCollidable === CollisionType.Post) {
-                SOUNDS_CTRL.playFooPang();
-            } else {
-                SOUNDS_CTRL.playExplosionSmall();
-            }
-            if (this._scoreboard && otherCollidable === CollisionType.Enemy_Projectile) {
+            if (otherCollidable === CollisionType.Post) {
+                SOUNDS_CTRL.playBulletDullRicochet();
+            } else if (this._scoreboard && otherCollidable === CollisionType.Enemy_Projectile) {
                 this._scoreboard.addPoints(this._points);
+                SOUNDS_CTRL.playBullet2BulletRicochet();
             }
             this._createRicochet(false);
             return true;

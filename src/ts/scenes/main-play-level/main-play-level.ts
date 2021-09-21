@@ -540,7 +540,8 @@ export class MainPlayLevel {
         SOUNDS_CTRL.stopAirThruster();
         SOUNDS_CTRL.stopAirThruster();
         SOUNDS_CTRL.stopBackgroundMusicScifi01();
-        SOUNDS_CTRL.stopDrilling();
+        SOUNDS_CTRL.stopBullet2BulletRicochet();
+        SOUNDS_CTRL.stopEnemyDeath();
         SOUNDS_CTRL.stopMainThrusterSmall();
         SOUNDS_CTRL.stopWalkingFastGravel();
         SOUNDS_CTRL.stopWind();

@@ -61,20 +61,20 @@ class SoundsCtrl {
         this._sounds['bipBipBipBing'].sound = new Sound(this._sounds['bipBipBipBing'].audio, 0, 0.5, 0.4);
         this._sounds['blap'].sound = new Sound(this._sounds['blap'].audio, 0, 1, 0.4);
         this._sounds['blip'].sound = new Sound(this._sounds['blip'].audio, 0, 1, 0.4);
+        this._sounds['bullet2BulletRicochet'].sound = new Sound(this._sounds['bullet2BulletRicochet'].audio, 0, 0.2);
+        this._sounds['bulletDullRicochet'].sound = new Sound(this._sounds['bulletDullRicochet'].audio, 0, 0.2);
         this._sounds['clickClack'].sound = new Sound(this._sounds['clickClack'].audio, 0, 0.8);
         this._sounds['deathNoNoAchEhh'].sound = new Sound(this._sounds['deathNoNoAchEhh'].audio, 0.5, 0.9, 0.4);
-        this._sounds['drilling'].sound = new Sound(this._sounds['drilling'].audio, 0, 0.3, 0.3, true);
         this._sounds['drone'].sound = new Sound(this._sounds['drone'].audio, 0, 0.5);
+        this._sounds['enemyDeath'].sound = new Sound(this._sounds['enemyDeath'].audio, 0, 0.3, 0.3);
         this._sounds['explosionLarge'].sound = new Sound(this._sounds['explosionLarge'].audio, 0.5, 0.3, 0.1);
         this._sounds['explosionSmall'].sound = new Sound(this._sounds['explosionSmall'].audio, 0, 1, 0.3);
-        this._sounds['fire'].sound = new Sound(this._sounds['fire'].audio, 0, 0.3);
-        this._sounds['fooPang'].sound = new Sound(this._sounds['fooPang'].audio, 0, 1, 0.4);
+        this._sounds['fire'].sound = new Sound(this._sounds['fire'].audio, 0, 0.1);
         this._sounds['gameOver'].sound = new Sound(this._sounds['gameOver'].audio, 0, 0.7);
         this._sounds['hollowClank'].sound = new Sound(this._sounds['hollowClank'].audio, 0, 0.8, 0.4);
         this._sounds['hollowClunk'].sound = new Sound(this._sounds['hollowClunk'].audio, 0, 0.8, 0.4);
         this._sounds['mainThrusterSmall'].sound = new Sound(this._sounds['mainThrusterSmall'].audio, 0, 0.8, 0.3, true);
         this._sounds['regen'].sound = new Sound(this._sounds['regen'].audio, 0, 0.3);
-        this._sounds['saucer'].sound = new Sound(this._sounds['saucer'].audio, 0, 0.2);
         this._sounds['shieldDown'].sound = new Sound(this._sounds['shieldDown'].audio, 0, 0.7);
         this._sounds['shieldUp'].sound = new Sound(this._sounds['shieldUp'].audio, 0, 0.7);
         this._sounds['teleporter'].sound = new Sound(this._sounds['teleporter'].audio, 0, 1.1);
@@ -189,6 +189,22 @@ class SoundsCtrl {
     }
 
     /**
+     * Plays the bullet to bullet ricochet sound.
+     */
+    public playBullet2BulletRicochet(): void {
+        if (this._isMute || this._isPaused) { return; }
+        this._sounds.bullet2BulletRicochet.sound.play();
+    }
+
+    /**
+     * Plays the dull bullet ricochet sound.
+     */
+    public playBulletDullRicochet(): void {
+        if (this._isMute || this._isPaused) { return; }
+        this._sounds.bulletDullRicochet.sound.play();
+    }
+
+    /**
      * Plays the mouse click clack sound.
      */
     public playClickClack(): void {
@@ -205,19 +221,19 @@ class SoundsCtrl {
     }
 
     /**
-     * Plays the drilling drop sound.
-     */
-    public playDrilling(): void {
-        if (this._isMute || this._isPaused) { return; }
-        this._sounds.drilling.sound.play();
-    }
-
-    /**
      * Plays the drone drop sound.
      */
     public playDrone(): void {
         if (this._isMute || this._isPaused) { return; }
         this._sounds.drone.sound.play();
+    }
+
+    /**
+     * Plays the enemy death sound.
+     */
+    public playEnemyDeath(): void {
+        if (this._isMute || this._isPaused) { return; }
+        this._sounds.enemyDeath.sound.play();
     }
 
     /**
@@ -244,14 +260,6 @@ class SoundsCtrl {
     public playFire(): void {
         if (this._isMute || this._isPaused) { return; }
         this._sounds.fire.sound.play();
-    }
-
-    /**
-     * Plays the fwoop pang sound.
-     */
-    public playFooPang(): void {
-        if (this._isMute || this._isPaused) { return; }
-        this._sounds.fooPang.sound.play();
     }
 
     /**
@@ -292,14 +300,6 @@ class SoundsCtrl {
     public playRegen(): void {
         if (this._isMute || this._isPaused) { return; }
         this._sounds.regen.sound.play();
-    }
-
-    /**
-     * Plays the saucer is coming sound.
-     */
-    public playSaucer(): void {
-        if (this._isMute || this._isPaused) { return; }
-        this._sounds.saucer.sound.play();
     }
 
     /**
@@ -383,11 +383,19 @@ class SoundsCtrl {
     }
 
     /**
-     * Stops the drilling is coming sound.
+     * Stops the bullet to bullet ricochet sound.
      */
-    public stopDrilling(): void {
+    public stopBullet2BulletRicochet(): void {
         if (this._isMute) { return; }
-        this._sounds.drilling.sound.stop();
+        this._sounds.bullet2BulletRicochet.sound.stop();
+    }
+
+    /**
+     * Stops the enemy death is coming sound.
+     */
+    public stopEnemyDeath(): void {
+        if (this._isMute) { return; }
+        this._sounds.enemyDeath.sound.stop();
     }
 
     /**
@@ -396,14 +404,6 @@ class SoundsCtrl {
     public stopMainThrusterSmall(): void {
         if (this._isMute) { return; }
         this._sounds.mainThrusterSmall.sound.stop();
-    }
-
-    /**
-     * Stops the saucer is coming sound.
-     */
-    public stopSaucer(): void {
-        if (this._isMute) { return; }
-        this._sounds.saucer.sound.stop();
     }
 
     /**

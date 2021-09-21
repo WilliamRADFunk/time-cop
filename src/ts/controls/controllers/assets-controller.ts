@@ -87,6 +87,26 @@ const SOUND_PATHS: { name: string; path: string; }[] = [
         path: 'assets/audio/blip.mp3'
     },
     {
+        name: 'bullet2BulletRicochet',
+        /**
+        * Exaggerated ricochet noise
+        * https://freesound.org/people/pierrecartoons1979/sounds/90222/
+        * license: NAttribution Noncommercial License
+        * Recorded by: pierrecartoons1979
+        */
+        path: 'assets/audio/bullet-2-bullet-ricochet.wav'
+    },
+    {
+        name: 'bulletDullRicochet',
+        /**
+        * A pitched up recording of me flicking a coin past a microphone.
+        * https://freesound.org/people/kMoon/sounds/90783/
+        * license: Attribution.
+        * Recorded by: kMoon
+        */
+        path: 'assets/audio/bullet-dull-ricochet.wav'
+    },
+    {
         name: 'clickClack',
         /**
          * Click On Sound
@@ -107,14 +127,14 @@ const SOUND_PATHS: { name: string; path: string; }[] = [
         path: 'assets/audio/death-no-no-ach-ehh.wav'
     },
     {
-        name: 'drilling',
+        name: 'enemyDeath',
         /**
-        * Drone, Machine, Engine, Motor, UFO, Spaceship, Sci-Fi, Aliens, Ambience, Buzz, Hum, Noise, Seamless, Loop, Looping
-        * https://www.zapsplat.com/music/drone-machine-engine-motor-ufo-spaceship-sci-fi-aliens-ambience-buzz-hum-noise-seamless-loop-looping-2/
-        * license: Standard License (See ZapSplat license pdf)
-        * Recorded by: Sound Spark LLC
+        * A esoteric man, clad in heavy armor, is bissected in two by an skilled samurai.
+        * https://freesound.org/people/starkvind/sounds/559975/
+        * license: Creative Commons 0 License.
+        * Recorded by: starkvind
         */
-        path: 'assets/audio/drilling.mp3'
+        path: 'assets/audio/enemy-death.wav'
     },
     {
         name: 'drone',
@@ -155,16 +175,6 @@ const SOUND_PATHS: { name: string; path: string; }[] = [
         * Recorded by: snottyboy
         */
         path: 'assets/audio/fire.mp3'
-    },
-    {
-        name: 'fooPang',
-        /**
-        * Fast swing, whoosh into a metal hit, thud or clunk, could be sword hitting shield or armor. Version 2
-        * https://www.zapsplat.com/music/fast-swing-whoosh-into-a-metal-hit-thud-or-clunk-could-be-sword-hitting-shield-or-armor-version-2/
-        * license: Standard License (See ZapSplat license pdf)
-        * Recorded by: ZapSplat
-        */
-        path: 'assets/audio/foop-pang.mp3'
     },
     {
         name: 'gameOver',
@@ -215,16 +225,6 @@ const SOUND_PATHS: { name: string; path: string; }[] = [
         * Recorded by: Mike Koenig
         */
         path: 'assets/audio/regen.mp3'
-    },
-    {
-        name: 'saucer',
-        /**
-        * Strange Noise Sound
-        * http://soundbible.com/1636-Power-Up-Ray.html
-        * license: Noncommercial 3.0
-        * Recorded by: Mike Koenig
-        */
-        path: 'assets/audio/saucer.mp3'
     },
     {
         name: 'shieldDown',

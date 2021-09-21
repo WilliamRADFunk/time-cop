@@ -558,9 +558,6 @@ export class Bandit implements Collidable, Entity {
 
         if (this._waitToFire >= 1) {
             this._waitToFire--;
-            if (!this._waitToFire && !this.isHelpBandit) {
-                SOUNDS_CTRL.playFooPang();
-            }
             return this._isActive;
         }
 
@@ -802,7 +799,7 @@ export class Bandit implements Collidable, Entity {
     public impact(self: Collidable, otherThing: CollisionType): boolean {
         if (this._isActive && otherThing !== CollisionType.Player && !this._inDeathSequence) {
             this._inDeathSequence = true;
-            // SOUNDS_CTRL.enemyDies()
+            SOUNDS_CTRL.playEnemyDeath();
             this._scoreboard.addPoints(this._points);
             this._projectiles.forEach(projectile => projectile.destroy());
             this._projectiles.length = 0;
