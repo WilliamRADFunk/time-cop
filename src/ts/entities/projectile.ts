@@ -12,10 +12,10 @@ import {
     Vector3 } from 'three';
 
 import { Collidable } from '../collidable';
-import { Explosion } from './explosion';
+import { Ricochet } from './ricochet';
 import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
-import { ExplosionType } from '../models/explosions';
+import { RicochetType } from '../models/ricochets';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
 import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 
@@ -50,9 +50,9 @@ export class Projectile implements Collidable {
     private _endingPoint: number[];
 
     /**
-     * Explosion from impacted missile
+     * Ricochet from impacted missile
      */
-    private _explosion: Explosion;
+    private _ricochet: Ricochet;
 
     /**
      * Tracks the frame number up to a max and resets.
@@ -271,11 +271,11 @@ export class Projectile implements Collidable {
             new Vector3(
                 0,
                 tailY,
-                0.3),
+                0.1),
             new Vector3(
                 0,
                 tailY,
-                0.1));
+                0.2));
         let tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         let line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[0].add(line);
@@ -285,13 +285,13 @@ export class Projectile implements Collidable {
         tailGeometry = new Geometry();
         tailGeometry.vertices.push(
             new Vector3(
-                0.15,
+                0.05,
                 tailY,
-                (Math.sin(1.0472) * 0.25)),
+                0.1),
             new Vector3(
-                0,
+                0.05,
                 tailY,
-                0.1));
+                0.3));
         tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[0].add(line);
@@ -300,13 +300,13 @@ export class Projectile implements Collidable {
         tailGeometry = new Geometry();
         tailGeometry.vertices.push(
             new Vector3(
-                -0.15,
+                -0.05,
                 tailY,
-                (Math.sin(1.0472) * 0.25)),
+                0.1),
             new Vector3(
-                0,
+                -0.05,
                 tailY,
-                0.1));
+                0.3));
         tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[0].add(line);
@@ -319,11 +319,11 @@ export class Projectile implements Collidable {
             new Vector3(
                 0,
                 tailY,
-                0.32),
+                0.1),
             new Vector3(
                 0,
                 tailY,
-                0.1));
+                0.3));
         tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[1].add(line);
@@ -332,13 +332,13 @@ export class Projectile implements Collidable {
         tailGeometry = new Geometry();
         tailGeometry.vertices.push(
             new Vector3(
-                0.1,
+                0.05,
                 tailY,
-                (Math.tan(1.48353) * 0.025)),
+                0.2),
             new Vector3(
-                0,
+                0.05,
                 tailY,
-                0.1));
+                0.4));
         tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[1].add(line);
@@ -347,13 +347,13 @@ export class Projectile implements Collidable {
         tailGeometry = new Geometry();
         tailGeometry.vertices.push(
             new Vector3(
-                -0.1,
+                -0.05,
                 tailY,
-                (Math.tan(1.48353) * 0.025)),
+                0.2),
             new Vector3(
-                0,
+                -0.05,
                 tailY,
-                0.1));
+                0.4));
         tailMaterial = new LineBasicMaterial({color: new Color(0x555555)});
         line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[1].add(line);
@@ -398,20 +398,20 @@ export class Projectile implements Collidable {
     }
 
     /**
-     * Creates an explosion during collision and adds it to the collidables list.
-     * @param isInert flag to let explosion know it isn't a 'real' explosion (hit shield).
+     * Creates an ricochet during collision and adds it to the collidables list.
+     * @param isInert flag to let ricochet know it isn't a 'real' ricochet (hit shield).
      */
-    private _createExplosion(isInert: boolean): void {
-        this._explosion = new Explosion(
+    private _createRicochet(isInert: boolean): void {
+        this._ricochet = new Ricochet(
             this._scene,
             this._projectileObjects[0].position.x,
             this._projectileObjects[0].position.z,
             {
-                color: isInert ? ExplosionType.Electric : ExplosionType.Fire,
+                color: isInert ? RicochetType.Electric : RicochetType.Fire,
                 radius: 0.12,
                 y: this._projectileObjects[0].position.y + 0.26
             });
-        if (!isInert) CollisionatorSingleton.add(this._explosion);
+        if (!isInert) CollisionatorSingleton.add(this._ricochet);
     }
 
     /**
@@ -419,10 +419,10 @@ export class Projectile implements Collidable {
      * Mainly used for non-game instantiations of this (ie. help screen animations).
      */
     public destroy(): void {
-        if (this._explosion) {
-            CollisionatorSingleton.remove(this._explosion);
-            this._scene.remove(this._explosion.getMesh());
-            this._explosion = null;
+        if (this._ricochet) {
+            CollisionatorSingleton.remove(this._ricochet);
+            this._ricochet.destroy();
+            this._ricochet = null;
         }
         this.removeFromScene(this._scene);
     }
@@ -436,11 +436,11 @@ export class Projectile implements Collidable {
             this._waitToFire--;
             return true;
         }
-        if (this._explosion) {
-            if (!this._explosion.endCycle()) {
-                CollisionatorSingleton.remove(this._explosion);
-                this._scene.remove(this._explosion.getMesh());
-                this._explosion = null;
+        if (this._ricochet) {
+            if (!this._ricochet.endCycle()) {
+                CollisionatorSingleton.remove(this._ricochet);
+                this._ricochet.destroy();
+                this._ricochet = null;
                 return false;
             }
         } else {
@@ -464,7 +464,7 @@ export class Projectile implements Collidable {
                 this._projectileObjects.forEach(obj => obj.visible = false);
                 this._frameCounter = 0;
                 this._trailCounter = 0;
-                this._createExplosion(false);
+                this._createRicochet(false);
                 // SOUNDS_CTRL.playFooPang();
                 this.removeFromScene(this._scene);
             }
@@ -529,7 +529,7 @@ export class Projectile implements Collidable {
             if (this._scoreboard && otherCollidable === CollisionType.Enemy_Projectile) {
                 this._scoreboard.addPoints(this._points);
             }
-            this._createExplosion(false);
+            this._createRicochet(false);
             return true;
         }
         return false;
@@ -544,7 +544,7 @@ export class Projectile implements Collidable {
     }
 
     /**
-     * Removes missile object from the 'visible' scene by removing non-explosion parts from scene.
+     * Removes missile object from the 'visible' scene by removing non-ricochet parts from scene.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
     public removeFromScene(scene: Scene): void {

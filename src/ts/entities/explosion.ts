@@ -2,7 +2,6 @@ import { CircleGeometry, Mesh, MeshBasicMaterial, Scene } from 'three';
 
 import { Collidable } from '../collidable';
 import { CollisionType } from '../collisionator';
-import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 import { ExplosionOptions, ExplosionType } from '../models/explosions';
 
 /**

@@ -17,6 +17,7 @@ export const enum CollisionType {
     // 51 + 21 = 72 should not collide
     // 51 + 1 = 52 should not collide
     'Explosion' = 81,
+    'Ricochet' = 81,
     'Barricade' = 200,
     // 200 + 1 = 201 should not collide
     // 200 + 21 = 221 should not collide
@@ -50,6 +51,10 @@ export function getCollisionType(name: string): CollisionType {
 
     if (name.indexOf('explosion') === 0) {
         return CollisionType.Explosion;
+    }
+
+    if (name.indexOf('ricochet') === 0) {
+        return CollisionType.Ricochet;
     }
 
     if (name.indexOf('barricade') === 0) {
