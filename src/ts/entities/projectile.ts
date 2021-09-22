@@ -521,7 +521,7 @@ export class Projectile implements Collidable {
     public impact(self: Collidable, otherCollidable: CollisionType): boolean {
         if (this._isActive) {
             this._isActive = false;
-            if (otherCollidable === CollisionType.Post) {
+            if (otherCollidable === CollisionType.Post || otherCollidable === CollisionType.Barricade) {
                 SOUNDS_CTRL.playBulletDullRicochet();
             } else if (this._scoreboard && otherCollidable === CollisionType.Enemy_Projectile) {
                 this._scoreboard.addPoints(this._points);
