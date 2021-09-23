@@ -10,7 +10,7 @@ import { Collidable } from "../collidable";
 import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { Entity, EntityDirection } from '../models/entity';
-import { animateEntity, showCurrentEntityFrame } from '../utils/animate-entity';
+import { animateEntity } from '../utils/animate-entity';
 import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
 import { Projectile } from './projectile';
@@ -20,26 +20,26 @@ import { ExplosionType } from '../models/explosions';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
 import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 import {
-    BANDIT_RADIUS,
-    BANDIT_INSIDE_RADIUS,
-    BANDIT_SCALE_GOAL,
-    BANDIT_RADIUS_DIFF } from '../utils/standard-entity-radii';
+    ENEMY_RADIUS,
+    ENEMY_INSIDE_RADIUS,
+    ENEMY_SCALE_GOAL,
+    ENEMY_RADIUS_DIFF } from '../utils/standard-entity-radii';
 
-export const banditMovePoints: [number, number, EntityDirection][] = [
+export const enemyMovePoints: [number, number, EntityDirection][] = [
     [ -5, 5, EntityDirection.Up ],      // Lower Left Corner
     [ 5, 5, EntityDirection.Left ],     // Lower Right Corner
     [ 5, -5, EntityDirection.Down ],    // Upper Right Corner
     [ -5, -5, EntityDirection.Right ]   // Upper Left Corner
 ];
 
-export const banditIntMovePoints: [number, number, EntityDirection][] = [
+export const enemyIntMovePoints: [number, number, EntityDirection][] = [
     [ -2.5, 2.5, EntityDirection.Up ],      // Lower Left Corner
     [ 2.5, 2.5, EntityDirection.Left ],     // Lower Right Corner
     [ 2.5, -2.5, EntityDirection.Down ],    // Upper Right Corner
     [ -2.5, -2.5, EntityDirection.Right ]   // Upper Left Corner
 ];
 
-export const banditStartPositions: [number, number, number][] = [
+export const enemyStartPositions: [number, number, number][] = [
     [ -5, -5, 0 ], // Left Going down
     [ -5, -4, 0 ],
     [ -5, -3, 0 ],
@@ -85,7 +85,7 @@ export const banditStartPositions: [number, number, number][] = [
     [ 4, -5, 3],
 ];
 
-export const banditIntStartPositions: [number, number, number][] = [
+export const enemyIntStartPositions: [number, number, number][] = [
     [ -5, -5, 0 ], // Left Going down
     [ -5, -4, 0 ],
     [ -5, -3, 0 ],
@@ -133,7 +133,63 @@ export const banditIntStartPositions: [number, number, number][] = [
 
 let index: number = 0;
 
-export class Bandit implements Collidable, Entity {
+/**
+ * The options necessary to create a regular enemy unit.
+ * This allows progressive changes in speed and different textures to be applied as needed.
+ */
+export interface EnemyOptions {
+    /**
+     * the instance of scoreboard used for this level instance.
+     */
+    scoreboard: ScoreCtrl;
+
+    /**
+     * current level the enemy exists on.
+     */    
+    level: number;
+
+    /**
+     * graphic rendering scene object. Used each iteration to redraw things contained in scene.
+     */         
+    scene: Scene;
+
+    /**
+     * sprite sheet texture used to represent this level's enemy animation frames.
+     */         
+    texture: Texture;
+
+    /**
+     * origin point x of where the enemy starts.
+     */ 
+    x1: number
+
+    /**
+     * origin point z of where the enemy starts.
+     */            
+    z1: number
+
+    /**
+     * index in walk positions array for enemies to head towards
+     */            
+    walkIndex: number;
+
+    /**
+     * speed modifier at time of enemy instantiation.
+     */     
+    speedMod: number;
+
+    /**
+     * layer level for enemy to appear.
+     */      
+    yPos?: number;
+
+    /**
+     * lets enemy know it's a help screen iteration and not to play sound effects.
+     */       
+    isHelpScreen?: boolean; 
+}
+
+export class Enemy implements Collidable, Entity {
     /**
      * Tracks position in walking animation sequence to know which animation to switch to next frame.
      */
@@ -145,7 +201,7 @@ export class Bandit implements Collidable, Entity {
      _animationMeshes: [Mesh, Mesh, Mesh] = [ null, null, null ];
 
      /**
-      * The list of blood explosions the bandit has around them as they die.
+      * The list of blood explosions the enemy has around them as they die.
       */
      private _bloodExplosions: Explosion[] = [];
 
@@ -155,22 +211,22 @@ export class Bandit implements Collidable, Entity {
     _currDirection: EntityDirection = EntityDirection.Right;
 
     /**
-     * Controls size and shape of the bandit
+     * Controls size and shape of the enemy
      */
-    private _banditGeometry: CircleGeometry;
+    private _enemyGeometry: CircleGeometry;
 
     /**
-     * Keeps track of the x,z point the bandit is at currently.
+     * Keeps track of the x,z point the enemy is at currently.
      */
     private _currentPoint: number[];
 
     /**
-     * Keeps track of the banditMovePoint index.
+     * Keeps track of the enemyMovePoint index.
      */
     private _currentWalkIndex: number;
 
     /**
-     * The mesh that shows bandit's character dead.
+     * The mesh that shows enemy's character dead.
      */
     private _deathMesh: Mesh;
 
@@ -185,25 +241,25 @@ export class Bandit implements Collidable, Entity {
     private _dyingAnimationCounter: number = 0;
 
     /**
-     * Keeps track of the x,z point of bandit's destination point.
+     * Keeps track of the x,z point of enemy's destination point.
      */
     private _endingPoint: number[];
 
     /**
-     * Flag to signal if bandit has been destroyed or not.
+     * Flag to signal if enemy has been destroyed or not.
      * True = not destroyed. False = destroyed.
      */
     private _isActive: boolean = true;
 
     /**
-     * Tracks if bandit is going through death animation.
+     * Tracks if enemy is going through death animation.
      */
     private _inDeathSequence: boolean = false;
 
     /**
-     * Optional constructor param that determines if bandit is on help screen. If so, don't play sounds.
+     * Optional constructor param that determines if enemy is on help screen. If so, don't play sounds.
      */
-    private isHelpBandit: boolean = false;
+    private isHelpEnemy: boolean = false;
 
     /**
      * Flag to signal walking animation should be active.
@@ -231,7 +287,7 @@ export class Bandit implements Collidable, Entity {
     private _level: number = 1;
 
     /**
-     * Keeps track of the x,z point where bandit fired from.
+     * Keeps track of the x,z point where enemy fired from.
      */
     private _originalStartingPoint: number[];
 
@@ -242,7 +298,7 @@ export class Bandit implements Collidable, Entity {
     _path: [number, number][] = [];
 
     /**
-     * Number of points scored for killing this bandit.
+     * Number of points scored for killing this enemy.
      */
     private _points: number = 50;
 
@@ -254,10 +310,10 @@ export class Bandit implements Collidable, Entity {
     /**
      * Radius of the circle geometry used to imprint the texture onto and also the collision radius for hit detection.
      */
-    private _radius: number = BANDIT_RADIUS;
+    private _radius: number = ENEMY_RADIUS;
 
     /**
-     * Reference to the scene, used to remove bandit from rendering cycle once destroyed.
+     * Reference to the scene, used to remove enemy from rendering cycle once destroyed.
      */
     private _scene: Scene;
 
@@ -267,100 +323,72 @@ export class Bandit implements Collidable, Entity {
     private _scoreboard: ScoreCtrl;
 
     /**
-     * The list of smoke explosions the bandit has fired.
+     * The list of smoke explosions the enemy has fired.
      */
     private _smokeExplosions: Explosion[] = [];
 
     /**
-     * The speed at which the bandit travels.
+     * The speed at which the enemy travels.
      */
     private _speed: number = 0.008;
 
     /**
-     * The speed at which the bandit travels when running toward the interior.
+     * The speed at which the enemy travels when running toward the interior.
      */
     private _speedRunning: number = 0.012;
 
     /**
-     * The total distance from bandit to final destination.
+     * The total distance from enemy to final destination.
      */
     private _totalDistance: number;
 
     /**
-     * The wait number of iterations before loosing the bandit.
-     * Prevents new level creation from bandit immediately.
-     */
-    private _waitToFire: number = 0;
-
-    /**
-     * The distance to and from the camera that the bandit should exist...its layer.
+     * The distance to and from the camera that the enemy should exist...its layer.
      */
     private _yPos: number;
 
     /**
-     * Constructor for the Bandit class
-     * @param scoreboard    the instance of scoreboard used for this level instance.
-     * @param level         current level the bandit exists on.
-     * @param scene         graphic rendering scene object. Used each iteration to redraw things contained in scene.
-     * @param banditTexture sprite sheet texture used to represent this level's bandit animation frames.
-     * @param x1            origin point x of where the bandit starts.
-     * @param z1            origin point z of where the bandit starts.
-     * @param walkIndex     index in walk positions array for bandits to head towards
-     * @param speedMod      speed modifier at time of bandit instantiation.
-     * @param yPos          layer level for bandit to appear.
-     * @param fireNow       optional choice not to wait to have bandit start moving.
-     * @param isHelpScreen  lets bandit know it's a help screen iteration and not to play sound effects.
+     * Constructor for the Enemy class
+     * @param options   specific options for the creation of these enemy units.
      * @hidden
      */
-    constructor(
-        scoreboard: ScoreCtrl,
-        level: number,
-        scene: Scene,
-        banditTexture: Texture,
-        x1:number,
-        z1: number,
-        walkIndex: number,
-        speedMod: number,
-        yPos?: number,
-        fireNow?: boolean,
-        isHelpScreen?: boolean) {
+    constructor(options: EnemyOptions) {
         index++;
-        this._scoreboard = scoreboard;
-        this._level = level;
-        this._yPos = yPos || 0.6;
-        this._speed += (speedMod / 1000);
+        this._scoreboard = options.scoreboard;
+        this._level = options.level;
+        this._yPos = options.yPos || 0.6;
+        this._speed += (options.speedMod / 1000);
         this._speedRunning = this._speed * 2;
-        this._originalStartingPoint = [x1, z1];
-        this._currentPoint = [x1, z1];
-        this._currentWalkIndex = walkIndex;
-        this._endingPoint = banditMovePoints[walkIndex].slice(0, 2);
-        this._currDirection = banditMovePoints[walkIndex][2];
+        this._originalStartingPoint = [options.x1, options.z1];
+        this._currentPoint = [options.x1, options.z1];
+        this._currentWalkIndex = options.walkIndex;
+        this._endingPoint = enemyMovePoints[options.walkIndex].slice(0, 2);
+        this._currDirection = enemyMovePoints[options.walkIndex][2];
         const xDiff = this._endingPoint[0] - this._currentPoint[0];
         const zDiff = this._endingPoint[1] - this._currentPoint[1];
         this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
         this._distanceTraveled = 0;
-        this.isHelpBandit = isHelpScreen;
+        this.isHelpEnemy = !!options.isHelpScreen;
         // Calculates the first (second vertices) point.
         this._calculateNextPoint();
         
-        this._scene = scene;
-		this._banditGeometry = new CircleGeometry(this._radius, 16, 16);
+        this._scene = options.scene;
+		this._enemyGeometry = new CircleGeometry(this._radius, 16, 16);
         const variationChoice = Math.random() < 0.5 ? 0 : 1;
         [0, 1, 2].forEach((val: number) => {
             const offCoordsX = val;
             const offCoordsY = variationChoice;
             const size = [4, 2];
-            const material = makeEntityMaterial(banditTexture, offCoordsX, offCoordsY, size);
+            const material = makeEntityMaterial(options.texture, offCoordsX, offCoordsY, size);
             makeEntity(
                 this._animationMeshes,
-                this._banditGeometry,
+                this._enemyGeometry,
                 material,
                 val,
                 [this._currentPoint[0], this._yPos, this._currentPoint[1]],
-                `enemy-bandit-${index}-${val}`);
+                `enemy-unit-${index}-${val}`);
         });
         rotateEntity(this);
-        this._waitToFire = (fireNow) ? 0 : Math.floor((Math.random() * 2000) + 1);
 
         const offCoordsX = 3;
         const offCoordsY = 0;
@@ -369,29 +397,29 @@ export class Bandit implements Collidable, Entity {
         makeEntity(
             dMesh,
             new PlaneGeometry(this._radius * 2.2, this._radius * 2.2, 16, 16),
-            makeEntityMaterial(banditTexture, offCoordsX, offCoordsY, size),
+            makeEntityMaterial(options.texture, offCoordsX, offCoordsY, size),
             0,
             [this._currentPoint[0], this._yPos, this._currentPoint[1]],
-            `dead-bandit`);
+            `dead-enemy`);
         this._deathMesh = dMesh[0];
         this._deathMesh.visible = false;
     }
 
     /**
-     * Calculates the next point in the bandit's path.
+     * Calculates the next point in the enemy's path.
      */
     private _calculateNextPoint(): void {
         if (SlowMo_Ctrl.getSlowMo()) {
             const posBubble = SlowMo_Ctrl.getBubbleCenter();
-            const posBandit = this.getCurrentPosition();
+            const posEnemy = this.getCurrentPosition();
             const radBubble = 1;
-            const radBandit = this._isRunning ? BANDIT_INSIDE_RADIUS : BANDIT_RADIUS;
+            const radEnemy = this._isRunning ? ENEMY_INSIDE_RADIUS : ENEMY_RADIUS;
             const dist = Math.sqrt(
-                (posBubble[0] - posBandit[0]) * (posBubble[0] - posBandit[0]) +
-                (posBubble[1] - posBandit[1]) * (posBubble[1] - posBandit[1])
+                (posBubble[0] - posEnemy[0]) * (posBubble[0] - posEnemy[0]) +
+                (posBubble[1] - posEnemy[1]) * (posBubble[1] - posEnemy[1])
             );
             // Inside the time bubble, move at normal speed.
-            if (radBandit + radBubble > dist) {
+            if (radEnemy + radBubble > dist) {
                 this._distanceTraveled += this._isRunning ? this._speedRunning : this._speed;
             // Outside the time bubble, move at 1/8th speed.
             } else {
@@ -413,14 +441,14 @@ export class Bandit implements Collidable, Entity {
 
             if (!this._isRunning) {
                 this._isRunCapable = true;
-                this._currentWalkIndex = this._currentWalkIndex + 1 >= banditMovePoints.length ? 0 : this._currentWalkIndex + 1;
-                this._endingPoint = banditMovePoints[this._currentWalkIndex].slice(0, 2);
-                this._currDirection = banditMovePoints[this._currentWalkIndex][2];
+                this._currentWalkIndex = this._currentWalkIndex + 1 >= enemyMovePoints.length ? 0 : this._currentWalkIndex + 1;
+                this._endingPoint = enemyMovePoints[this._currentWalkIndex].slice(0, 2);
+                this._currDirection = enemyMovePoints[this._currentWalkIndex][2];
             } else {
                 this._isRunCapable = false;
-                this._currentWalkIndex = this._currentWalkIndex + 1 >= banditIntMovePoints.length ? 0 : this._currentWalkIndex + 1;
-                this._endingPoint = banditIntMovePoints[this._currentWalkIndex].slice(0, 2);
-                this._currDirection = banditIntMovePoints[this._currentWalkIndex][2];
+                this._currentWalkIndex = this._currentWalkIndex + 1 >= enemyIntMovePoints.length ? 0 : this._currentWalkIndex + 1;
+                this._endingPoint = enemyIntMovePoints[this._currentWalkIndex].slice(0, 2);
+                this._currDirection = enemyIntMovePoints[this._currentWalkIndex][2];
             }
 
             const xDiff = this._endingPoint[0] - this._currentPoint[0];
@@ -428,8 +456,8 @@ export class Bandit implements Collidable, Entity {
             this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
             rotateEntity(this);
             return;
-        } else if (this._isRunning && this._radius < BANDIT_INSIDE_RADIUS) {
-            const scaleGoal = BANDIT_SCALE_GOAL;
+        } else if (this._isRunning && this._radius < ENEMY_INSIDE_RADIUS) {
+            const scaleGoal = ENEMY_SCALE_GOAL;
             const steps = (this._totalDistance / this._speedRunning);
             let scaleIncrease = (scaleGoal - 1) / steps;
             
@@ -437,11 +465,11 @@ export class Bandit implements Collidable, Entity {
             if (currScale.x + scaleIncrease < scaleGoal) {
                 this._animationMeshes.forEach(mesh => mesh.scale.set(currScale.x + scaleIncrease, currScale.y + scaleIncrease, currScale.z + scaleIncrease));
                 this._deathMesh.scale.set(currScale.x + scaleIncrease, currScale.y + scaleIncrease, currScale.z + scaleIncrease)
-                this._radius += BANDIT_RADIUS_DIFF / steps;
+                this._radius += ENEMY_RADIUS_DIFF / steps;
             } else {
                 this._animationMeshes.forEach(mesh => mesh.scale.set(scaleGoal, scaleGoal, scaleGoal));
                 this._deathMesh.scale.set(scaleGoal + 0.1, scaleGoal + 0.1, scaleGoal + 0.1);
-                this._radius = BANDIT_INSIDE_RADIUS;
+                this._radius = ENEMY_INSIDE_RADIUS;
             }
         }
         this._isRunCapable = false;
@@ -488,7 +516,7 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
-     * Adds bandit object to the three.js scene.
+     * Adds enemy object to the three.js scene.
      */
     public addToScene(): void {
         this._animationMeshes.forEach(mesh => this._scene.add(mesh));
@@ -496,28 +524,17 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
-     * (Re)activates the bandit, usually at beginning of new level.
-     */
-    public activate(): void {
-        // If bandit was never destroyed (game over), let him "wait" on his own loop.
-        if (!this._isActive) {
-            this._waitToFire = Math.floor((Math.random() * 2000) + 1);
-        }
-        this._isActive = true;
-    }
-
-    /**
-     * Tells the bandits in the corners to make their way to the interior.
-     * @returns true if this bandit was capable of running and false if not.
+     * Tells the enemies in the corners to make their way to the interior.
+     * @returns true if this enemy was capable of running and false if not.
      */
     public activateRunning(): boolean {
         if (this._isRunCapable && !this._isRunning) {
             this._isRunCapable = false;
             this._isRunning = true;
 
-            this._currentWalkIndex = this._currentWalkIndex - 1 < 0 ? banditIntMovePoints.length - 1 : this._currentWalkIndex - 1;
-            this._endingPoint = banditIntMovePoints[this._currentWalkIndex].slice(0, 2);
-            this._currDirection = banditIntMovePoints[this._currentWalkIndex][2];
+            this._currentWalkIndex = this._currentWalkIndex - 1 < 0 ? enemyIntMovePoints.length - 1 : this._currentWalkIndex - 1;
+            this._endingPoint = enemyIntMovePoints[this._currentWalkIndex].slice(0, 2);
+            this._currDirection = enemyIntMovePoints[this._currentWalkIndex][2];
             const xDiff = this._endingPoint[0] - this._currentPoint[0];
             const zDiff = this._endingPoint[1] - this._currentPoint[1];
             this._totalDistance = Math.sqrt((xDiff * xDiff) + (zDiff * zDiff));
@@ -527,7 +544,7 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
-     * The level manager chose not to have bandits race to the interior.
+     * The level manager chose not to have enemies race to the interior.
      */
     public cancelRunCapable(): void {
         this._isRunCapable = false;
@@ -542,9 +559,9 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
-     * At the end of each loop iteration, move the bandit a little.
-     * @param isPlayerDying signal that player death animation is ongoing and all bandit projectiles should be destroyed.
-     * @returns whether or not the bandit is done, and its points calculated.
+     * At the end of each loop iteration, move the enemy a little.
+     * @param isPlayerDying signal that player death animation is ongoing and all enemy projectiles should be destroyed.
+     * @returns whether or not the enemy is done, and its points calculated.
      */
     public endCycle(isPlayerDying?: boolean): boolean {
         // If player has already been hit, destroy all bullets and related graphics until they start again.
@@ -556,11 +573,6 @@ export class Bandit implements Collidable, Entity {
             return this._isActive;
         }
 
-        if (this._waitToFire >= 1) {
-            this._waitToFire--;
-            return this._isActive;
-        }
-
         if (this._inDeathSequence) {
             if (!this._dyingAnimationCounter) {
                 this._animationMeshes.forEach(mesh => {
@@ -569,8 +581,8 @@ export class Bandit implements Collidable, Entity {
                 this._deathMesh.position.set(this._currentPoint[0], this._yPos + 2, this._currentPoint[1]);
                 this._deathMesh.visible = true;
                 this._dyingAnimationCounter++;
-            } else if (this._dyingAnimationCounter < 360) {
-                if (this._bloodExplosions.length < 5 && Math.random() > 0.7) {
+            } else if (this._dyingAnimationCounter < 120) {
+                if (this._bloodExplosions.length < 3 && Math.random() > 0.7) {
                     const isXNeg = Math.random() > 0.5;
                     const isZNeg = Math.random() > 0.5;
                     const bloodMaxDistance = this._isRunning ? 0.8 : 0.5;
@@ -663,13 +675,18 @@ export class Bandit implements Collidable, Entity {
                     }
                 }
                 if (!skip) {
-                    const miss = new Projectile(
-                        this._scene,
-                        x1, z1,
-                        x2, z2,
+                    const miss = new Projectile({
+                        scene: this._scene,
+                        x1,
+                        z1,
+                        x2,
+                        z2,
                         dist,
-                        new Color('#FF0000'),
-                        true, 0.0075 + (0.0005 * this._level), this._yPos, 0.0000001, false);
+                        color: new Color('#FF0000'),
+                        colllidableAtBirth: true,
+                        speed: 0.0075 + (0.0005 * this._level),
+                        y: this._yPos,
+                        playerMissile: false });
                     this._projectiles.push(miss);
                     CollisionatorSingleton.add(miss);
 
@@ -685,13 +702,13 @@ export class Bandit implements Collidable, Entity {
                 }
             }
 
-            // Work through each projectile the bandit has fired.
+            // Work through each projectile the enemy has fired.
             this._handleChildCycleList(CollisionType.Enemy_Projectile, this._projectiles);
 
-            // Work through each smoke explosion the bandit has fired.
+            // Work through each smoke explosion the enemy has fired.
             this._handleChildCycleList(ExplosionType.Smoke, this._smokeExplosions);
 
-            // Move the smoke explosions with the bandit.
+            // Move the smoke explosions with the enemy.
             for (let i = 0; i < this._smokeExplosions.length; i++) {
                 const smokeExplosion = this._smokeExplosions[i];
                 if (smokeExplosion) {
@@ -751,32 +768,32 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
-     * Gets the name of the bandit.
-     * @returns the name of the bandit.
+     * Gets the name of the enemy.
+     * @returns the name of the enemy.
      */
     public getName(): string {
         return this._animationMeshes[0].name;
     }
 
     /**
-     * Gets the points awarded for killing the bandit.
-     * @returns the points awarded for killing the bandit.
+     * Gets the points awarded for killing the enemy.
+     * @returns the points awarded for killing the enemy.
      */
     public getPoints(): number {
         return this._points;
     }
 
     /**
-     * Communicates whether this bandit can run to the interior.
-     * @returns True if this bandit is in a position to run toward the interior.
+     * Communicates whether this enemy can run to the interior.
+     * @returns True if this enemy is in a position to run toward the interior.
      */
     public getRunCapability(): boolean {
         return this._isRunCapable;
     }
 
     /**
-     * Communicates whether this bandit can run to the interior.
-     * @returns True if this bandit is in a position to run toward the interior.
+     * Communicates whether this enemy can run to the interior.
+     * @returns True if this enemy is in a position to run toward the interior.
      */
     public getRunning(): boolean {
         return this._isRunning;
@@ -791,7 +808,7 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
-     * Called when something collides with bandit, which destroys it.
+     * Called when something collides with enemy, which destroys it.
      * @param self         the thing to remove from collidables...and scene.
      * @param otherThing   the type of the other thing in collision.
      * @returns whether or not impact means calling removeFromScene by collisionator.
@@ -818,7 +835,7 @@ export class Bandit implements Collidable, Entity {
     }
 
     /**
-     * Removes bandit object from the 'visible' scene by sending it back to its starting location.
+     * Removes enemy object from the 'visible' scene by sending it back to its starting location.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
     public removeFromScene(): void {

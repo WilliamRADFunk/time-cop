@@ -13,7 +13,7 @@ import {
 
 import { Collidable } from '../collidable';
 import { Ricochet } from './ricochet';
-import { CollisionatorSingleton, CollisionType, getCollisionType } from '../collisionator';
+import { CollisionatorSingleton, CollisionType } from '../collisionator';
 import { SOUNDS_CTRL } from '../controls/controllers/sounds-controller';
 import { RicochetType } from '../models/ricochets';
 import { ScoreCtrl } from '../controls/controllers/score-controller';
@@ -25,8 +25,74 @@ import { SlowMo_Ctrl } from '../controls/controllers/slow-mo-controller';
 let index: number = 0;
 
 /**
+ * The options necessary to create a regular projectile.
+ * This allows progressive changes in speed and color to be applied as needed.
+ */
+export interface ProjectileOptions {
+    /**
+     * Graphic rendering scene object. Used each iteration to redraw things contained in scene.
+     */
+    scene: Scene;
+
+    /**
+     * Origin point x of where the projectile starts.
+     */              
+    x1: number;
+
+    /**
+     * Origin point z of where the projectile starts.
+     */                 
+    z1: number;
+
+    /**
+     * Final point x of where the projectile starts.
+     */                 
+    x2: number;
+
+    /**
+     * Final point z of where the projectile starts.
+     */                 
+    z2: number;
+
+    /**
+     * Total distance the projectile must travel.
+     */                 
+    dist: number;
+
+    /**
+     * Color of the projectile.
+     */               
+    color: Color;
+
+    /**
+     * Enemy projectiles need to be destructable before hitting target, where player's don't.
+     */              
+    colllidableAtBirth?: boolean;
+
+    /**
+     * Optional speed modifier for projectiles.
+     */
+    speed?: number;
+    
+    /**
+     * Optional y value for projectile (for help screen demo).
+     */
+    y?: number;
+    
+    /**
+     * Signals if this projectile was fired by the player.
+     */
+    playerMissile?: boolean;
+    
+    /**
+     * Reference to the scoreboard used to get and add points throughout play.
+     */
+    scoreboard?: ScoreCtrl;
+}
+
+/**
  * @class
- * Projectile that represents missile unit in the game. It hits something, it blows up.
+ * Projectile that represents projectile unit in the game. It hits something, it blows up.
  */
 export class Projectile implements Collidable {
     /**
@@ -35,7 +101,7 @@ export class Projectile implements Collidable {
     private _color: Color;
 
     /**
-     * Keeps track of the x,z point the missile is at currently.
+     * Keeps track of the x,z point the projectile is at currently.
      */
     private _currentPoint: number[];
 
@@ -50,7 +116,7 @@ export class Projectile implements Collidable {
     private _endingPoint: number[];
 
     /**
-     * Ricochet from impacted missile
+     * Ricochet from impacted projectile
      */
     private _ricochet: Ricochet;
 
@@ -60,19 +126,19 @@ export class Projectile implements Collidable {
     private _frameCounter: number = 0;
 
     /**
-     * Flag to signal if the missile has been destroyed.
+     * Flag to signal if the projectile has been destroyed.
      * True is not destroyed. False is destroyed.
      */
     private _isActive: boolean = true;
 
     /**
-     * Flag to signal if the missile can be considered for collisions.
+     * Flag to signal if the projectile can be considered for collisions.
      * True is collidable. False is not collidable.
      */
     private _isCollidable: boolean = true;
 
     /**
-     * Keeps track of the x,z point where missile fired from.
+     * Keeps track of the x,z point where projectile fired from.
      */
     private _originalStartingPoint: number[];
 
@@ -97,7 +163,7 @@ export class Projectile implements Collidable {
     private _scoreboard: ScoreCtrl;
 
     /**
-     * The speed at which the missile travels.
+     * The speed at which the projectile travels.
      */
     private _speed: number = 0.03;
 
@@ -117,59 +183,31 @@ export class Projectile implements Collidable {
     private _type: CollisionType;
 
     /**
-     * The wait number of iterations before loosing the enemy missile.
-     * Prevents new level creation from throwing all missiles at once.
-     */
-    private _waitToFire: number = 0;
-
-    /**
      * Constructor for the Projectile class
-     * @param scene              graphic rendering scene object. Used each iteration to redraw things contained in scene.
-     * @param x1                 origin point x of where the missile starts.
-     * @param z1                 origin point z of where the missile starts.
-     * @param x2                 final point x of where the missile starts.
-     * @param z2                 final point z of where the missile starts.
-     * @param dist               total distance the missile must travel.
-     * @param color              color of the missile.
-     * @param colllidableAtBirth Enemy missiles need to be destructable before hitting target, where player's don't.
-     * @param speed              optional speed modifier for missiles.
-     * @param y                  optional y value for missile (for help screen demo).
-     * @param waitToFire         optional wait time (instead of randomized wait time).
-     * @param playerMissile      signals if this projectile was fired by the player.
-     * @param scoreboard         reference to the scoreboard used to get and add points throughout play.
+     * @param options   options for this specific projectile.
      * @hidden
      */
-    constructor(
-        scene: Scene,
-        x1: number,
-        z1: number,
-        x2: number,
-        z2: number,
-        dist: number,
-        color: Color,
-        colllidableAtBirth?: boolean,
-        speed?: number,
-        y?: number,
-        waitToFire?: number,
-        playerMissile?: boolean,
-        scoreboard?: ScoreCtrl) {
+    constructor(options: ProjectileOptions) {
         index++;
-        this._scoreboard = scoreboard;
-        const headY = y || 0.51;
-        const tailY = (y && (y + 0.04)) || 0.55;
-        this._color = color;
-        this._speed = speed || this._speed;
-        this._isCollidable = !!colllidableAtBirth;
-        this._type = !!playerMissile ? CollisionType.Player_Projectile : CollisionType.Enemy_Projectile;
-        this._scene = scene;
-        this._originalStartingPoint = [x1, z1];
-        this._currentPoint = [x1, z1];
-        this._endingPoint = [x2, z2];
-        this._totalDistance = dist;
+        this._scoreboard = options.scoreboard;
+        const headY = options.y || 0.51;
+        const tailY = (options.y && (options.y + 0.04)) || 0.55;
+        this._color = options.color;
+        this._speed = options.speed || this._speed;
+        this._isCollidable = !!options.colllidableAtBirth;
+        this._type = !!options.playerMissile ? CollisionType.Player_Projectile : CollisionType.Enemy_Projectile;
+        this._scene = options.scene;
+        this._originalStartingPoint = [options.x1, options.z1];
+        this._currentPoint = [options.x1, options.z1];
+        this._endingPoint = [options.x2, options.z2];
+        this._totalDistance = options.dist;
         this._distanceTraveled = 0;
         // Calculates the first (second vertices) point.
         this._calculateNextPoint();
-        // Glowing head of the missile.
+        
+//#region Creates glowing body of the projectile.
+    //#region The primary frame for projectile body.
+        // Glowing head of the projectile.
         let headGeometry = new CircleGeometry(0.06, 64);
         let headMaterial = new MeshBasicMaterial({
             color: this._color,
@@ -180,6 +218,7 @@ export class Projectile implements Collidable {
         head.position.set(0, headY, 0);
         head.rotation.set(-1.5708, 0, 0);
 
+        // Glowing shaft of the projectile.
         let shaftGeometry = new PlaneGeometry(0.12, 0.12, 32, 32);
         let shaftMaterial = new MeshBasicMaterial({
             color: this._color,
@@ -190,6 +229,7 @@ export class Projectile implements Collidable {
         shaft.position.set(0, headY, 0.06);
         shaft.rotation.set(-1.5708, 0, 0);
 
+        // Black stripes in body of projectile.
         let rivetGeometry = new PlaneGeometry(0.15, 0.01, 32, 32);
         let rivetMaterial = new MeshBasicMaterial({
             color: new Color(0x000000),
@@ -208,7 +248,9 @@ export class Projectile implements Collidable {
         this._projectileObjects[0].add(shaft);
         this._projectileObjects[0].add(rivet1);
         this._projectileObjects[0].add(rivet2);
-        
+    //#endregion
+    //#region The alternate frame for projectile body.
+        // Glowing head of the projectile.
         headGeometry = new CircleGeometry(0.06, 64);
         headMaterial = new MeshBasicMaterial({
             color: this._color,
@@ -219,6 +261,7 @@ export class Projectile implements Collidable {
         head.position.set(0, headY, 0);
         head.rotation.set(-1.5708, 0, 0);
 
+        // Glowing shaft of the projectile.
         shaftGeometry = new PlaneGeometry(0.12, 0.12, 32, 32);
         shaftMaterial = new MeshBasicMaterial({
             color: this._color,
@@ -229,6 +272,7 @@ export class Projectile implements Collidable {
         shaft.position.set(0, headY, 0.06);
         shaft.rotation.set(-1.5708, 0, 0);
 
+        // Black stripes in body of projectile.
         rivetGeometry = new PlaneGeometry(0.15, 0.01, 32, 32);
         rivetMaterial = new MeshBasicMaterial({
             color: new Color(0x000000),
@@ -247,8 +291,10 @@ export class Projectile implements Collidable {
         this._projectileObjects[1].add(shaft);
         this._projectileObjects[1].add(rivet1);
         this._projectileObjects[1].add(rivet2);
+    //#endregion
+//#endregion
 
-        // Creates the missile's fiery trail.
+//#region Creates the projectile's fiery trail.
         const startX = Number(this._currentPoint[0].toFixed(3));
         const startZ = Number(this._currentPoint[1].toFixed(3));
         const endX = Number(this._endingPoint[0].toFixed(3));
@@ -264,7 +310,7 @@ export class Projectile implements Collidable {
                     ? -2.35619
                     : -5.49779;
         const straightRot = isNaN(zDir) ? xDir * 1.5708 : zDir === 1 ? 0 : 3.14159;
-//#region The primary frame for missile trail.
+    //#region The primary frame for projectile trail.
         // Straight line
         let tailGeometry = new Geometry();
         tailGeometry.vertices.push(
@@ -311,8 +357,8 @@ export class Projectile implements Collidable {
         line = new Line(tailGeometry, tailMaterial);
         this._projectileObjects[0].add(line);
         this._projectileObjects[0].rotation.set(0, isDiag ? diagRot : straightRot, 0);
-//#endregion
-//#region The alternate frame for missile trail.
+    //#endregion
+    //#region The alternate frame for projectile trail.
         // Straight line
         tailGeometry = new Geometry();
         tailGeometry.vertices.push(
@@ -359,17 +405,17 @@ export class Projectile implements Collidable {
         this._projectileObjects[1].add(line);
         this._projectileObjects[1].rotation.set(0, isDiag ? diagRot : straightRot, 0);
         this._projectileObjects[1].visible = false;
+    //#endregion
 //#endregion
-
+        
         if (this._type === CollisionType.Enemy_Projectile) {
             this._projectileObjects[0].name = `projectile-enemy-${index}`;
-            this._waitToFire = waitToFire || Math.floor((Math.random() * 900) + 1);
         }
         this._projectileObjects.forEach(obj => this._scene.add(obj));
     }
 
     /**
-     * Calculates the next point in the missile's path.
+     * Calculates the next point in the projectile's path.
      */
     private _calculateNextPoint(): void {
         if (SlowMo_Ctrl.getSlowMo() && this._projectileObjects[0]) {
@@ -432,10 +478,6 @@ export class Projectile implements Collidable {
      * @returns whether or not the projectile is done, and should be removed from list. FALSE --> no longer needed. TRUE --> Keep cycling.
      */
     public endCycle(): boolean {
-        if (this._waitToFire >= 1) {
-            this._waitToFire--;
-            return true;
-        }
         if (this._ricochet) {
             if (!this._ricochet.endCycle()) {
                 CollisionatorSingleton.remove(this._ricochet);
@@ -497,8 +539,8 @@ export class Projectile implements Collidable {
     }
 
     /**
-     * Gets the name of the missile.
-     * @returns the name of the missile.
+     * Gets the name of the projectile.
+     * @returns the name of the projectile.
      */
     public getName(): string {
         return this._projectileObjects[0].name;
@@ -542,7 +584,7 @@ export class Projectile implements Collidable {
     }
 
     /**
-     * Removes missile object from the 'visible' scene by removing non-ricochet parts from scene.
+     * Removes projectile object from the 'visible' scene by removing non-ricochet parts from scene.
      * @param scene graphic rendering scene object. Used each iteration to redraw things contained in scene.
      */
     public removeFromScene(scene: Scene): void {

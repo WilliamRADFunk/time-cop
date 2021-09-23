@@ -1,4 +1,10 @@
-import { Audio, AudioLoader, Font, FontLoader, Texture, TextureLoader } from "three";
+import {
+    Audio,
+    AudioLoader,
+    Font,
+    FontLoader,
+    Texture,
+    TextureLoader } from "three";
 
 import { SOUNDS_CTRL } from "./sounds-controller";
 

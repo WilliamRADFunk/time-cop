@@ -41,7 +41,7 @@ export function getCollisionType(name: string): CollisionType {
         return CollisionType.Player;
     }
 
-    if (name.indexOf('enemy-bandit') === 0) {
+    if (name.indexOf('enemy-unit') === 0) {
         return CollisionType.Enemy;
     }
 

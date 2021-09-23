@@ -1,4 +1,9 @@
-import { Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Scene } from 'three';
+import {
+    Mesh,
+    MeshBasicMaterial,
+    Object3D,
+    PlaneGeometry,
+    Scene } from 'three';
 
 import { Collidable } from '../collidable';
 import { CollisionType } from '../collisionator';
@@ -181,7 +186,7 @@ export class Ricochet implements Collidable {
 
             if (this._currentRicochetCount < 60) {
                 this._isRicochetGrowing = true;
-            } else if (this._currentRicochetCount >= 120) {
+            } else if (this._currentRicochetCount >= 100) {
                 this._currentRicochetCount = 0;
                 this._isActive = false;
                 return false;

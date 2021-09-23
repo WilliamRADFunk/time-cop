@@ -10,7 +10,6 @@ import {
 import { CollisionatorSingleton } from '../../collisionator';
 import { SOUNDS_CTRL } from '../../controls/controllers/sounds-controller';
 import { SceneType } from '../../models/scene-type';
-import { getIntersections } from '../../utils/get-intersections';
 import { ButtonBase } from '../../controls/buttons/button-base';
 import { StartButton } from '../../controls/buttons/start-button';
 import { BUTTON_COLORS } from '../../styles/button-colors';
@@ -20,7 +19,7 @@ import { TextBase } from '../../controls/text/text-base';
 import { SettingsCtrl } from '../../controls/controllers/settings-controllers';
 import { ASSETS_CTRL } from '../../controls/controllers/assets-controller';
 import { Post, PostPositions } from '../../entities/post';
-import { Bandit, banditStartPositions } from '../../entities/bandit';
+import { Enemy, enemyStartPositions } from '../../entities/enemy';
 import { Player } from '../../entities/player';
 import { ScoreCtrl } from '../../controls/controllers/score-controller';
 import { ActorController } from './controllers/actor-controller';
@@ -70,9 +69,9 @@ export class MainPlayLevel {
     private _barricadeLevel: BarricadeLevel;
 
     /**
-     * List of bandits in the scene.
+     * List of enemies in the scene.
      */
-    private _bandits: Bandit[] = [];
+    private _enemies: Enemy[] = [];
 
     /**
      * List of buttons
@@ -242,35 +241,35 @@ export class MainPlayLevel {
     }
 
     private _addEntities(): void {
-        this._player = new Player(
-            this._scoreboard,
-            this._lifeHandler,
-            this._scene,
-            ASSETS_CTRL.textures.sheriff,
-            0, 0,
-            0,
-            1,
-            false);
+        this._player = new Player({
+            scoreboard: this._scoreboard,
+            lifeHandler: this._lifeHandler,
+            scene: this._scene,
+            texture: ASSETS_CTRL.textures.sheriff,
+            x1: 0,
+            z1: 0,
+            speed: 0,
+            yPos: 1,
+            isHelpScreen: false });
         this._player.addToScene();
         CollisionatorSingleton.add(this._player);
 
-        for (let y = 0; y < banditStartPositions.length; y++) {
-            const startPos = banditStartPositions[y];
-            const bandit = new Bandit(
-                this._scoreboard,
-                this._level,
-                this._scene,
-                ASSETS_CTRL.textures.banditCowboy,
-                startPos[0],
-                startPos[1],
-                startPos[2],
-                0.05,
-                1,
-                true,
-                false);
-            bandit.addToScene();
-            CollisionatorSingleton.add(bandit);
-            this._bandits.push(bandit);
+        for (let y = 0; y < enemyStartPositions.length; y++) {
+            const startPos = enemyStartPositions[y];
+            const enemy = new Enemy({
+                scoreboard: this._scoreboard,
+                level: this._level,
+                scene: this._scene,
+                texture: ASSETS_CTRL.textures.banditCowboy,
+                x1: startPos[0],
+                z1: startPos[1],
+                walkIndex: startPos[2],
+                speedMod: 0.05,
+                yPos: 1,
+                isHelpScreen: false });
+            enemy.addToScene();
+            CollisionatorSingleton.add(enemy);
+            this._enemies.push(enemy);
         }
     }
     
@@ -548,8 +547,8 @@ export class MainPlayLevel {
     
         this._player && this._player.destroy();
         this._player = null;
-        this._bandits.forEach(bandit => bandit.destroy());
-        this._bandits.length = 0;
+        this._enemies.forEach(enemy => enemy.destroy());
+        this._enemies.length = 0;
         this._posts.forEach(post => post.destroy());
         this._posts.length = 0;
         this._barricadeLevel && this._barricadeLevel.destroy();
@@ -594,8 +593,8 @@ export class MainPlayLevel {
         if (this._state === MainLevelState.dead) {
             this._player && this._player.destroy();
             this._player = null;
-            this._bandits.forEach(bandit => bandit.destroy());
-            this._bandits.length = 0;
+            this._enemies.forEach(enemy => enemy.destroy());
+            this._enemies.length = 0;
             this._posts.forEach(post => post.destroy());
             this._posts.length = 0;
             this._barricadeLevel && this._barricadeLevel.destroy();
@@ -607,8 +606,8 @@ export class MainPlayLevel {
         if (this._state === MainLevelState.win) {
             this._player && this._player.destroy();
             this._player = null;
-            this._bandits.forEach(bandit => bandit.destroy());
-            this._bandits.length = 0;
+            this._enemies.forEach(enemy => enemy.destroy());
+            this._enemies.length = 0;
             this._posts.forEach(post => post.destroy());
             this._posts.length = 0;
             this._barricadeLevel && this._barricadeLevel.destroy();
@@ -620,9 +619,9 @@ export class MainPlayLevel {
 
         if (this._state === MainLevelState.active) {
             const playerDeadStatus = this._player.endCycle(this._dirKeys);
-            this._bandits = this._bandits.filter(bandit => {
-                if (!bandit.endCycle(this._lifeHandler.isDying())) {
-                    bandit.destroy();
+            this._enemies = this._enemies.filter(enemy => {
+                if (!enemy.endCycle(this._lifeHandler.isDying())) {
+                    enemy.destroy();
                     return false;
                 }
                 return true;
@@ -635,14 +634,14 @@ export class MainPlayLevel {
                 return;
             }
 
-            if (!this._bandits.length) {
+            if (!this._enemies.length) {
                 this._state = MainLevelState.win;
-            } else if (this._bandits.filter(bandit => bandit.getRunning()).length) {
-                // There are bandits already running, don't activate anyone else.
+            } else if (this._enemies.filter(enemy => enemy.getRunning()).length) {
+                // There are enemies already running, don't activate anyone else.
             } else if (new Date().getTime() - this._delayStartTime > runningDelay && Math.random() > 0.8) {
-                this._bandits
-                    .filter(bandit => bandit.getRunCapability())
-                    .filter(bandit => bandit.activateRunning())
+                this._enemies
+                    .filter(enemy => enemy.getRunCapability())
+                    .filter(enemy => enemy.activateRunning())
                     .length ? this._actorCtrl.activateArrows() : null;
             }
 

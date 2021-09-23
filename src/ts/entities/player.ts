@@ -31,6 +31,57 @@ let index: number = 0;
 
 const GUN_COOLDOWN_TIME = 30;
 
+/**
+ * The options necessary to create a player character.
+ * This allows progressive changes in speed and texture to be applied as needed.
+ */
+export interface PlayerOptions {
+    /**
+     * The instance of scoreboard used for this level instance.
+     */
+    scoreboard: ScoreCtrl;
+
+    /**
+     * The instance of lifeHandler used for this level instance.
+     */
+    lifeHandler: LifeCtrl;
+
+    /**
+     * Graphic rendering scene object. Used each iteration to redraw things contained in scene.
+     */
+    scene: Scene;
+
+    /**
+     * Sprite sheet texture used to represent this level's player animation frames.
+     */
+    texture: Texture;
+
+    /**
+     * Origin point x of where the player starts.
+     */
+    x1: number;
+
+    /**
+     * Origin point z of where the player starts.
+     */
+    z1: number;
+
+    /**
+     * Speed for player instantiation.
+     */
+    speed?: number;
+
+    /**
+     * Layer level for player to appear.
+     */
+    yPos?: number;
+
+    /**
+     * Lets player know it's a help screen iteration and not to play sound effects.
+     */
+    isHelpScreen?: boolean;
+}
+
 export class Player implements Collidable, Entity {
     /**
      * Tracks position in walking animation sequence to know which animation to switch to next frame.
@@ -154,37 +205,20 @@ export class Player implements Collidable, Entity {
     private _yPos: number;
 
     /**
-     * Constructor for the Bandit class
-     * @param scoreboard    the instance of scoreboard used for this level instance.
-     * @param lifeHandler   the instance of lifeHandler used for this level instance.
-     * @param scene         graphic rendering scene object. Used each iteration to redraw things contained in scene.
-     * @param playerTexture sprite sheet texture used to represent this level's player animation frames.
-     * @param x1            origin point x of where the player starts.
-     * @param z1            origin point z of where the player starts.
-     * @param speed         speed for player instantiation.
-     * @param yPos          layer level for player to appear.
-     * @param isHelpScreen  lets player know it's a help screen iteration and not to play sound effects.
+     * Constructor for the Player class
+     * @param options   options necessary to create this round's specific player character.
      * @hidden
      */
-    constructor(
-        scoreboard: ScoreCtrl,
-        lifeHandler: LifeCtrl,
-        scene: Scene,
-        playerTexture: Texture,
-        x1:number,
-        z1: number,
-        speed?: number,
-        yPos?: number,
-        isHelpScreen?: boolean) {
+    constructor(options: PlayerOptions) {
         index++;
-        this._scoreboard = scoreboard;
-        this._lifeHandler = lifeHandler;
-        this._yPos = yPos || 0.6;
-        this._speed = speed || this._speed;
-        this._currentPoint = [x1, z1];
-        this._isHelpPlayer = isHelpScreen;
+        this._scoreboard = options.scoreboard;
+        this._lifeHandler = options.lifeHandler;
+        this._yPos = options.yPos || 0.6;
+        this._speed = options.speed || this._speed;
+        this._currentPoint = [options.x1, options.z1];
+        this._isHelpPlayer = options.isHelpScreen;
 
-        this._scene = scene;
+        this._scene = options.scene;
 		this._playerGeometry = new CircleGeometry(this._radius, 16, 16);
 		const shadowGeometry = new CircleGeometry(this._radius / 2.5, 64, 64);
         const material: MeshBasicMaterial = new MeshBasicMaterial({
@@ -202,7 +236,7 @@ export class Player implements Collidable, Entity {
             const offCoordsX = val;
             const offCoordsY = 0;
             const size = [4, 1];
-            const material = makeEntityMaterial(playerTexture, offCoordsX, offCoordsY, size);
+            const material = makeEntityMaterial(options.texture, offCoordsX, offCoordsY, size);
             makeEntity(
                 this._animationMeshes,
                 this._playerGeometry,
@@ -219,7 +253,7 @@ export class Player implements Collidable, Entity {
         makeEntity(
             dMesh,
             new PlaneGeometry(this._radius * 2, this._radius * 2, 16, 16),
-            makeEntityMaterial(playerTexture, offCoordsX, offCoordsY, size),
+            makeEntityMaterial(options.texture, offCoordsX, offCoordsY, size),
             0,
             [this._currentPoint[0], this._yPos, this._currentPoint[1]],
             `dead-player`);
@@ -417,7 +451,7 @@ export class Player implements Collidable, Entity {
             // Work through each projectile the player has fired.
             this._handleChildCycleList(CollisionType.Player_Projectile, this._projectiles);
 
-            // Work through each smoke explosion the bandit has fired.
+            // Work through each smoke explosion the player has fired.
             this._handleChildCycleList(ExplosionType.Smoke, this._smokeExplosions);
 
             return false;
@@ -457,20 +491,19 @@ export class Player implements Collidable, Entity {
         const xStep = (targetX - bulletPoints[0]) * (targetX - bulletPoints[0]);
         const zStep = (targetZ - bulletPoints[1]) * (targetZ - bulletPoints[1]);
         const dist = Math.sqrt(xStep + zStep);
-        this._projectiles.push(new Projectile(
-            this._scene,
-            bulletPoints[0],
-            bulletPoints[1],
-            targetX,
-            targetZ,
+        this._projectiles.push(new Projectile({
+            scene: this._scene,
+            x1: bulletPoints[0],
+            z1: bulletPoints[1],
+            x2: targetX,
+            z2: targetZ,
             dist,
-            new Color(0xF6C123),
-            true,
-            this._speed + 0.02,
-            -1,
-            0.00000001,
-            true,
-            this._scoreboard));
+            color: new Color(0xF6C123),
+            colllidableAtBirth: true,
+            speed: this._speed + 0.02,
+            y: -1,
+            playerMissile: true,
+            scoreboard: this._scoreboard}));
         CollisionatorSingleton.add(this._projectiles[this._projectiles.length - 1]);
         SOUNDS_CTRL.playFire();
 
