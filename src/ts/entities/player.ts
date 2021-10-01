@@ -1,11 +1,15 @@
 import {
     CircleGeometry,
     Color,
+    Geometry,
+    Line,
+    LineBasicMaterial,
     Mesh,
     MeshBasicMaterial,
     PlaneGeometry,
     Scene,
-    Texture } from 'three';
+    Texture, 
+    Vector3} from 'three';
     
 import { Collidable } from "../collidable";
 import { CollisionatorSingleton, CollisionType } from '../collisionator';
@@ -160,6 +164,11 @@ export class Player implements Collidable, Entity {
     private _lifeHandler: LifeCtrl;
 
     /**
+     * The graphic containing the blue meter representing cooldown period between shots.
+     */
+    private _mainGunRechargeMeter: Line;
+
+    /**
      * Controls size and shape of the player
      */
     private _playerGeometry: CircleGeometry;
@@ -261,6 +270,21 @@ export class Player implements Collidable, Entity {
         this._deathMesh.visible = false;
 
         rotateEntity(this);
+
+        const points = [];
+        let tailGeometry = new Geometry();
+        for(var i = 0; i < GUN_COOLDOWN_TIME; i++)
+		{
+			var x_coord = 1 * Math.cos( ((90 / GUN_COOLDOWN_TIME) * i) * (Math.PI / 180) );
+			var y_coord = 1 * Math.sin( ((90 / GUN_COOLDOWN_TIME) * i) * (Math.PI / 180) );
+            points.push([x_coord, y_coord]);
+            tailGeometry.vertices.push(new Vector3(x_coord, 3, y_coord));
+		}
+        console.log(points);
+        let tailMaterial = new LineBasicMaterial({color: new Color(0x1F51FF)});
+        this._mainGunRechargeMeter = new Line(tailGeometry, tailMaterial);
+        this._mainGunRechargeMeter.rotation.y += Math.PI / 2;
+        this._scene.add(this._mainGunRechargeMeter);
     }
 
     /**
@@ -440,6 +464,7 @@ export class Player implements Collidable, Entity {
             }
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
             this._shadowMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
+            this._mainGunRechargeMeter.position.set(this._currentPoint[0], 3, this._currentPoint[1]);
 
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
