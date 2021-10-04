@@ -164,9 +164,19 @@ export class Player implements Collidable, Entity {
     private _lifeHandler: LifeCtrl;
 
     /**
-     * The graphic containing the blue meter representing cooldown period between shots.
+     * The graphic containing the blue meter representing cooldown period between shots for main gun.
      */
     private _mainGunRechargeMeter: Line;
+
+    /**
+     * Tracks the points along the arc for the main gun's recharge meter.
+     */
+    private _gunRechargePointsMain: Vector3[];
+
+    /**
+     * Tracks the points along the arc for the secondary gun's recharge meter.
+     */
+    private _gunRechargePointsSecondary: Vector3[];
 
     /**
      * Controls size and shape of the player
@@ -192,6 +202,11 @@ export class Player implements Collidable, Entity {
      * The instance of scoreboard used for this level instance.
      */
     private _scoreboard: ScoreCtrl;
+
+    /**
+     * The graphic containing the blue meter representing cooldown period between shots for secondary gun.
+     */
+    private _secondaryGunRechargeMeter: Line;
 
     /**
      * Mesh for player's shadow, which also reflects the player's hitbox area.
@@ -271,20 +286,14 @@ export class Player implements Collidable, Entity {
 
         rotateEntity(this);
 
-        const points = [];
-        let tailGeometry = new Geometry();
+        this._gunRechargePointsSecondary = [];
         for(var i = 0; i < GUN_COOLDOWN_TIME; i++)
 		{
 			var x_coord = 1 * Math.cos( ((90 / GUN_COOLDOWN_TIME) * i) * (Math.PI / 180) );
 			var y_coord = 1 * Math.sin( ((90 / GUN_COOLDOWN_TIME) * i) * (Math.PI / 180) );
-            points.push([x_coord, y_coord]);
-            tailGeometry.vertices.push(new Vector3(x_coord, 3, y_coord));
+            this._gunRechargePointsSecondary.push(new Vector3(x_coord, 3, y_coord));
 		}
-        console.log(points);
-        let tailMaterial = new LineBasicMaterial({color: new Color(0x1F51FF)});
-        this._mainGunRechargeMeter = new Line(tailGeometry, tailMaterial);
-        this._mainGunRechargeMeter.rotation.y += Math.PI / 2;
-        this._scene.add(this._mainGunRechargeMeter);
+        this._gunRechargePointsMain = this._gunRechargePointsSecondary.slice().reverse();
     }
 
     /**
@@ -359,10 +368,22 @@ export class Player implements Collidable, Entity {
     public endCycle(dirKeys: StringMapToNumber): boolean {
         if (this._cooldownSecondaryGun > 0) {
             this._cooldownSecondaryGun--;
+            this._scene.remove(this._secondaryGunRechargeMeter);
+            let tailGeometry = new Geometry();
+            tailGeometry.vertices.push(...this._gunRechargePointsSecondary.slice(0, this._cooldownSecondaryGun));
+            let tailMaterial = new LineBasicMaterial({color: new Color(0x1F51FF)});
+            this._secondaryGunRechargeMeter = new Line(tailGeometry, tailMaterial);
+            this._scene.add(this._secondaryGunRechargeMeter);
         }
 
         if (this._cooldownMainGun > 0) {
             this._cooldownMainGun--;
+            this._scene.remove(this._mainGunRechargeMeter);
+            let tailGeometry = new Geometry();
+            tailGeometry.vertices.push(...this._gunRechargePointsMain.slice(0, this._cooldownMainGun));
+            let tailMaterial = new LineBasicMaterial({color: new Color(0x1F51FF)});
+            this._mainGunRechargeMeter = new Line(tailGeometry, tailMaterial);
+            this._scene.add(this._mainGunRechargeMeter);
         }
 
         if (this._inDeathSequence) {
@@ -465,6 +486,7 @@ export class Player implements Collidable, Entity {
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
             this._shadowMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
             this._mainGunRechargeMeter.position.set(this._currentPoint[0], 3, this._currentPoint[1]);
+            this._secondaryGunRechargeMeter.position.set(this._currentPoint[0], 3, this._currentPoint[1]);
 
             // Cycle through movement meshes to animate walking, and to rotate according to current keys pressed.
             if (this._isMoving) {
@@ -472,6 +494,8 @@ export class Player implements Collidable, Entity {
                 this._currDirection = calculateNewEntityDirection(dirKeys.right - dirKeys.left, dirKeys.up - dirKeys.down);
                 rotateEntity(this);
             }
+            this._secondaryGunRechargeMeter.rotation.y = this._animationMeshes[0].rotation.z;
+            this._mainGunRechargeMeter.rotation.y = this._animationMeshes[0].rotation.z + RAD_90_DEG_RIGHT;
 
             // Work through each projectile the player has fired.
             this._handleChildCycleList(CollisionType.Player_Projectile, this._projectiles);
@@ -493,7 +517,7 @@ export class Player implements Collidable, Entity {
             return;
         }
 
-        if (isSecondary && this._cooldownSecondaryGun) {
+        if (isSecondary) {
             if (this._cooldownSecondaryGun) {
                 return;
             }
