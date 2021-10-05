@@ -6,6 +6,7 @@ import {
     LineBasicMaterial,
     Mesh,
     MeshBasicMaterial,
+    Object3D,
     PlaneGeometry,
     Scene,
     Texture, 
@@ -25,6 +26,7 @@ import { calculateEntityProjectilePathMain, calculateEntityProjectilePathSeconda
 import { calculateNewEntityDirection } from '../utils/calculate-new-entity-direction';
 import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
+import { makeBullet } from '../utils/make-projectile';
 import { RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
 import { rotateEntity } from '../utils/rotate-entity';
 import { PLAYER_COLLISION_RADIUS, PLAYER_GRAPHIC_RADIUS } from '../utils/standard-entity-radii';
@@ -294,6 +296,46 @@ export class Player implements Collidable, Entity {
             this._gunRechargePointsSecondary.push(new Vector3(x_coord, 3, y_coord));
 		}
         this._gunRechargePointsMain = this._gunRechargePointsSecondary.slice().reverse();
+
+
+        const chamberedRounds = new Object3D();
+    
+        const bullet1 = makeBullet(new Color(0x1F51FF), -1, -1 + 0.04, [0, 0, 0], 1, false)[0];
+        bullet1.rotation.y = RAD_90_DEG_RIGHT + (RAD_90_DEG_RIGHT * 0.15);
+        let pos = this._gunRechargePointsMain[Math.floor(GUN_COOLDOWN_TIME * 0.85)];
+        bullet1.position.x = pos.x * 0.9;
+        bullet1.position.z = pos.z * 0.9;
+        chamberedRounds.add(bullet1);
+
+        const bullet2 = makeBullet(new Color(0x1F51FF), -1, -1 + 0.04, [0, 0, 0], 1, false)[0];
+        bullet2.rotation.y = RAD_90_DEG_RIGHT + (RAD_90_DEG_RIGHT * 0.33);
+        pos = this._gunRechargePointsMain[Math.floor(GUN_COOLDOWN_TIME * 0.67)];
+        bullet2.position.x = pos.x * 0.9;
+        bullet2.position.z = pos.z * 0.9;
+        chamberedRounds.add(bullet2);
+
+        const bullet3 = makeBullet(new Color(0x1F51FF), -1, -1 + 0.04, [0, 0, 0], 1, false)[0];
+        bullet3.rotation.y = RAD_90_DEG_RIGHT + (RAD_90_DEG_RIGHT * 0.5);
+        pos = this._gunRechargePointsMain[Math.floor(GUN_COOLDOWN_TIME * 0.5)];
+        bullet3.position.x = pos.x * 0.9;
+        bullet3.position.z = pos.z * 0.9;
+        chamberedRounds.add(bullet3);
+
+        const bullet4 = makeBullet(new Color(0x1F51FF), -1, -1 + 0.04, [0, 0, 0], 1, false)[0];
+        bullet4.rotation.y = RAD_90_DEG_RIGHT + (RAD_90_DEG_RIGHT * 0.66);
+        pos = this._gunRechargePointsMain[Math.floor(GUN_COOLDOWN_TIME * 0.34)];
+        bullet4.position.x = pos.x * 0.9;
+        bullet4.position.z = pos.z * 0.9;
+        chamberedRounds.add(bullet4);
+
+        const bullet5 = makeBullet(new Color(0x1F51FF), -1, -1 + 0.04, [0, 0, 0], 1, false)[0];
+        bullet5.rotation.y = RAD_90_DEG_RIGHT + (RAD_90_DEG_RIGHT * 0.83);
+        pos = this._gunRechargePointsMain[Math.floor(GUN_COOLDOWN_TIME * 0.17)];
+        bullet5.position.x = pos.x * 0.9;
+        bullet5.position.z = pos.z * 0.9;
+        chamberedRounds.add(bullet5);
+
+        this._scene.add(chamberedRounds);
     }
 
     /**
