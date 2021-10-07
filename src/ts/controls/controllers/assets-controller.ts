@@ -308,8 +308,9 @@ const TEXTURES: { [key: string]: [string, Texture] } = {
     bulletLife: ['assets/images/bullet-life.png', null],
     bandit: ['assets/images/sprite-map-bandit.png', null],
     banditCowboy: ['assets/images/bandit-cowboy.png', null],
-    // The loaded texture, used for the ship layout dialogue engineer profile 1.
     engineerProfile: ['assets/images/ship-layout-profile.png', null],
+    gunCylinder: ['assets/images/gun-cylinder.png', null],
+    gunCylinderBullet: ['assets/images/gun-cylinder-bullet.png', null],
     keysForDown: ['assets/images/keys-down.png', null],
     keysForLeft: ['assets/images/keys-left.png', null],
     keysForRight: ['assets/images/keys-right.png', null],
