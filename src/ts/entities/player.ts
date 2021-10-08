@@ -9,7 +9,6 @@ import {
     MeshBasicMaterial,
     Object3D,
     PlaneGeometry,
-    RingGeometry,
     Scene,
     Texture, 
     Vector3} from 'three';
@@ -29,8 +28,7 @@ import { calculateEntityProjectilePathMain, calculateEntityProjectilePathSeconda
 import { calculateNewEntityDirection } from '../utils/calculate-new-entity-direction';
 import { makeEntity } from '../utils/make-entity';
 import { makeEntityMaterial } from '../utils/make-entity-material';
-import { makeBullet } from '../utils/make-projectile';
-import { RAD_135_DEG_RIGHT, RAD_45_DEG_RIGHT, RAD_60_DEG_RIGHT, RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
+import { RAD_135_DEG_RIGHT, RAD_180_DEG_RIGHT, RAD_60_DEG_RIGHT, RAD_90_DEG_RIGHT } from '../utils/radians-x-degrees-right';
 import { rotateEntity } from '../utils/rotate-entity';
 import { PLAYER_COLLISION_RADIUS, PLAYER_GRAPHIC_RADIUS } from '../utils/standard-entity-radii';
 import { Explosion } from './explosion';
@@ -138,6 +136,11 @@ export class Player implements Collidable, Entity {
     private _dyingAnimationCounter: number = 0;
 
     /**
+     * Since left clicking on the start button also registers as firing main gun, this flag will help to distinguish on from the other.
+     */
+    private _gunSafetyOff: boolean = false;
+
+    /**
      * Tracks if player is going through death animation.
      */
     private _inDeathSequence: boolean = false;
@@ -219,9 +222,24 @@ export class Player implements Collidable, Entity {
     private _scoreboard: ScoreCtrl;
 
     /**
+     * Object containing all objects that make up the secondary gun's chamber and bullets graphic.
+     */
+    private _secondaryGunChamber: Object3D = new Object3D();
+
+    /**
+     * Meshes for the individual bullets within the secondary gun's chamber and bullets graphic.
+     */
+    private _secondaryGunChamberBullets: Mesh[] = [];
+
+    /**
      * The graphic containing the blue meter representing cooldown period between shots for secondary gun.
      */
     private _secondaryGunRechargeMeter: Line;
+
+    /**
+     * The object in which the player character's shadow (hitbox) and gun chamber are attached.
+     */
+    private _shadow: Object3D = new Object3D();
 
     /**
      * Mesh for player's shadow, which also reflects the player's hitbox area.
@@ -269,7 +287,8 @@ export class Player implements Collidable, Entity {
         this._shadowMesh = new Mesh(shadowGeometry, material);
         this._shadowMesh.position.set(this._currentPoint[0], this._yPos + 2, this._currentPoint[1]);
         this._shadowMesh.rotation.set(-1.5708, 0, 0);
-        this._scene.add(this._shadowMesh);
+        this._shadow.add(this._shadowMesh);
+        this._scene.add(this._shadow);
 
         [0, 1, 2].forEach((val: number) => {
             const offCoordsX = val;
@@ -310,108 +329,107 @@ export class Player implements Collidable, Entity {
 		}
         this._gunRechargePointsMain = this._gunRechargePointsSecondary.slice().reverse();
 
-        const mainStartCoords = [0.5, 5, 0.5];
-
-		const mainGunCylinderGeo = new CircleGeometry(0.2, 16, 16);
-        const mainGunCylinderMat: MeshBasicMaterial = new MeshBasicMaterial({
+		const gunCylinderGeo = new CircleGeometry(0.2, 16, 16);
+        const gunCylinderMat: MeshBasicMaterial = new MeshBasicMaterial({
             color: 0xFFFFFF,
             map: ASSETS_CTRL.textures['gunCylinder'],
             side: DoubleSide,
             transparent: true
         });
-        const mainGunCylinderMesh = new Mesh( mainGunCylinderGeo, mainGunCylinderMat );
+
+        const mainGunCylinderMesh = new Mesh( gunCylinderGeo, gunCylinderMat );
         mainGunCylinderMesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
         this._mainGunChamber.add(mainGunCylinderMesh);
+
+        const secondaryGunCylinderMesh = new Mesh( gunCylinderGeo, gunCylinderMat );
+        secondaryGunCylinderMesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._secondaryGunChamber.add(secondaryGunCylinderMesh);
         
 		const bulletGeo = new CircleGeometry(0.055, 16, 16);
-
-        const bullet1Mat: MeshBasicMaterial = new MeshBasicMaterial({
+        const bulletMat: MeshBasicMaterial = new MeshBasicMaterial({
             color: 0xFFFFFF,
             map: ASSETS_CTRL.textures['gunCylinderBullet'],
             side: DoubleSide,
             transparent: true
         });
-        const bullet1Mesh = new Mesh( bulletGeo, bullet1Mat );
-        bullet1Mesh.position.set(0, -1, -0.115);
-        bullet1Mesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-        this._mainGunChamber.add(bullet1Mesh);
-        this._mainGunChamberBullets.push(bullet1Mesh);
 
-        const bullet2Mat: MeshBasicMaterial = new MeshBasicMaterial({
-            color: 0xFFFFFF,
-            map: ASSETS_CTRL.textures['gunCylinderBullet'],
-            side: DoubleSide,
-            transparent: true
-        });
-        const bullet2Mesh = new Mesh( bulletGeo, bullet2Mat );
-        bullet2Mesh.position.set(0.1, -1, -0.06);
-        bullet2Mesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-        this._mainGunChamber.add(bullet2Mesh);
-        this._mainGunChamberBullets.push(bullet2Mesh);
+        let bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0, -1, -0.115);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._mainGunChamber.add(bullet);
+        this._mainGunChamberBullets.push(bullet);
 
-        const bullet3Mat: MeshBasicMaterial = new MeshBasicMaterial({
-            color: 0xFFFFFF,
-            map: ASSETS_CTRL.textures['gunCylinderBullet'],
-            side: DoubleSide,
-            transparent: true
-        });
-        const bullet3Mesh = new Mesh( bulletGeo, bullet3Mat );
-        bullet3Mesh.position.set(0.1, -1, 0.06);
-        bullet3Mesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-        this._mainGunChamber.add(bullet3Mesh);
-        this._mainGunChamberBullets.push(bullet3Mesh);
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0.1, -1, -0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._mainGunChamber.add(bullet);
+        this._mainGunChamberBullets.push(bullet);
 
-        const bullet4Mat: MeshBasicMaterial = new MeshBasicMaterial({
-            color: 0xFFFFFF,
-            map: ASSETS_CTRL.textures['gunCylinderBullet'],
-            side: DoubleSide,
-            transparent: true
-        });
-        const bullet4Mesh = new Mesh( bulletGeo, bullet4Mat );
-        bullet4Mesh.position.set(0, -1, 0.12);
-        bullet4Mesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-        this._mainGunChamber.add(bullet4Mesh);
-        this._mainGunChamberBullets.push(bullet4Mesh);
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0.1, -1, 0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._mainGunChamber.add(bullet);
+        this._mainGunChamberBullets.push(bullet);
 
-        const bullet5Mat: MeshBasicMaterial = new MeshBasicMaterial({
-            color: 0xFFFFFF,
-            map: ASSETS_CTRL.textures['gunCylinderBullet'],
-            side: DoubleSide,
-            transparent: true
-        });
-        const bullet5Mesh = new Mesh( bulletGeo, bullet5Mat );
-        bullet5Mesh.position.set(-0.1, -1, -0.06);
-        bullet5Mesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-        this._mainGunChamber.add(bullet5Mesh);
-        this._mainGunChamberBullets.push(bullet5Mesh);
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0, -1, 0.12);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._mainGunChamber.add(bullet);
+        this._mainGunChamberBullets.push(bullet);
 
-        const bullet6Mat: MeshBasicMaterial = new MeshBasicMaterial({
-            color: 0xFFFFFF,
-            map: ASSETS_CTRL.textures['gunCylinderBullet'],
-            side: DoubleSide,
-            transparent: true
-        });
-        const bullet6Mesh = new Mesh( bulletGeo, bullet6Mat );
-        bullet6Mesh.position.set(-0.1, -1, 0.06);
-        bullet6Mesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-        this._mainGunChamber.add(bullet6Mesh);
-        this._mainGunChamberBullets.push(bullet6Mesh);
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(-0.1, -1, 0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._mainGunChamber.add(bullet);
+        this._mainGunChamberBullets.push(bullet);
 
-        this._mainGunChamber.position.set(mainStartCoords[0], mainStartCoords[1], mainStartCoords[2]);
-        this._scene.add(this._mainGunChamber);
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(-0.1, -1, -0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._mainGunChamber.add(bullet);
+        this._mainGunChamberBullets.push(bullet);
 
+
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0, -1, -0.115);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._secondaryGunChamber.add(bullet);
+        this._secondaryGunChamberBullets.push(bullet);
+
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(-0.1, -1, -0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._secondaryGunChamber.add(bullet);
+        this._secondaryGunChamberBullets.push(bullet);
         
-		const secondaryGunCylinderGeo = new CircleGeometry(0.2, 16, 16);
-        const secondaryGunCylinderMat: MeshBasicMaterial = new MeshBasicMaterial({
-            color: 0xFFFFFF,
-            map: ASSETS_CTRL.textures['gunCylinder'],
-            side: DoubleSide,
-            transparent: true
-        });
-        const secondaryGunCylinderMesh = new Mesh( secondaryGunCylinderGeo, secondaryGunCylinderMat );
-        secondaryGunCylinderMesh.position.set(-0.5, 3, 0.5);
-        secondaryGunCylinderMesh.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
-        this._scene.add(secondaryGunCylinderMesh);
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(-0.1, -1, 0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._secondaryGunChamber.add(bullet);
+        this._secondaryGunChamberBullets.push(bullet);
+
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0, -1, 0.12);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._secondaryGunChamber.add(bullet);
+        this._secondaryGunChamberBullets.push(bullet);
+
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0.1, -1, 0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._secondaryGunChamber.add(bullet);
+        this._secondaryGunChamberBullets.push(bullet);
+
+        bullet = new Mesh( bulletGeo, bulletMat );
+        bullet.position.set(0.1, -1, -0.06);
+        bullet.rotation.set(RAD_90_DEG_RIGHT, 0, 0);
+        this._secondaryGunChamber.add(bullet);
+        this._secondaryGunChamberBullets.push(bullet);
+
+        this._mainGunChamber.position.set(0.5, 3, 0.5);
+        this._secondaryGunChamber.position.set(-0.5, 3, 0.5);
+        this._shadow.add(this._mainGunChamber);
+        this._shadow.add(this._secondaryGunChamber);
     }
 
     /**
@@ -484,6 +502,7 @@ export class Player implements Collidable, Entity {
      * @returns whether or not the player is done, and its points calculated.
      */
     public endCycle(dirKeys: StringMapToNumber): boolean {
+        const coolDownBefore = this._cooldownMainGun;
         if (this._cooldownSecondaryGun > 0) {
             this._cooldownSecondaryGun--;
             this._scene.remove(this._secondaryGunRechargeMeter);
@@ -492,6 +511,10 @@ export class Player implements Collidable, Entity {
             let tailMaterial = new LineBasicMaterial({color: new Color(0x1F51FF)});
             this._secondaryGunRechargeMeter = new Line(tailGeometry, tailMaterial);
             this._scene.add(this._secondaryGunRechargeMeter);
+            
+            if (this._gunSafetyOff) {
+                this._secondaryGunChamber.rotation.y += (RAD_60_DEG_RIGHT / GUN_COOLDOWN_TIME);
+            }
         }
 
         if (this._cooldownMainGun > 0) {
@@ -502,11 +525,19 @@ export class Player implements Collidable, Entity {
             let tailMaterial = new LineBasicMaterial({color: new Color(0x1F51FF)});
             this._mainGunRechargeMeter = new Line(tailGeometry, tailMaterial);
             this._scene.add(this._mainGunRechargeMeter);
+            
+            if (this._gunSafetyOff) {
+                this._mainGunChamber.rotation.y -= (RAD_60_DEG_RIGHT / GUN_COOLDOWN_TIME);
+            }
+        }
+        
+        if (coolDownBefore > 0 && this._cooldownMainGun <= 0) {
+            this._gunSafetyOff = true;
         }
 
         if (this._inDeathSequence) {
             if (this._dyingAnimationCounter < 180) {
-                this._shadowMesh.visible = false;
+                this._shadow.visible = false;
                 this._animationMeshes.forEach(mesh => {
                     const rot: number[] = mesh.rotation.toArray();
                     mesh.rotation.set(rot[0], rot[1], rot[2] + 0.07);
@@ -566,7 +597,7 @@ export class Player implements Collidable, Entity {
                 this._animationMeshes.forEach(mesh => mesh.position.set(0, this._yPos, 0));
                 this._currentPoint = [0, 0];
                 this._currDirection = EntityDirection.Right;
-                this._shadowMesh.visible = true;
+                this._shadow.visible = true;
                 rotateEntity(this);
                 this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
                 this._bloodExplosions.length = 0;
@@ -602,7 +633,7 @@ export class Player implements Collidable, Entity {
                 this._currentPoint[0] += this._speed;
             }
             this._animationMeshes.forEach(mesh => mesh.position.set(this._currentPoint[0], this._yPos, this._currentPoint[1]));
-            this._shadowMesh.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
+            this._shadow.position.set(this._currentPoint[0], this._yPos + 1, this._currentPoint[1]);
             this._mainGunRechargeMeter.position.set(this._currentPoint[0], 3, this._currentPoint[1]);
             this._secondaryGunRechargeMeter.position.set(this._currentPoint[0], 3, this._currentPoint[1]);
 
@@ -614,6 +645,7 @@ export class Player implements Collidable, Entity {
             }
             this._secondaryGunRechargeMeter.rotation.y = this._animationMeshes[0].rotation.z;
             this._mainGunRechargeMeter.rotation.y = this._animationMeshes[0].rotation.z + RAD_90_DEG_RIGHT;
+            this._shadow.rotation.y = this._animationMeshes[0].rotation.z + RAD_180_DEG_RIGHT;
 
             // Work through each projectile the player has fired.
             this._handleChildCycleList(CollisionType.Player_Projectile, this._projectiles);
@@ -636,18 +668,20 @@ export class Player implements Collidable, Entity {
         }
 
         if (isSecondary) {
-            if (this._cooldownSecondaryGun) {
+            if (this._cooldownSecondaryGun || !this._secondaryGunChamberBullets.some(bullet => bullet.visible)) {
                 return;
             }
             this._cooldownSecondaryGun = GUN_COOLDOWN_TIME;
-            
-            SOUNDS_CTRL.playFire();
+            const nextBullet = this._secondaryGunChamberBullets.find(bullet => bullet.visible);
+            if (nextBullet) {
+                nextBullet.visible = false;
+                SOUNDS_CTRL.playFire();
+            }
         } else {
-            if (this._cooldownMainGun) {
+            if (this._cooldownMainGun || !this._mainGunChamberBullets.some(bullet => bullet.visible)) {
                 return;
             }
             this._cooldownMainGun = GUN_COOLDOWN_TIME;
-            this._mainGunChamber.rotation.y += RAD_60_DEG_RIGHT;
             const nextBullet = this._mainGunChamberBullets.find(bullet => bullet.visible);
             if (nextBullet) {
                 nextBullet.visible = false;
@@ -775,6 +809,8 @@ export class Player implements Collidable, Entity {
         this._bloodExplosions.forEach(bloodExplosion => bloodExplosion.destroy());
         this._bloodExplosions.length = 0;
         CollisionatorSingleton.remove(this);
-        this._scene.remove(this._shadowMesh);
+        this._scene.remove(this._shadow);
+        this._scene.remove(this._mainGunRechargeMeter);
+        this._scene.remove(this._secondaryGunRechargeMeter);
     }
 }
