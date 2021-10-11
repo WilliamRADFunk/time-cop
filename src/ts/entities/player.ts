@@ -212,6 +212,11 @@ export class Player implements Collidable, Entity {
     private _radius: number = PLAYER_GRAPHIC_RADIUS;
 
     /**
+     * Number of frames the player's main gun takes to reload one round.
+     */
+    private _reloadMainGun: number = 0;
+
+    /**
      * Reference to the scene, used to remove player from rendering cycle once destroyed.
      */
     private _scene: Scene;
@@ -526,8 +531,23 @@ export class Player implements Collidable, Entity {
             this._mainGunRechargeMeter = new Line(tailGeometry, tailMaterial);
             this._scene.add(this._mainGunRechargeMeter);
             
-            if (this._gunSafetyOff) {
+            if (this._gunSafetyOff && !this._reloadMainGun) {
                 this._mainGunChamber.rotation.y -= (RAD_60_DEG_RIGHT / GUN_COOLDOWN_TIME);
+            }
+
+            if (this._gunSafetyOff && this._cooldownMainGun === 0 && !this._mainGunChamberBullets.some(bullet => bullet.visible)) {
+                this._reloadMainGun = GUN_COOLDOWN_TIME;
+                this._mainGunChamberBullets[this._mainGunChamberBullets.length - 1].visible = true;
+            }
+        }
+
+        if (this._reloadMainGun > 0) {
+            this._mainGunChamber.rotation.y += (RAD_60_DEG_RIGHT / GUN_COOLDOWN_TIME);
+            this._reloadMainGun--;
+            if (this._reloadMainGun <= 0) {
+                const missingBullet = this._mainGunChamberBullets.slice().reverse().find(bullet => !bullet.visible);
+                missingBullet ? missingBullet.visible = true : null;
+                missingBullet ? this._reloadMainGun = GUN_COOLDOWN_TIME : null;
             }
         }
         
