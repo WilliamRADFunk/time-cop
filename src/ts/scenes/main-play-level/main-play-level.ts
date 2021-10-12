@@ -328,19 +328,18 @@ export class MainPlayLevel {
     private _onInitialize(): void {
         // DOM Events
         const container = document.getElementById('mainview');
-        document.onclick = event => {
+        document.addEventListener('click', (event) => {
             event.preventDefault();
-            console.log('left click');
             return this._player.fire(false);
-        };
-        document.oncontextmenu = event => {
+        });
+        document.addEventListener('contextmenu', (event) => {
             event.preventDefault();
-            console.log('right click');
             return this._player.fire(true);
-        };
-        document.onkeydown = event => {
+        });
+        document.addEventListener('keydown', (event) => {
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
+                console.log("+++++++++++++++++++++ onkeydown", key);
                 // Up & Down move and aim adjustment.
                 if (key === 'w' || key === 'arrowup') {
                     // Move towards up
@@ -362,10 +361,26 @@ export class MainPlayLevel {
                     this._dirKeys.left = 0;
                 }
             }
-        };
-        document.onkeyup = event => {
+        });
+        document.addEventListener('keyup', (event) => {
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
+                console.log("------------------- onkeyup", key);
+
+                if (key === ' ' || key === 'space') {
+                    this._player.reload(false);
+                } else if (key === 'shift') {
+                    this._player.reload(true);
+                }
+
+                if (key === '[' || key === 'leftbracket') {
+                    this._player.fire(false);
+                }
+                
+                if (key === ']' || key === 'rightbracket') {
+                    this._player.fire(true);
+                }
+
                 // Up & Down move and aim adjustment.
                 if (key === 'w' || key === 'arrowup') {
                     // Cancel move towards vertical.
@@ -387,7 +402,7 @@ export class MainPlayLevel {
                     this._dirKeys.right = 0;
                 }
             }
-        };
+        });
 
         // Get window dimmensions
         let width = window.innerWidth * 0.99;

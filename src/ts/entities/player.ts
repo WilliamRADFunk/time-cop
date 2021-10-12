@@ -101,9 +101,19 @@ export class Player implements Collidable, Entity {
      _animationMeshes: [Mesh, Mesh, Mesh] = [ null, null, null ];
 
      /**
-      * The list of blood explosions the player has around them as they die.
-      */
-     private _bloodExplosions: Explosion[] = [];
+     * The list of blood explosions the player has around them as they die.
+     */
+    private _bloodExplosions: Explosion[] = [];
+
+    /**
+     * User opted to fire while reloading. This flag ensures the reloading is stopped and the cylinder's alignment is set properly.
+     */
+    private _canceledMainGunReload: boolean = false;
+
+    /**
+     * User opted to fire while reloading. This flag ensures the reloading is stopped and the cylinder's alignment is set properly.
+     */
+    private _canceledSecondaryGunReload: boolean = false;
 
     /**
      * Number of frames remaining before the player's main gun can fire again.
@@ -215,6 +225,11 @@ export class Player implements Collidable, Entity {
      * Number of frames the player's main gun takes to reload one round.
      */
     private _reloadMainGun: number = 0;
+
+    /**
+     * Number of frames the player's secondary gun takes to reload one round.
+     */
+    private _reloadSecondaryGun: number = 0;
 
     /**
      * Reference to the scene, used to remove player from rendering cycle once destroyed.
@@ -534,10 +549,16 @@ export class Player implements Collidable, Entity {
             if (this._gunSafetyOff && !this._reloadMainGun) {
                 this._mainGunChamber.rotation.y -= (RAD_60_DEG_RIGHT / GUN_COOLDOWN_TIME);
             }
+        }
 
-            if (this._gunSafetyOff && this._cooldownMainGun === 0 && !this._mainGunChamberBullets.some(bullet => bullet.visible)) {
-                this._reloadMainGun = GUN_COOLDOWN_TIME;
-                this._mainGunChamberBullets[this._mainGunChamberBullets.length - 1].visible = true;
+        if (this._reloadSecondaryGun > 0) {
+            this._secondaryGunChamber.rotation.y -= (RAD_60_DEG_RIGHT / GUN_COOLDOWN_TIME);
+            this._reloadSecondaryGun--;
+            if (this._reloadSecondaryGun <= 0) {
+                const rounds = this._secondaryGunChamberBullets.slice().reverse();
+                const missingBullet = rounds.find(bullet => !bullet.visible);
+                missingBullet ? missingBullet.visible = true : null;
+                rounds.some(bullet => !bullet.visible) ? this._reloadSecondaryGun = GUN_COOLDOWN_TIME : null;
             }
         }
 
@@ -545,9 +566,10 @@ export class Player implements Collidable, Entity {
             this._mainGunChamber.rotation.y += (RAD_60_DEG_RIGHT / GUN_COOLDOWN_TIME);
             this._reloadMainGun--;
             if (this._reloadMainGun <= 0) {
-                const missingBullet = this._mainGunChamberBullets.slice().reverse().find(bullet => !bullet.visible);
+                const rounds = this._mainGunChamberBullets.slice().reverse();
+                const missingBullet = rounds.find(bullet => !bullet.visible);
                 missingBullet ? missingBullet.visible = true : null;
-                missingBullet ? this._reloadMainGun = GUN_COOLDOWN_TIME : null;
+                rounds.some(bullet => !bullet.visible) ? this._reloadMainGun = GUN_COOLDOWN_TIME : null;
             }
         }
         
@@ -688,7 +710,7 @@ export class Player implements Collidable, Entity {
         }
 
         if (isSecondary) {
-            if (this._cooldownSecondaryGun || !this._secondaryGunChamberBullets.some(bullet => bullet.visible)) {
+            if (this._cooldownSecondaryGun || this._reloadSecondaryGun || !this._secondaryGunChamberBullets.some(bullet => bullet.visible)) {
                 return;
             }
             this._cooldownSecondaryGun = GUN_COOLDOWN_TIME;
@@ -698,7 +720,7 @@ export class Player implements Collidable, Entity {
                 SOUNDS_CTRL.playFire();
             }
         } else {
-            if (this._cooldownMainGun || !this._mainGunChamberBullets.some(bullet => bullet.visible)) {
+            if (this._cooldownMainGun || this._reloadMainGun || !this._mainGunChamberBullets.some(bullet => bullet.visible)) {
                 return;
             }
             this._cooldownMainGun = GUN_COOLDOWN_TIME;
@@ -813,6 +835,19 @@ export class Player implements Collidable, Entity {
     public isPassive(): boolean {
         // Becomes passive when dead.
         return !this._isActive || this._inDeathSequence;
+    }
+
+    /**
+     * Triggers the reload cycle for one of the player's guns.
+     * @param isSecondary whether the key press to reload was for the secondary gun or not.
+     */
+    public reload(isSecondary: boolean): void {
+        console.log("Reloading Gun", isSecondary);
+        if (isSecondary && !this._cooldownSecondaryGun && !this._reloadSecondaryGun && this._secondaryGunChamberBullets.some(bullet => !bullet.visible)) {
+            this._reloadSecondaryGun = GUN_COOLDOWN_TIME;
+        } else if (!isSecondary && !this._cooldownMainGun && !this._reloadMainGun && this._mainGunChamberBullets.some(bullet => !bullet.visible)) {
+            this._reloadMainGun = GUN_COOLDOWN_TIME;
+        }
     }
 
     /**
