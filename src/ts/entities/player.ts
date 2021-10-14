@@ -842,7 +842,6 @@ export class Player implements Collidable, Entity {
      * @param isSecondary whether the key press to reload was for the secondary gun or not.
      */
     public reload(isSecondary: boolean): void {
-        console.log("Reloading Gun", isSecondary);
         if (isSecondary && !this._cooldownSecondaryGun && !this._reloadSecondaryGun && this._secondaryGunChamberBullets.some(bullet => !bullet.visible)) {
             this._reloadSecondaryGun = GUN_COOLDOWN_TIME;
         } else if (!isSecondary && !this._cooldownMainGun && !this._reloadMainGun && this._mainGunChamberBullets.some(bullet => !bullet.visible)) {

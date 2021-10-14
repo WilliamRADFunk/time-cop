@@ -59,6 +59,10 @@ export class ButtonBase {
         this.element.onmouseleave = this.onExit.bind(this);
         this.element.onmousedown = this.onMouseDown.bind(this);
         this.element.onmouseup = this.onMouseUp.bind(this);
+        this.element.onclick = (event) => { 
+            event.preventDefault();
+            event.stopPropagation();
+        };
     }
 
     /**
@@ -123,8 +127,11 @@ export class ButtonBase {
 
     /**
      * Activates button changes related to onmousedown listeners.
+     * @param event the html mouse event when player presses down on a mouse button.
      */
-    public onMouseDown(): void {
+    public onMouseDown(event: MouseEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
         if (this._isEnabled) {
             this.element.style.backgroundColor = this._colorTheme.onMouseDown.backgroundColor;
             this.element.style.color = this._colorTheme.onMouseDown.color;
@@ -134,8 +141,11 @@ export class ButtonBase {
 
     /**
      * Activates button changes related to onmouseup listeners.
+     * @param event the html mouse event when player unpresses a mouse button.
      */
-    public onMouseUp(): void {
+    public onMouseUp(event: MouseEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
         if (this._isEnabled) {
             this.element.style.backgroundColor = this._colorTheme.onMouseUp.backgroundColor;
             this.element.style.color = this._colorTheme.onMouseUp.color;

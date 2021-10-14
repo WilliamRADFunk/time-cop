@@ -317,6 +317,7 @@ const TEXTURES: { [key: string]: [string, Texture] } = {
     keysForUp: ['assets/images/keys-up.png', null],
     mouse: ['assets/images/mouse.png', null],
     mouseLeft: ['assets/images/mouse-left.png', null],
+    rebel: ['assets/images/rebel.png', null],
     sheriff: ['assets/images/sheriff.png', null],
     spriteMapGlowingBlueOrb: ['assets/images/sprite-map-glowing-blue-orb.png', null],
     spriteMapTeleporterEffects: ['assets/images/sprite-map-teleporters.png', null]

@@ -328,29 +328,34 @@ export class MainPlayLevel {
     private _onInitialize(): void {
         // DOM Events
         const container = document.getElementById('mainview');
-        document.addEventListener('click', (event) => {
+        document.addEventListener('mouseup', (event) => {
             event.preventDefault();
+            const button = event.button;
+            if (button) {
+                event.stopPropagation();
+                return this._player.fire(true);
+            }
             return this._player.fire(false);
         });
         document.addEventListener('contextmenu', (event) => {
             event.preventDefault();
-            return this._player.fire(true);
         });
         document.addEventListener('keydown', (event) => {
+            event.preventDefault();
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
-                console.log("+++++++++++++++++++++ onkeydown", key);
                 // Up & Down move and aim adjustment.
-                if (key === 'w' || key === 'arrowup') {
-                    // Move towards up
-                    this._dirKeys.up = 1;
-                    this._dirKeys.down = 0;
-                } else if (key === 's' || key === 'arrowdown') {
+                if (key === 's' || key === 'arrowdown') {
                     // Move towards down
                     this._dirKeys.down = 1;
                     this._dirKeys.up = 0;
+                } else if (key === 'w' || key === 'arrowup') {
+                    // Move towards up
+                    this._dirKeys.up = 1;
+                    this._dirKeys.down = 0;
                 }
-                
+
+                // Left and Right move and aim adjustment.
                 if (key === 'a' || key === 'arrowleft') {
                     // Move towards left
                     this._dirKeys.left = 1;
@@ -363,22 +368,14 @@ export class MainPlayLevel {
             }
         });
         document.addEventListener('keyup', (event) => {
+            event.preventDefault();
             if (this._state === MainLevelState.active) {
                 const key = (event.key || '').toLowerCase();
-                console.log("------------------- onkeyup", key);
 
                 if (key === ' ' || key === 'space') {
                     this._player.reload(false);
                 } else if (key === 'shift') {
                     this._player.reload(true);
-                }
-
-                if (key === '[' || key === 'leftbracket') {
-                    this._player.fire(false);
-                }
-                
-                if (key === ']' || key === 'rightbracket') {
-                    this._player.fire(true);
                 }
 
                 // Up & Down move and aim adjustment.
