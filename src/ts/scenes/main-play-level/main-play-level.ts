@@ -667,7 +667,9 @@ export class MainPlayLevel {
                 SOUNDS_CTRL.playRegen();
                 this._lifeHandler.addLife();
             }
-            if (scoreRewards.timeSlow) {
+
+            // Only activate slow motion mode if there are still enemy units alive.
+            if (scoreRewards.timeSlow && this._enemies.filter(enemy => !enemy.getDeathSequeanceStatus()).filter.length) {
                 SOUNDS_CTRL.playShieldUp();
                 SlowMo_Ctrl.enterSlowMo(true);
             }

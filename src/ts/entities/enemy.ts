@@ -768,6 +768,14 @@ export class Enemy implements Collidable, Entity {
     }
 
     /**
+     * Check if enemy unit has alreayd been hit but is still finishing it's dying animation.
+     * @returns TRUE if enemy is currently doing its death animation. FALSE if not in death sequence.
+     */
+    public getDeathSequeanceStatus(): boolean {
+        return this._inDeathSequence;
+    }
+
+    /**
      * Gets the name of the enemy.
      * @returns the name of the enemy.
      */
