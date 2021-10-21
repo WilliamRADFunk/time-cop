@@ -245,7 +245,7 @@ export class MainPlayLevel {
             scoreboard: this._scoreboard,
             lifeHandler: this._lifeHandler,
             scene: this._scene,
-            texture: ASSETS_CTRL.textures.sheriff,
+            texture: ASSETS_CTRL.textures.rebel,
             x1: 0,
             z1: 0,
             speed: 0,
